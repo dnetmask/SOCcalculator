@@ -152,6 +152,11 @@
         equilibrioPorSede: dinero(costoVuln / sedesEq),
         precioPorSede: precioSede,
         sedesMinimas: Math.ceil(costoVuln / precioSede - 1e-9),
+        descuentoVolumen: {
+          desdeSede: v.descuento_volumen.desde_sede,
+          fraccion: num(v.descuento_volumen.descuento_fraccion),
+          precio: dinero(precioSede * (1 - num(v.descuento_volumen.descuento_fraccion))),
+        },
         dispositivosIncluidos: s.plan_base.dispositivos_incluidos,
         agentesIncluidos: s.plan_base.agentes_avanzados_incluidos,
         precioDispositivo: precioAdicional("dispositivos", "margen_dispositivo_adicional"),
@@ -163,6 +168,14 @@
         costoUeba: costoUnitarioPrimerNivel("ueba"),
         retencion: { enLineaDias: s.retencion_base.en_linea_dias, archivadoMeses: s.retencion_base.archivado_meses },
       };
+    }
+
+    /* Piso de costo de un contrato de `sedes`: su parte del equipo (equilibrio por sede, nunca más
+     * que el equipo completo) y, por encima de la capacidad, el personal adicional que exigiría. */
+    function pisoVulnerabilidades(sedes, p) {
+      const cap = s.gestion_vulnerabilidades.capacidad_max_sedes;
+      const dentro = Math.min(Math.min(sedes, cap) * p.equilibrioPorSede, p.costoVulnerabilidades);
+      return dentro + Math.max(0, sedes - cap) * (p.costoVulnerabilidades / cap);
     }
 
     // Equipo de vulnerabilidades al mes (con contingencia): lo cubre el servicio por sede.
@@ -194,8 +207,17 @@
                       cantidad: 1, unitario: p.listaBase, costo: p.equilibrioBase, descontable: true, meses: null });
       }
       if (sedes) {
-        lineas.push({ id: "vuln", concepto: "Gestión de vulnerabilidades OT por sede", cantidad: sedes,
-                      unitario: p.precioPorSede, costo: p.equilibrioPorSede, descontable: true, meses: null });
+        // Precio lista hasta la sede anterior a `desdeSede`; desde ahí, descuento por volumen.
+        const dv = p.descuentoVolumen;
+        const lista = Math.min(sedes, dv.desdeSede - 1);
+        const extra = sedes - lista;
+        lineas.push({ id: "vuln", concepto: extra ? `Gestión de vulnerabilidades OT, sedes 1 a ${lista}` : "Gestión de vulnerabilidades OT por sede",
+                      cantidad: lista, unitario: p.precioPorSede, costo: pisoVulnerabilidades(lista, p) / lista, descontable: true, meses: null });
+        if (extra) {
+          lineas.push({ id: "vuln2", concepto: `Gestión de vulnerabilidades OT desde la sede ${dv.desdeSede} (${Math.round(dv.fraccion * 100)} % de descuento)`,
+                        cantidad: extra, unitario: dv.precio, costo: (pisoVulnerabilidades(sedes, p) - pisoVulnerabilidades(lista, p)) / extra,
+                        descontable: true, meses: null });
+        }
       }
       if (soc && extraDisp) {
         lineas.push({ id: "disp", concepto: "Dispositivos adicionales", cantidad: extraDisp,

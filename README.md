@@ -7,7 +7,7 @@ La base es la calculadora de licenciamiento FortiSIEM MSSP del líder del SOC (`
 Se venden dos servicios, juntos o por separado:
 
 - **SOC de gestión de incidentes (mensual por cliente)**: plataforma FortiSIEM e incluye **25 dispositivos** (`plan_base`). Su punto de equilibrio excluye el equipo de vulnerabilidades.
-- **Gestión de vulnerabilidades OT (mensual por sede)**: USD 560 por sede, sin licencias FortiSIEM ni colector. No incluye la licencia de la sonda OT, que aporta el cliente. Cubre el equipo de vulnerabilidades (USD 3.344/mes): con 2 sedes por cliente, 3 clientes = 6 sedes, el equilibrio es USD 557,33 por sede.
+- **Gestión de vulnerabilidades OT (mensual por sede)**: USD 560 por sede (sedes 1 a 10 del contrato; desde la sede 11, 50 % de descuento: USD 280), sin licencias FortiSIEM ni colector. No incluye la licencia de la sonda OT, que aporta el cliente. Cubre el equipo de vulnerabilidades (USD 3.344/mes): con 2 sedes por cliente, 3 clientes = 6 sedes, el equilibrio es USD 557,33 por sede.
 - **Retención base incluida**: 1 mes de eventos en línea + 11 meses archivados (12 meses en total), cubierta por el almacenamiento Azure por cliente.
 - **Dispositivo / agente / UEBA adicional**: costo de licencia FortiSIEM del primer nivel (el más caro) / (1 − margen). UEBA se contrata por agente avanzado y no puede superar la cantidad de agentes.
 - **Colector (opcional, se cobra aparte del plan)**:
@@ -53,7 +53,9 @@ Para usarlo localmente, sirve la raíz del repositorio y abre `web/`:
 python -m http.server 8000   # luego abrir http://localhost:8000/web/
 ```
 
-Despliegue en Vercel: `vercel.json` copia solo `web/` y `data/` a `public/` (sin el código Python ni las pruebas) y marca el sitio como `noindex`. Cada push a la rama de producción del repositorio despliega una nueva versión.
+Despliegue en Vercel: `vercel.json` copia solo `web/` y `data/` a `public/` (sin el código Python ni las pruebas) y marca el sitio como `noindex`.
+
+**Código de acceso:** `middleware.js` bloquea todas las rutas (también `data/*.json`) hasta que se ingresa el código. El código vive en la variable de entorno `ACCESS_CODE` del proyecto en Vercel (con `ACCESS_SECRET` como sal del token), nunca en el repositorio. Al acertar se guarda una cookie HttpOnly de 12 horas; `/salir` la borra. Para cambiar el código: editar `ACCESS_CODE` en Vercel → Settings → Environment Variables y redesplegar; las sesiones abiertas se invalidan. Sin `ACCESS_CODE` el sitio queda cerrado.
 
 ## Observaciones sobre las fuentes
 

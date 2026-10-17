@@ -97,3 +97,12 @@ test("sensibilidad de vulnerabilidades cruza cero en 6 sedes", () => {
   assert.ok(f[4].utilidad < 0 && f[5].utilidad > 0);
   assert.equal(f[10].excedeCapacidad, true);
 });
+
+test("vulnerabilidades: 50 % de descuento desde la sede 11", () => {
+  const q = modelo.cotizar({ soc: false, vulnerabilidades: true, sedes: 13 });
+  assert.deepEqual(q.lineas.map((l) => [l.id, l.cantidad, l.unitario]), [["vuln", 10, 560], ["vuln2", 3, 280]]);
+  assert.equal(q.mensualInicial, 5600 + 840);
+  // Piso: equipo completo (3344) + 3 sedes sobre la capacidad de 10 a 334.40 c/u
+  assert.equal(q.pisoEquilibrio, 3344 + 3 * 334.4);
+  assert.equal(modelo.cotizar({ soc: false, vulnerabilidades: true, sedes: 10 }).lineas.length, 1);
+});

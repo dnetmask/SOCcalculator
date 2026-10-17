@@ -66,6 +66,8 @@ h1, h2, h3 { color: var(--ink); margin: 0; font-weight: 700; text-wrap: balance;
 .logo .chip { background: #ffffff; border-radius: 4px; padding: 4px 6px; display: inline-flex; }
 .cobrand { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .82rem; }
 .cobrand b { color: var(--ink); font-weight: 700; }
+.cobrand .salir { margin-left: 8px; color: var(--cyan); font-weight: 600; text-decoration: none; border: 1px solid var(--line-strong); border-radius: 4px; padding: 4px 10px; }
+.cobrand .salir:hover { background: var(--cyan-soft); }
 .cobrand .fortibar { width: 22px; height: 14px; background: var(--red); border-radius: 2px; flex: none; }
 .band { background: var(--band); color: var(--band-ink); position: relative; overflow: hidden; }
 .band .inner { padding-block: 28px 30px; display: grid; gap: 8px; position: relative; z-index: 1; }
@@ -112,6 +114,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .opt:focus-with
 .plan .price small { font: 500 .78rem var(--f-sans); color: var(--muted); margin-left: 2px; }
 .sedes-row { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-weight: 600; color: var(--ink); }
 .note { grid-column: 1 / -1; margin: 0; font-size: .8rem; color: var(--muted); }
+.note.volumen { color: var(--ink); font-weight: 600; font-size: .85rem; }
 
 .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 16px; padding-block: 12px; border-top: 1px solid var(--line); }
 .row:first-of-type { border-top: 0; padding-top: 0; }
@@ -221,7 +224,7 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
 <div class="brandbar gutter">
   <div class="inner">
     <div class="logo"><span class="chip"><img src="assets/netmask-logo.png" alt="Netmask Industrial Networking" width="148" height="34"></span></div>
-    <div class="cobrand"><span class="fortibar" aria-hidden="true"></span><span>SOC OT sobre <b>FortiSIEM® MSSP</b> · Partner MSSP de Fortinet</span></div>
+    <div class="cobrand"><span class="fortibar" aria-hidden="true"></span><span>SOC OT sobre <b>FortiSIEM® MSSP</b> · Partner MSSP de Fortinet</span><a class="salir" href="/salir">Salir</a></div>
   </div>
 </div>
 <header class="band gutter">
@@ -293,6 +296,7 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
               <span>Sedes o plantas</span>
               <div class="stepper"><button type="button" data-step="sedes" data-d="-1" aria-label="Quitar sede">−</button><input id="sedes" type="number" min="1" step="1" value="2" inputmode="numeric" aria-label="Sedes"><button type="button" data-step="sedes" data-d="1" aria-label="Agregar sede">+</button></div>
             </div>
+            <p class="note volumen" id="notaVolumen"></p>
             <p class="note">No incluye la licencia de la sonda OT (licencia OT de Fortinet, Nozomi, Claroty, TXOne…): la aporta el cliente. Sin licencias FortiSIEM.</p>
           </div>
         </div>

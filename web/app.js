@@ -96,6 +96,8 @@
 
     $("precioBase").textContent = usd0.format(p.listaBase) + "/mes";
     $("precioSede").textContent = usd0.format(p.precioPorSede);
+    const dv = p.descuentoVolumen;
+    $("notaVolumen").textContent = `Desde la sede ${dv.desdeSede}: ${usd0.format(dv.precio)}/sede (${Math.round(dv.fraccion * 100)} % de descuento).`;
     $("precioDisp").textContent = usd0.format(p.precioDispositivo);
     $("precioAgente").textContent = usd0.format(p.precioAgente);
     $("precioUeba").textContent = usd0.format(p.precioUeba);

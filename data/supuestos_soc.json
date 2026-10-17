@@ -19,6 +19,12 @@
     "nota": "Servicio que se vende solo o junto al SOC de incidentes. No usa licencias FortiSIEM ni colector. No incluye la licencia de la sonda OT (licencia OT de Fortinet, Nozomi, Claroty, TXOne...), que aporta el cliente. Lo cubre el personal del módulo vulnerabilidades.",
     "precio_por_sede_usd": "560",
     "origen_precio": "dato Netmask",
+    "descuento_volumen": {
+      "desde_sede": 11,
+      "descuento_fraccion": "0.50",
+      "nota": "Por contrato: las sedes 1 a 10 se cobran a precio lista y desde la sede 11 con 50 % de descuento.",
+      "origen": "dato Netmask"
+    },
     "sedes_promedio_por_cliente": 2,
     "capacidad_max_sedes": 10,
     "origen_sedes_y_capacidad": "supuesto"

@@ -54,6 +54,11 @@ class TestPrecioSOC(unittest.TestCase):
         self.assertGreater(filas[5].utilidad, 0)
         self.assertTrue(filas[10].excede_capacidad)
 
+    def test_descuento_por_volumen_de_sedes(self):
+        self.assertEqual(self.modelo.tramos_vulnerabilidades(10), [(10, Decimal("560.00"))])
+        self.assertEqual(self.modelo.tramos_vulnerabilidades(13), [(10, Decimal("560.00")), (3, Decimal("280.00"))])
+        self.assertEqual(self.modelo.tramos_vulnerabilidades(0), [])
+
     def test_sensibilidad_cruza_cero_en_punto_de_equilibrio(self):
         p = self.modelo.precio()
         filas = self.modelo.sensibilidad(p.lista_base, 4)
@@ -99,6 +104,7 @@ class TestPrecioSOC(unittest.TestCase):
             lambda s: s.pop("factor_prestacional"),
             lambda s: s["gestion_vulnerabilidades"].update(precio_por_sede_usd="0"),
             lambda s: s["gestion_vulnerabilidades"].update(sedes_promedio_por_cliente=0),
+            lambda s: s["gestion_vulnerabilidades"]["descuento_volumen"].update(descuento_fraccion="1"),
         ):
             s = copy.deepcopy(supuestos())
             mutar(s)

@@ -170,6 +170,10 @@ class ModeloPrecioSOC:
             v = s["gestion_vulnerabilidades"]
             if _decimal(v["precio_por_sede_usd"], "precio_por_sede_usd") <= 0:
                 raise ErrorModelo("gestion_vulnerabilidades.precio_por_sede_usd debe ser positivo")
+            if _entero_no_negativo(v["descuento_volumen"]["desde_sede"], "descuento_volumen.desde_sede") < 2:
+                raise ErrorModelo("gestion_vulnerabilidades.descuento_volumen.desde_sede debe ser al menos 2")
+            if not Decimal(0) <= _decimal(v["descuento_volumen"]["descuento_fraccion"], "descuento_volumen") < 1:
+                raise ErrorModelo("gestion_vulnerabilidades.descuento_volumen.descuento_fraccion debe estar en [0, 1)")
             if _entero_no_negativo(v["sedes_promedio_por_cliente"], "sedes_promedio_por_cliente") < 1:
                 raise ErrorModelo("gestion_vulnerabilidades.sedes_promedio_por_cliente debe ser al menos 1")
             _entero_no_negativo(v["capacidad_max_sedes"], "capacidad_max_sedes")
@@ -247,6 +251,18 @@ class ModeloPrecioSOC:
             self._precio_adicional("ueba", "margen_ueba_adicional"),
             costo_vuln, sedes, _dinero(costo_vuln / sedes), _dinero(_decimal(v["precio_por_sede_usd"], "precio_por_sede")),
         )
+
+    def tramos_vulnerabilidades(self, sedes: int) -> list[tuple[int, Decimal]]:
+        """Precio de un contrato de `sedes`: [(cantidad, precio unitario)] a lista y con descuento por volumen."""
+        v = self.s["gestion_vulnerabilidades"]
+        precio = _decimal(v["precio_por_sede_usd"], "precio_por_sede")
+        desde = v["descuento_volumen"]["desde_sede"]
+        lista = min(_entero_no_negativo(sedes, "sedes"), desde - 1)
+        tramos = [(lista, _dinero(precio))] if lista else []
+        if sedes > lista:
+            descuento = _decimal(v["descuento_volumen"]["descuento_fraccion"], "descuento_volumen")
+            tramos.append((sedes - lista, _dinero(precio * (1 - descuento))))
+        return tramos
 
     def costo_vulnerabilidades(self, escenario: str | None = None) -> Decimal:
         """Costo mensual del equipo de vulnerabilidades (con contingencia): no depende de clientes ni licencias."""
@@ -335,6 +351,9 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         "|---|---:|---:|",
         f"| SOC de incidentes, plan base (plataforma + {p.dispositivos_incluidos} dispositivos) | {_m(p.equilibrio_base)} | {_m(p.lista_base)} |",
         f"| Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | {_m(p.equilibrio_por_sede)} | {_m(p.precio_por_sede)} |",
+        f"| Vulnerabilidades desde la sede {s['gestion_vulnerabilidades']['descuento_volumen']['desde_sede']} del contrato "
+        f"({Decimal(s['gestion_vulnerabilidades']['descuento_volumen']['descuento_fraccion']) * 100:.0f} % de descuento) | — | "
+        f"{_m(modelo.tramos_vulnerabilidades(s['gestion_vulnerabilidades']['descuento_volumen']['desde_sede'])[-1][1])} |",
         f"| Dispositivo adicional | — | {_m(p.precio_dispositivo_adicional)} |",
         f"| Agente avanzado adicional | — | {_m(p.precio_agente_adicional)} |",
         f"| UEBA por agente avanzado (opcional) | — | {_m(p.precio_ueba_adicional)} |",
