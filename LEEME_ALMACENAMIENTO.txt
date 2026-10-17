@@ -1,0 +1,46 @@
+FORTISIEM MSSP CALCULATOR: almacenamiento manual (sin autoguardado)
+===================================================================
+
+Inicio
+------
+En la carpeta del proyecto:
+  python -m pip install -r requirements.txt
+  python main.py
+
+El programa lee data/precios.json y data/reglas.json para inicializar el
+motor. No guarda escenarios ni catálogos de forma automática. En esta versión
+no utiliza LOCALAPPDATA, APPDATA ni una carpeta predeterminada de datos.
+
+Operaciones de la interfaz
+-------------------------
+- Calculadora y Proyecciones: cambios y cálculos solo en memoria.
+- Catálogo / Importar: elige precios.json y reglas.json externos; los datos
+  se validan y quedan disponibles durante la sesión, sin copiarlos.
+- Guardar: para un escenario nuevo abre el selector de ubicación; si ya se
+  guardó/abrió un escenario del mismo tipo, actualiza ese archivo elegido.
+- Guardar como...: permite elegir otra ruta y genera una copia independiente.
+- Abrir escenario: selecciona un JSON ya guardado en el directorio deseado.
+- Exportar CSV: exporta los datos actuales directamente; no crea un JSON.
+- Cerrar, abrir otro escenario o cambiar el catálogo: permite guardar,
+  descartar o cancelar cuando hay cambios pendientes.
+
+Cada escenario JSON guarda internamente una copia de precios y reglas de su
+cálculo, lo cual permite abrirlo después aunque el catálogo haya cambiado.
+
+Migración desde versiones anteriores
+-----------------------------------
+No se consultan ni migran automáticamente las carpetas de almacenamiento de
+versiones anteriores. Los escenarios previos se pueden abrir manualmente con
+«Abrir escenario» seleccionando el JSON dentro de su carpeta antigua.
+No borres esos archivos antiguos hasta tener las copias que quieras conservar.
+
+El intérprete Python y los componentes de terceros pueden realizar E/S técnica
+independiente (p. ej., librerías y cachés del sistema). El código del proyecto
+desactiva la escritura de bytecode al iniciar mediante main.py o ui.py.
+
+Pruebas
+-------
+Desde la carpeta raíz del proyecto:
+  python -m unittest discover -s tests -p "test_*.py" -v
+
+Las pruebas Qt requieren PySide6. En un entorno sin PySide6 se omiten.

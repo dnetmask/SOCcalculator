@@ -1,0 +1,358 @@
+"""Precio del servicio SOC Netmask con punto de equilibrio en N clientes.
+
+Usa el motor de licenciamiento FortiSIEM MSSP (core.py) para el costo de
+licencias agregado de todos los clientes y data/supuestos_soc.json para
+personal, Azure, colectores y contingencia.
+
+Modelo:
+    costo_mes(n) = (personal + fijos + cuota_programa/12 + licencias(n)
+                    + n * variable_por_cliente) * (1 + contingencia)
+    precio_equilibrio = costo_mes(N) / N
+
+El precio se separa en dos módulos: «base» (incidentes, plataforma y
+licencias) y «vulnerabilidades» (personal del equipo de vulnerabilidades OT).
+
+Uso:
+    python precio_soc.py                     # reporte Markdown con los supuestos por defecto
+    python precio_soc.py --clientes 4 --escenario esbelto
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from dataclasses import dataclass
+from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
+from pathlib import Path
+from typing import Any, Mapping
+
+from core import ErrorModelo, MotorLicenciamiento, ResultadoMensual, _decimal, _entero_no_negativo
+
+MODULOS = ("incidentes", "vulnerabilidades", "compartido")
+CENTAVO = Decimal("0.01")
+
+
+def _dinero(valor: Decimal) -> Decimal:
+    return valor.quantize(CENTAVO, rounding=ROUND_HALF_UP)
+
+
+def _redondear_arriba(valor: Decimal, paso: Decimal) -> Decimal:
+    return _dinero((valor / paso).to_integral_value(rounding=ROUND_CEILING) * paso)
+
+
+@dataclass(frozen=True)
+class CostosMensuales:
+    clientes: int
+    dispositivos: int
+    agentes_avanzados: int
+    personal_por_modulo: Mapping[str, Decimal]
+    disponibilidad: Decimal
+    fijos: Decimal
+    cuota_programa_mensual: Decimal
+    licencias: ResultadoMensual
+    variables: Decimal
+    contingencia: Decimal
+    total: Decimal
+
+    @property
+    def personal(self) -> Decimal:
+        return sum(self.personal_por_modulo.values(), Decimal(0)) + self.disponibilidad
+
+
+@dataclass(frozen=True)
+class PrecioSOC:
+    clientes_equilibrio: int
+    escenario: str
+    costos: CostosMensuales
+    equilibrio_base: Decimal
+    equilibrio_vulnerabilidades: Decimal
+    lista_base: Decimal
+    lista_vulnerabilidades: Decimal
+    dispositivos_incluidos: int
+    precio_dispositivo_adicional: Decimal
+    precio_agente_adicional: Decimal
+
+    @property
+    def equilibrio_total(self) -> Decimal:
+        return self.equilibrio_base + self.equilibrio_vulnerabilidades
+
+    @property
+    def lista_total(self) -> Decimal:
+        return self.lista_base + self.lista_vulnerabilidades
+
+
+@dataclass(frozen=True)
+class FilaSensibilidad:
+    clientes: int
+    ingreso: Decimal
+    costo: Decimal
+    utilidad: Decimal
+    margen: Decimal
+    excede_capacidad: bool
+
+
+@dataclass(frozen=True)
+class OpcionColector:
+    opcion: str
+    precio_mensual: Decimal
+    cuotas: int | None  # None = cargo recurrente mientras dure el servicio
+
+
+class ModeloPrecioSOC:
+    def __init__(self, motor: MotorLicenciamiento, supuestos: Mapping[str, Any]):
+        self.motor = motor
+        self.s = supuestos
+        self._validar()
+
+    @classmethod
+    def desde_archivos(cls, supuestos: str | Path | None = None, **rutas_motor) -> "ModeloPrecioSOC":
+        ruta = Path(supuestos) if supuestos else Path(__file__).resolve().parent / "data" / "supuestos_soc.json"
+        try:
+            datos = json.loads(ruta.read_text(encoding="utf-8"), parse_float=Decimal)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ErrorModelo(f"No se pudo cargar {ruta}: {exc}") from exc
+        return cls(MotorLicenciamiento.desde_archivos(**rutas_motor), datos)
+
+    def _validar(self) -> None:
+        s = self.s
+        try:
+            if s["schema_version"] != "1.0.0":
+                raise ErrorModelo("supuestos_soc.json: versión de esquema no soportada")
+            if s["moneda"] != self.motor.moneda:
+                raise ErrorModelo("La moneda de los supuestos no coincide con el catálogo de licencias")
+            if _entero_no_negativo(s["clientes_punto_equilibrio"], "clientes_punto_equilibrio") < 1:
+                raise ErrorModelo("clientes_punto_equilibrio debe ser al menos 1")
+            if _decimal(s["tasa_cambio_cop_por_usd"], "tasa_cambio") <= 0:
+                raise ErrorModelo("La tasa de cambio debe ser positiva")
+            _entero_no_negativo(s["plan_base"]["dispositivos_incluidos"], "dispositivos_incluidos")
+            _entero_no_negativo(s["plan_base"]["agentes_avanzados_incluidos"], "agentes_avanzados_incluidos")
+            for clave in ("costos_fijos_mensuales", "costos_variables_por_cliente_mensuales"):
+                for item in s[clave]:
+                    if _decimal(item["importe"], f"{clave}.{item['concepto']}") < 0:
+                        raise ErrorModelo(f"{clave}: importe negativo en {item['concepto']!r}")
+            for clave in ("factor_prestacional", "disponibilidad_fuera_de_horario_cop", "contingencia_fraccion"):
+                if _decimal(s[clave], clave) < 0:
+                    raise ErrorModelo(f"{clave} no puede ser negativo")
+            if _decimal(s["redondeo_precio_lista"], "redondeo_precio_lista") <= 0:
+                raise ErrorModelo("redondeo_precio_lista debe ser positivo")
+            for clave in ("margen_dispositivo_adicional", "margen_agente_adicional"):
+                if not Decimal(0) <= _decimal(s["adicionales"][clave], clave) < 1:
+                    raise ErrorModelo(f"{clave} debe estar en [0, 1)")
+            if s["escenario_personal"] not in s["escenarios_personal"]:
+                raise ErrorModelo("escenario_personal no existe en escenarios_personal")
+            for nombre, escenario in s["escenarios_personal"].items():
+                for rol in escenario["roles"]:
+                    if rol["modulo"] not in MODULOS:
+                        raise ErrorModelo(f"{nombre}: módulo inválido {rol['modulo']!r}")
+                    _entero_no_negativo(rol["cantidad"], f"{nombre}.{rol['rol']}.cantidad")
+                    if _decimal(rol["salario_mensual_cop"], "salario") < 0:
+                        raise ErrorModelo(f"{nombre}: salario negativo en {rol['rol']!r}")
+                    if not Decimal(0) <= _decimal(rol["dedicacion"], "dedicacion") <= 1:
+                        raise ErrorModelo(f"{nombre}: dedicación fuera de [0, 1] en {rol['rol']!r}")
+            if not Decimal(0) <= _decimal(s["opciones_colector"]["margen"], "margen_colector") < 1:
+                raise ErrorModelo("opciones_colector.margen debe estar en [0, 1)")
+            for op in s["opciones_colector"]["opciones"]:
+                if ("costo_total" in op) == ("costo_mensual" in op):
+                    raise ErrorModelo(f"Colector {op['opcion']!r}: indicar costo_total+cuotas o costo_mensual")
+                if "costo_total" in op and _entero_no_negativo(op["cuotas"], "cuotas") < 1:
+                    raise ErrorModelo(f"Colector {op['opcion']!r}: cuotas debe ser al menos 1")
+                if _decimal(op.get("costo_total", op.get("costo_mensual")), "costo_colector") < 0:
+                    raise ErrorModelo(f"Colector {op['opcion']!r}: costo negativo")
+            _entero_no_negativo(s["capacidad_max_clientes_sin_contratar"], "capacidad_max_clientes_sin_contratar")
+        except (KeyError, TypeError, AttributeError) as exc:
+            raise ErrorModelo(f"Falta una clave o tiene un tipo incorrecto en supuestos_soc.json: {exc}") from exc
+
+    def _usd(self, cop: Decimal) -> Decimal:
+        return cop / _decimal(self.s["tasa_cambio_cop_por_usd"], "tasa_cambio")
+
+    def _escenario(self, escenario: str | None) -> str:
+        nombre = escenario or self.s["escenario_personal"]
+        if nombre not in self.s["escenarios_personal"]:
+            raise ErrorModelo(f"Escenario de personal desconocido: {nombre!r}")
+        return nombre
+
+    def personal_por_modulo(self, escenario: str | None = None) -> dict[str, Decimal]:
+        factor = _decimal(self.s["factor_prestacional"], "factor_prestacional")
+        totales = {modulo: Decimal(0) for modulo in MODULOS}
+        for rol in self.s["escenarios_personal"][self._escenario(escenario)]["roles"]:
+            cop = _decimal(rol["salario_mensual_cop"], "salario") * rol["cantidad"] * _decimal(rol["dedicacion"], "dedicacion") * factor
+            totales[rol["modulo"]] += self._usd(cop)
+        return totales
+
+    def costos(
+        self,
+        clientes: int,
+        *,
+        dispositivos_por_cliente: int | None = None,
+        agentes_por_cliente: int | None = None,
+        escenario: str | None = None,
+    ) -> CostosMensuales:
+        _entero_no_negativo(clientes, "clientes")
+        base = self.s["plan_base"]
+        dispositivos = clientes * (base["dispositivos_incluidos"] if dispositivos_por_cliente is None else dispositivos_por_cliente)
+        agentes = clientes * (base["agentes_avanzados_incluidos"] if agentes_por_cliente is None else agentes_por_cliente)
+        personal = self.personal_por_modulo(escenario)
+        disponibilidad = self._usd(_decimal(self.s["disponibilidad_fuera_de_horario_cop"], "disponibilidad"))
+        fijos = sum((_decimal(i["importe"], "fijo") for i in self.s["costos_fijos_mensuales"]), Decimal(0))
+        cuota = self.motor._cuota_anual(1) / 12
+        licencias = self.motor.calcular_mes(dispositivos=dispositivos, agentes_avanzados=agentes)
+        variables = clientes * sum((_decimal(i["importe"], "variable") for i in self.s["costos_variables_por_cliente_mensuales"]), Decimal(0))
+        subtotal = sum(personal.values(), Decimal(0)) + disponibilidad + fijos + cuota + licencias.consumo_total + variables
+        contingencia = subtotal * _decimal(self.s["contingencia_fraccion"], "contingencia")
+        return CostosMensuales(
+            clientes, dispositivos, agentes,
+            {k: _dinero(v) for k, v in personal.items()}, _dinero(disponibilidad), _dinero(fijos), _dinero(cuota),
+            licencias, _dinero(variables), _dinero(contingencia), _dinero(subtotal + contingencia),
+        )
+
+    def _precio_adicional(self, categoria: str, margen: str) -> Decimal:
+        # Primer nivel = tarifa unitaria más alta: el adicional queda cubierto aunque no se suba de nivel.
+        mes = self.motor.calcular_mes(**{categoria: 1})
+        unitario = next(c.precio_unitario_neto for c in mes.componentes if c.categoria == categoria)
+        return _redondear_arriba(unitario / (1 - _decimal(self.s["adicionales"][margen], margen)), Decimal(1))
+
+    def precio(self, clientes: int | None = None, escenario: str | None = None) -> PrecioSOC:
+        n = self.s["clientes_punto_equilibrio"] if clientes is None else clientes
+        if _entero_no_negativo(n, "clientes") < 1:
+            raise ErrorModelo("Se requiere al menos 1 cliente para el punto de equilibrio")
+        nombre = self._escenario(escenario)
+        costos = self.costos(n, escenario=nombre)
+        contingencia = 1 + _decimal(self.s["contingencia_fraccion"], "contingencia")
+        vulnerabilidades = _dinero(costos.personal_por_modulo["vulnerabilidades"] * contingencia / n)
+        total = costos.total / n
+        base = _dinero(total) - vulnerabilidades
+        paso = _decimal(self.s["redondeo_precio_lista"], "redondeo")
+        return PrecioSOC(
+            n, nombre, costos, base, vulnerabilidades,
+            _redondear_arriba(base, paso), _redondear_arriba(vulnerabilidades, paso),
+            self.s["plan_base"]["dispositivos_incluidos"],
+            self._precio_adicional("dispositivos", "margen_dispositivo_adicional"),
+            self._precio_adicional("agentes_avanzados", "margen_agente_adicional"),
+        )
+
+    def opciones_colector(self) -> list[OpcionColector]:
+        """Colector por cliente, cobrado aparte del plan: NUC financiado en cuotas o cargo mensual."""
+        cfg = self.s["opciones_colector"]
+        factor = 1 - _decimal(cfg["margen"], "margen_colector")
+        opciones = []
+        for op in cfg["opciones"]:
+            if "costo_total" in op:
+                mensual, cuotas = _decimal(op["costo_total"], "costo_total") / op["cuotas"], op["cuotas"]
+            else:
+                mensual, cuotas = _decimal(op["costo_mensual"], "costo_mensual"), None
+            opciones.append(OpcionColector(op["opcion"], _redondear_arriba(mensual / factor, CENTAVO), cuotas))
+        return opciones
+
+    def sensibilidad(self, precio_mensual: Decimal, hasta_clientes: int = 10, escenario: str | None = None) -> list[FilaSensibilidad]:
+        """Resultado mensual si cada cliente paga `precio_mensual` (sin adicionales) y el equipo no cambia."""
+        capacidad = self.s["capacidad_max_clientes_sin_contratar"]
+        filas = []
+        for n in range(1, hasta_clientes + 1):
+            costo = self.costos(n, escenario=escenario).total
+            ingreso = _dinero(precio_mensual * n)
+            utilidad = ingreso - costo
+            filas.append(FilaSensibilidad(n, ingreso, costo, utilidad, _dinero(utilidad / ingreso * 100), n > capacidad))
+        return filas
+
+    def estimar_almacenamiento(self, eps: int) -> dict[str, Decimal]:
+        """Costo mensual de almacenamiento de un cliente a partir de sus EPS promedio."""
+        e = self.s["estimador_almacenamiento"]
+        gb_dia = Decimal(_entero_no_negativo(eps, "eps")) * e["bytes_por_evento"] * 86400 / Decimal(10) ** 9
+        gb_retenidos = gb_dia * _decimal(e["fraccion_tras_compresion"], "compresion") * e["retencion_dias"]
+        return {
+            "gb_dia_crudo": gb_dia.quantize(Decimal("0.1")),
+            "gb_retenidos": gb_retenidos.quantize(Decimal(1)),
+            "costo_mensual": _dinero(gb_retenidos * _decimal(e["costo_gb_mes_usd"], "costo_gb")),
+        }
+
+
+def _m(valor: Decimal) -> str:
+    return f"${valor:,.2f}"
+
+
+def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escenario: str | None = None) -> str:
+    p = modelo.precio(clientes, escenario)
+    c = p.costos
+    s = modelo.s
+    lin = [
+        f"# Precio SOC Netmask — punto de equilibrio con {p.clientes_equilibrio} clientes",
+        "",
+        f"Escenario de personal: **{p.escenario}** — {s['escenarios_personal'][p.escenario]['descripcion']}",
+        f"Plan base por cliente: {p.dispositivos_incluidos} dispositivos, "
+        f"{s['plan_base']['agentes_avanzados_incluidos']} agentes avanzados. TRM supuesta: {s['tasa_cambio_cop_por_usd']} COP/USD.",
+        "",
+        "## Precio propuesto (mensual por cliente, USD)",
+        "",
+        "| Componente | Equilibrio | Precio lista |",
+        "|---|---:|---:|",
+        f"| SOC base (incidentes + plataforma + {p.dispositivos_incluidos} dispositivos) | {_m(p.equilibrio_base)} | {_m(p.lista_base)} |",
+        f"| Módulo gestión de vulnerabilidades OT | {_m(p.equilibrio_vulnerabilidades)} | {_m(p.lista_vulnerabilidades)} |",
+        f"| **SOC OT completo** | **{_m(p.equilibrio_total)}** | **{_m(p.lista_total)}** |",
+        f"| Dispositivo adicional | — | {_m(p.precio_dispositivo_adicional)} |",
+        f"| Agente avanzado adicional | — | {_m(p.precio_agente_adicional)} |",
+        "",
+        f"## Costos mensuales con {c.clientes} clientes ({c.dispositivos} dispositivos agregados en FortiSIEM)",
+        "",
+        "| Concepto | USD/mes |",
+        "|---|---:|",
+    ]
+    for modulo in MODULOS:
+        lin.append(f"| Personal — {modulo} | {_m(c.personal_por_modulo[modulo])} |")
+    lin += [
+        f"| Disponibilidad fuera de horario | {_m(c.disponibilidad)} |",
+        *[f"| {i['concepto']} | {_m(_decimal(i['importe'], 'fijo'))} |" for i in s["costos_fijos_mensuales"]],
+        f"| Cuota anual programa FortiSIEM MSSP (prorrateada /12) | {_m(c.cuota_programa_mensual)} |",
+        *[f"| Licencia FortiSIEM {d.categoria} ({d.cantidad_facturable} facturables × {_m(d.precio_unitario_neto)}) | {_m(d.subtotal)} |"
+          for d in c.licencias.componentes if d.subtotal],
+        *[f"| {i['concepto']} × {c.clientes} | {_m(_decimal(i['importe'], 'variable') * c.clientes)} |" for i in s["costos_variables_por_cliente_mensuales"]],
+        f"| Contingencia ({Decimal(s['contingencia_fraccion']) * 100:.0f}%) | {_m(c.contingencia)} |",
+        f"| **Total** | **{_m(c.total)}** |",
+        "",
+        f"## Sensibilidad al número de clientes (precio lista SOC OT completo {_m(p.lista_total)})",
+        "",
+        "| Clientes | Ingreso | Costo | Utilidad | Margen |",
+        "|---:|---:|---:|---:|---:|",
+    ]
+    for f in modelo.sensibilidad(p.lista_total, escenario=p.escenario):
+        nota = " ⚠️ requiere ampliar equipo" if f.excede_capacidad else ""
+        lin.append(f"| {f.clientes}{nota} | {_m(f.ingreso)} | {_m(f.costo)} | {_m(f.utilidad)} | {f.margen}% |")
+    lin += [
+        "",
+        "## Colector FortiSIEM (opcional, se cobra aparte del plan)",
+        "",
+        "| Opción | Mensual por cliente | Duración del cargo |",
+        "|---|---:|---|",
+        *[f"| {o.opcion} | {_m(o.precio_mensual)} | {f'{o.cuotas} cuotas' if o.cuotas else 'recurrente'} |"
+          for o in modelo.opciones_colector()],
+    ]
+    alm = modelo.estimar_almacenamiento(200)
+    e = s["estimador_almacenamiento"]
+    lin += [
+        "",
+        "## Referencia: almacenamiento por EPS",
+        "",
+        f"Un cliente con 200 EPS promedio genera ~{alm['gb_dia_crudo']} GB/día crudos; con compresión al "
+        f"{Decimal(e['fraccion_tras_compresion']) * 100:.0f}% y {e['retencion_dias']} días de retención son "
+        f"~{alm['gb_retenidos']} GB → {_m(alm['costo_mensual'])}/mes a {_m(Decimal(e['costo_gb_mes_usd']))}/GB-mes.",
+        "",
+    ]
+    return "\n".join(lin)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--supuestos", help="Ruta a supuestos_soc.json alternativo")
+    parser.add_argument("--clientes", type=int, help="Clientes para el punto de equilibrio")
+    parser.add_argument("--escenario", help="Escenario de personal (p. ej. completo, esbelto)")
+    args = parser.parse_args(argv)
+    try:
+        print(reporte_markdown(ModeloPrecioSOC.desde_archivos(args.supuestos), args.clientes, args.escenario))
+    except ErrorModelo as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.dont_write_bytecode = True
+    raise SystemExit(main())

@@ -1,0 +1,586 @@
+{
+  "schema_version": "1.0.0",
+  "catalogo_id": "fortisiem-mssp-graph-v4-excel",
+  "moneda": "USD",
+  "moneda_nota": "Inferida del formato monetario $ con configuración regional estadounidense de la hoja; validar contra la lista comercial aplicable.",
+  "vigente_desde": null,
+  "vigente_hasta": null,
+  "estatus_comercial": "referencia_extraida_del_excel; vigencia_y_condiciones_oficiales_no_verificadas",
+  "fuente": {
+    "tipo": "archivo_proporcionado_por_usuario",
+    "nombre": "FortiSIEM MSSP Graph v4.xlsx",
+    "sha256": "06cec4488d235230a2db55acfcbbd7102116a14bfbfd90b91f7c34fca8500b18",
+    "hoja_catalogo": "FortiSIEM MSSP",
+    "hoja_formulas": "Costo vs usuarios",
+    "nota": "Los importes provienen de la columna G (List Price); el descuento de la columna H. La columna I contiene el importe de referencia (cantidad 1 en el Excel)."
+  },
+  "productos": {
+    "programa_mssp": {
+      "sku": "FC-10-FSMUL-946-02-12",
+      "descripcion_excel": "FortiSIEM Annual MSSP program fee for monthly utilization and billing",
+      "categoria": "programa_mssp",
+      "precio_unitario_lista": "5000.00",
+      "descuento_fraccion_excel": "0",
+      "periodicidad": "anual",
+      "unidad": "programa",
+      "referencia_excel": {
+        "hoja": "FortiSIEM MSSP",
+        "fila": 6,
+        "sku": "D6",
+        "descripcion": "E6",
+        "cantidad_referencia": "F6",
+        "precio_lista": "G6",
+        "descuento": "H6",
+        "total_calculado": "I6"
+      }
+    },
+    "dispositivos": [
+      {
+        "sku": "FSM-MSSP-LIC-001-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 50 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise.",
+        "categoria": "dispositivos",
+        "precio_unitario_lista": "25.52",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 10,
+          "sku": "D10",
+          "descripcion": "E10",
+          "cantidad_referencia": "F10",
+          "precio_lista": "G10",
+          "descuento": "H10",
+          "total_calculado": "I10"
+        },
+        "orden_nivel": 1
+      },
+      {
+        "sku": "FSM-MSSP-LIC-150-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 150 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise.",
+        "categoria": "dispositivos",
+        "precio_unitario_lista": "20.01",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 11,
+          "sku": "D11",
+          "descripcion": "E11",
+          "cantidad_referencia": "F11",
+          "precio_lista": "G11",
+          "descuento": "H11",
+          "total_calculado": "I11"
+        },
+        "orden_nivel": 2
+      },
+      {
+        "sku": "FSM-MSSP-LIC-500-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 500 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise.",
+        "categoria": "dispositivos",
+        "precio_unitario_lista": "16.36",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 12,
+          "sku": "D12",
+          "descripcion": "E12",
+          "cantidad_referencia": "F12",
+          "precio_lista": "G12",
+          "descuento": "H12",
+          "total_calculado": "I12"
+        },
+        "orden_nivel": 3
+      },
+      {
+        "sku": "FSM-MSSP-LIC-01K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 1,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise.",
+        "categoria": "dispositivos",
+        "precio_unitario_lista": "14.31",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 13,
+          "sku": "D13",
+          "descripcion": "E13",
+          "cantidad_referencia": "F13",
+          "precio_lista": "G13",
+          "descuento": "H13",
+          "total_calculado": "I13"
+        },
+        "orden_nivel": 4
+      },
+      {
+        "sku": "FSM-MSSP-LIC-02K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 2,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise.",
+        "categoria": "dispositivos",
+        "precio_unitario_lista": "12.52",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 14,
+          "sku": "D14",
+          "descripcion": "E14",
+          "cantidad_referencia": "F14",
+          "precio_lista": "G14",
+          "descuento": "H14",
+          "total_calculado": "I14"
+        },
+        "orden_nivel": 5
+      },
+      {
+        "sku": "FSM-MSSP-LIC-05K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 5,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise.",
+        "categoria": "dispositivos",
+        "precio_unitario_lista": "10.56",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 15,
+          "sku": "D15",
+          "descripcion": "E15",
+          "cantidad_referencia": "F15",
+          "precio_lista": "G15",
+          "descuento": "H15",
+          "total_calculado": "I15"
+        },
+        "orden_nivel": 6
+      },
+      {
+        "sku": "FSM-MSSP-LIC-10K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 10,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise.",
+        "categoria": "dispositivos",
+        "precio_unitario_lista": "8.52",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 16,
+          "sku": "D16",
+          "descripcion": "E16",
+          "cantidad_referencia": "F16",
+          "precio_lista": "G16",
+          "descuento": "H16",
+          "total_calculado": "I16"
+        },
+        "orden_nivel": 7
+      },
+      {
+        "sku": "FSM-MSSP-LIC-15K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 15,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise.",
+        "categoria": "dispositivos",
+        "precio_unitario_lista": "7.68",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 17,
+          "sku": "D17",
+          "descripcion": "E17",
+          "cantidad_referencia": "F17",
+          "precio_lista": "G17",
+          "descuento": "H17",
+          "total_calculado": "I17"
+        },
+        "orden_nivel": 8
+      },
+      {
+        "sku": "FSM-MSSP-LIC-20K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 20,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise.",
+        "categoria": "dispositivos",
+        "precio_unitario_lista": "6.69",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 18,
+          "sku": "D18",
+          "descripcion": "E18",
+          "cantidad_referencia": "F18",
+          "precio_lista": "G18",
+          "descuento": "H18",
+          "total_calculado": "I18"
+        },
+        "orden_nivel": 9
+      }
+    ],
+    "agentes_avanzados": [
+      {
+        "sku": "FSM-MSSP-AGT-001-BILL",
+        "descripcion_excel": "MSSP: Per Agent Subscription License for minimum 50 Advanced Agents. Includes Maintenance & Support.",
+        "categoria": "agentes_avanzados",
+        "precio_unitario_lista": "4.97",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "agente",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 22,
+          "sku": "D22",
+          "descripcion": "E22",
+          "cantidad_referencia": "F22",
+          "precio_lista": "G22",
+          "descuento": "H22",
+          "total_calculado": "I22"
+        },
+        "orden_nivel": 1
+      },
+      {
+        "sku": "FSM-MSSP-AGT-150-BILL",
+        "descripcion_excel": "MSSP: Per Agent Subscription License for minimum 150 Advanced Agents. Includes Maintenance & Support.",
+        "categoria": "agentes_avanzados",
+        "precio_unitario_lista": "4.50",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "agente",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 23,
+          "sku": "D23",
+          "descripcion": "E23",
+          "cantidad_referencia": "F23",
+          "precio_lista": "G23",
+          "descuento": "H23",
+          "total_calculado": "I23"
+        },
+        "orden_nivel": 2
+      },
+      {
+        "sku": "FSM-MSSP-AGT-500-BILL",
+        "descripcion_excel": "MSSP: Per Agent Subscription License for minimum 500 Advanced Agents. Includes Maintenance & Support.",
+        "categoria": "agentes_avanzados",
+        "precio_unitario_lista": "3.44",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "agente",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 24,
+          "sku": "D24",
+          "descripcion": "E24",
+          "cantidad_referencia": "F24",
+          "precio_lista": "G24",
+          "descuento": "H24",
+          "total_calculado": "I24"
+        },
+        "orden_nivel": 3
+      },
+      {
+        "sku": "FSM-MSSP-AGT-01K-BILL",
+        "descripcion_excel": "MSSP: Per Agent Subscription License for minimum 1,000 Advanced Agents. Includes Maintenance & Support.",
+        "categoria": "agentes_avanzados",
+        "precio_unitario_lista": "2.97",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "agente",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 25,
+          "sku": "D25",
+          "descripcion": "E25",
+          "cantidad_referencia": "F25",
+          "precio_lista": "G25",
+          "descuento": "H25",
+          "total_calculado": "I25"
+        },
+        "orden_nivel": 4
+      },
+      {
+        "sku": "FSM-MSSP-AGT-02K-BILL",
+        "descripcion_excel": "MSSP: Per Agent Subscription License for minimum 2,000 Advanced Agents. Includes Maintenance & Support.",
+        "categoria": "agentes_avanzados",
+        "precio_unitario_lista": "2.51",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "agente",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 26,
+          "sku": "D26",
+          "descripcion": "E26",
+          "cantidad_referencia": "F26",
+          "precio_lista": "G26",
+          "descuento": "H26",
+          "total_calculado": "I26"
+        },
+        "orden_nivel": 5
+      },
+      {
+        "sku": "FSM-MSSP-AGT-05K-BILL",
+        "descripcion_excel": "MSSP: Per Agent Subscription License for minimum 5,000 Advanced Agents. Includes Maintenance & Support.",
+        "categoria": "agentes_avanzados",
+        "precio_unitario_lista": "1.91",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "agente",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 27,
+          "sku": "D27",
+          "descripcion": "E27",
+          "cantidad_referencia": "F27",
+          "precio_lista": "G27",
+          "descuento": "H27",
+          "total_calculado": "I27"
+        },
+        "orden_nivel": 6
+      }
+    ],
+    "ueba": [
+      {
+        "sku": "FSM-MSSP-UEBA-025-BILL",
+        "descripcion_excel": "MSSP: Per Advanced Agent - UEBA Telemetry Subscription License, a minimum of 25 Agents. Includes Maintenance & Support.",
+        "categoria": "ueba",
+        "precio_unitario_lista": "5.22",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "agente",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 31,
+          "sku": "D31",
+          "descripcion": "E31",
+          "cantidad_referencia": "F31",
+          "precio_lista": "G31",
+          "descuento": "H31",
+          "total_calculado": "I31"
+        },
+        "orden_nivel": 1
+      },
+      {
+        "sku": "FSM-MSSP-UEBA-500-BILL",
+        "descripcion_excel": "MSSP: Per Advanced Agent - UEBA Telemetry Subscription License, a minimum of 500 Agents. Includes Maintenance & Support.",
+        "categoria": "ueba",
+        "precio_unitario_lista": "5.00",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "agente",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 32,
+          "sku": "D32",
+          "descripcion": "E32",
+          "cantidad_referencia": "F32",
+          "precio_lista": "G32",
+          "descuento": "H32",
+          "total_calculado": "I32"
+        },
+        "orden_nivel": 2
+      },
+      {
+        "sku": "FSM-MSSP-UEBA-10K-BILL",
+        "descripcion_excel": "MSSP: Per Advanced Agent - UEBA Telemetry Subscription License, a minimum of 10000 Agents. Includes Maintenance & Support.",
+        "categoria": "ueba",
+        "precio_unitario_lista": "4.19",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "agente",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 33,
+          "sku": "D33",
+          "descripcion": "E33",
+          "cantidad_referencia": "F33",
+          "precio_lista": "G33",
+          "descuento": "H33",
+          "total_calculado": "I33"
+        },
+        "orden_nivel": 3
+      }
+    ],
+    "ha_dr": [
+      {
+        "sku": "FSM-MSSP-DR-LIC-001-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages 1-149 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise. Bill for Disaster and Recovery Instance only, must also be Billed for Primary Instance.",
+        "categoria": "ha_dr",
+        "precio_unitario_lista": "10.21",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 36,
+          "sku": "D36",
+          "descripcion": "E36",
+          "cantidad_referencia": "F36",
+          "precio_lista": "G36",
+          "descuento": "H36",
+          "total_calculado": "I36"
+        },
+        "orden_nivel": 1
+      },
+      {
+        "sku": "FSM-MSSP-DR-LIC-150-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 150 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise. Bill for Disaster and Recovery Instance only, must also be Billed for Primary Instance.",
+        "categoria": "ha_dr",
+        "precio_unitario_lista": "8.00",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 37,
+          "sku": "D37",
+          "descripcion": "E37",
+          "cantidad_referencia": "F37",
+          "precio_lista": "G37",
+          "descuento": "H37",
+          "total_calculado": "I37"
+        },
+        "orden_nivel": 2
+      },
+      {
+        "sku": "FSM-MSSP-DR-LIC-500-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 500 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise. Bill for Disaster and Recovery Instance only, must also be Billed for Primary Instance.",
+        "categoria": "ha_dr",
+        "precio_unitario_lista": "6.54",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 38,
+          "sku": "D38",
+          "descripcion": "E38",
+          "cantidad_referencia": "F38",
+          "precio_lista": "G38",
+          "descuento": "H38",
+          "total_calculado": "I38"
+        },
+        "orden_nivel": 3
+      },
+      {
+        "sku": "FSM-MSSP-DR-LIC-01K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 1,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise. Bill for Disaster and Recovery Instance only, must also be Billed for Primary Instance.",
+        "categoria": "ha_dr",
+        "precio_unitario_lista": "5.72",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 39,
+          "sku": "D39",
+          "descripcion": "E39",
+          "cantidad_referencia": "F39",
+          "precio_lista": "G39",
+          "descuento": "H39",
+          "total_calculado": "I39"
+        },
+        "orden_nivel": 4
+      },
+      {
+        "sku": "FSM-MSSP-DR-LIC-02K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 2,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise. Bill for Disaster and Recovery Instance only, must also be Billed for Primary Instance.",
+        "categoria": "ha_dr",
+        "precio_unitario_lista": "5.01",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 40,
+          "sku": "D40",
+          "descripcion": "E40",
+          "cantidad_referencia": "F40",
+          "precio_lista": "G40",
+          "descuento": "H40",
+          "total_calculado": "I40"
+        },
+        "orden_nivel": 5
+      },
+      {
+        "sku": "FSM-MSSP-DR-LIC-05K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 5,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise. Bill for Disaster and Recovery Instance only, must also be Billed for Primary Instance.",
+        "categoria": "ha_dr",
+        "precio_unitario_lista": "4.22",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 41,
+          "sku": "D41",
+          "descripcion": "E41",
+          "cantidad_referencia": "F41",
+          "precio_lista": "G41",
+          "descuento": "H41",
+          "total_calculado": "I41"
+        },
+        "orden_nivel": 6
+      },
+      {
+        "sku": "FSM-MSSP-DR-LIC-10K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 10,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise. Bill for Disaster and Recovery Instance only, must also be Billed for Primary Instance.",
+        "categoria": "ha_dr",
+        "precio_unitario_lista": "3.41",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 42,
+          "sku": "D42",
+          "descripcion": "E42",
+          "cantidad_referencia": "F42",
+          "precio_lista": "G42",
+          "descuento": "H42",
+          "total_calculado": "I42"
+        },
+        "orden_nivel": 7
+      },
+      {
+        "sku": "FSM-MSSP-DR-LIC-15K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 15,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise. Bill for Disaster and Recovery Instance only, must also be Billed for Primary Instance.",
+        "categoria": "ha_dr",
+        "precio_unitario_lista": "3.07",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 43,
+          "sku": "D43",
+          "descripcion": "E43",
+          "cantidad_referencia": "F43",
+          "precio_lista": "G43",
+          "descuento": "H43",
+          "total_calculado": "I43"
+        },
+        "orden_nivel": 8
+      },
+      {
+        "sku": "FSM-MSSP-DR-LIC-20K-BILL",
+        "descripcion_excel": "MSSP: Per Device Subscription License that manages minimum 20,000 devices. Includes Maintenance & Support and FortiSIEM Indicators of Compromise. Bill for Disaster and Recovery Instance only, must also be Billed for Primary Instance.",
+        "categoria": "ha_dr",
+        "precio_unitario_lista": "2.68",
+        "descuento_fraccion_excel": "0",
+        "periodicidad": "mensual",
+        "unidad": "dispositivo",
+        "referencia_excel": {
+          "hoja": "FortiSIEM MSSP",
+          "fila": 44,
+          "sku": "D44",
+          "descripcion": "E44",
+          "cantidad_referencia": "F44",
+          "precio_lista": "G44",
+          "descuento": "H44",
+          "total_calculado": "I44"
+        },
+        "orden_nivel": 9
+      }
+    ]
+  }
+}

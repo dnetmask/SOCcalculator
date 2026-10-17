@@ -1,0 +1,309 @@
+{
+  "schema_version": "1.0.0",
+  "reglas_id": "fortisiem-mssp-v4-aritmetica-acordada",
+  "catalogo_id_requerido": "fortisiem-mssp-graph-v4-excel",
+  "proposito": "Costo global del licenciamiento del proveedor MSSP con consumo agregado de todos sus clientes.",
+  "fuentes": [
+    {
+      "tipo": "archivo",
+      "nombre": "FortiSIEM MSSP Graph v4.xlsx",
+      "hoja": "FortiSIEM MSSP",
+      "rango": "D6:I44",
+      "contenido": "SKUs, precios, descuentos y descripciones"
+    },
+    {
+      "tipo": "archivo",
+      "nombre": "FortiSIEM MSSP Graph v4.xlsx",
+      "hoja": "Costo vs usuarios",
+      "rango": "C17:AM27",
+      "contenido": "Datos de entrada de escenario, condiciones IF de selección, cuotas anuales y facturación a mes vencido"
+    },
+    {
+      "tipo": "aclaraciones_usuario",
+      "fecha": "2026-09-22",
+      "contenido": "Mínimos de agentes y UEBA obligatorios incluso con entrada cero; 150 dispositivos permanece en primer nivel; HA/DR se interpreta por su ecuación, no por la descripción del SKU; cálculo exclusivamente global del MSSP."
+    }
+  ],
+  "unidad_de_calculo": {
+    "ambito": "mssp_global",
+    "acumulacion_clientes": "suma_de_cantidades_por_componente",
+    "costeo_por_cliente": false
+  },
+  "calculo_monetario": {
+    "precio_base": "precio_unitario_lista",
+    "descuento": "descuento_fraccion_excel",
+    "formula": "cantidad_facturable * precio_unitario_lista * (1 - descuento_fraccion_excel)",
+    "tipos_python_previstos": "decimal.Decimal",
+    "redondeo_presentacion": "0.01",
+    "modelo_niveles": "una_sola_tarifa_para_todas_las_unidades; no_tramos_progresivos",
+    "fuente_excel": "'FortiSIEM MSSP'!F6:I44 y 'Costo vs usuarios'!C22:AM25"
+  },
+  "entradas": {
+    "dispositivos": {
+      "tipo": "entero_no_negativo",
+      "cantidad_minima_facturable": 50,
+      "facturable": "max(solicitada, 50)",
+      "origen_excel": "Costo vs usuarios!C18:AM18 y C22:AM22"
+    },
+    "agentes_avanzados": {
+      "tipo": "entero_no_negativo",
+      "cantidad_minima_facturable": 50,
+      "facturable": "max(solicitada, 50)",
+      "cobro_obligatorio_con_entrada_cero": true,
+      "origen_excel": "Costo vs usuarios!C19:AM19 y C23:AM23"
+    },
+    "ueba": {
+      "tipo": "entero_no_negativo",
+      "cantidad_minima_facturable": 25,
+      "facturable": "max(solicitada, 25)",
+      "cobro_obligatorio_con_entrada_cero": true,
+      "origen_excel": "Costo vs usuarios!C20:AM20 y C24:AM24"
+    },
+    "ha_dr_dispositivos": {
+      "tipo": "entero_no_negativo",
+      "cantidad_minima_facturable": 0,
+      "facturable": "solicitada",
+      "si_no_se_contrata": 0,
+      "cantidad_explicita_por_periodo": true,
+      "no_inferir_automaticamente_del_total_de_dispositivos": true,
+      "origen_excel": "Costo vs usuarios!C21:AM21 y C25:AM25",
+      "observacion": "El desplegable B21 con valores Si/No no alimenta las cantidades C21:AM21; la ecuación toma el entero de cada periodo."
+    }
+  },
+  "seleccion_tarifas": {
+    "dispositivos": {
+      "variable": "dispositivos",
+      "evaluar_con": "cantidad_facturable",
+      "rangos_ordenados_primera_coincidencia": [
+        {
+          "desde_inclusive": 0,
+          "hasta_inclusive": 150,
+          "sku": "FSM-MSSP-LIC-001-BILL",
+          "fila_precio_excel": 10
+        },
+        {
+          "desde_inclusive": 151,
+          "hasta_inclusive": 500,
+          "sku": "FSM-MSSP-LIC-150-BILL",
+          "fila_precio_excel": 11
+        },
+        {
+          "desde_inclusive": 501,
+          "hasta_inclusive": 1000,
+          "sku": "FSM-MSSP-LIC-500-BILL",
+          "fila_precio_excel": 12
+        },
+        {
+          "desde_inclusive": 1001,
+          "hasta_inclusive": 2000,
+          "sku": "FSM-MSSP-LIC-01K-BILL",
+          "fila_precio_excel": 13
+        },
+        {
+          "desde_inclusive": 2001,
+          "hasta_inclusive": 5000,
+          "sku": "FSM-MSSP-LIC-02K-BILL",
+          "fila_precio_excel": 14
+        },
+        {
+          "desde_inclusive": 5001,
+          "hasta_inclusive": 10000,
+          "sku": "FSM-MSSP-LIC-05K-BILL",
+          "fila_precio_excel": 15
+        },
+        {
+          "desde_inclusive": 10001,
+          "hasta_inclusive": 15000,
+          "sku": "FSM-MSSP-LIC-10K-BILL",
+          "fila_precio_excel": 16
+        },
+        {
+          "desde_inclusive": 15001,
+          "hasta_inclusive": 20000,
+          "sku": "FSM-MSSP-LIC-15K-BILL",
+          "fila_precio_excel": 17
+        },
+        {
+          "desde_inclusive": 20001,
+          "hasta_inclusive": null,
+          "sku": "FSM-MSSP-LIC-20K-BILL",
+          "fila_precio_excel": 18
+        }
+      ],
+      "origen_formula": "Costo vs usuarios!C22:AM22"
+    },
+    "agentes_avanzados": {
+      "variable": "agentes_avanzados",
+      "evaluar_con": "cantidad_facturable",
+      "rangos_ordenados_primera_coincidencia": [
+        {
+          "desde_inclusive": 0,
+          "hasta_inclusive": 150,
+          "sku": "FSM-MSSP-AGT-001-BILL",
+          "fila_precio_excel": 22
+        },
+        {
+          "desde_inclusive": 151,
+          "hasta_inclusive": 500,
+          "sku": "FSM-MSSP-AGT-150-BILL",
+          "fila_precio_excel": 23
+        },
+        {
+          "desde_inclusive": 501,
+          "hasta_inclusive": 1000,
+          "sku": "FSM-MSSP-AGT-500-BILL",
+          "fila_precio_excel": 24
+        },
+        {
+          "desde_inclusive": 1001,
+          "hasta_inclusive": 2000,
+          "sku": "FSM-MSSP-AGT-01K-BILL",
+          "fila_precio_excel": 25
+        },
+        {
+          "desde_inclusive": 2001,
+          "hasta_inclusive": 5000,
+          "sku": "FSM-MSSP-AGT-02K-BILL",
+          "fila_precio_excel": 26
+        },
+        {
+          "desde_inclusive": 5001,
+          "hasta_inclusive": null,
+          "sku": "FSM-MSSP-AGT-05K-BILL",
+          "fila_precio_excel": 27
+        }
+      ],
+      "origen_formula": "Costo vs usuarios!C23:AM23"
+    },
+    "ueba": {
+      "variable": "ueba",
+      "evaluar_con": "cantidad_facturable",
+      "rangos_ordenados_primera_coincidencia": [
+        {
+          "desde_inclusive": 0,
+          "hasta_inclusive": 500,
+          "sku": "FSM-MSSP-UEBA-025-BILL",
+          "fila_precio_excel": 31
+        },
+        {
+          "desde_inclusive": 501,
+          "hasta_inclusive": 10000,
+          "sku": "FSM-MSSP-UEBA-500-BILL",
+          "fila_precio_excel": 32
+        },
+        {
+          "desde_inclusive": 10001,
+          "hasta_inclusive": null,
+          "sku": "FSM-MSSP-UEBA-10K-BILL",
+          "fila_precio_excel": 33
+        }
+      ],
+      "origen_formula": "Costo vs usuarios!C24:AM24"
+    },
+    "ha_dr": {
+      "variable": "ha_dr_dispositivos",
+      "evaluar_con": "cantidad_facturable",
+      "rangos_ordenados_primera_coincidencia": [
+        {
+          "desde_inclusive": 0,
+          "hasta_inclusive": 149,
+          "sku": "FSM-MSSP-DR-LIC-001-BILL",
+          "fila_precio_excel": 36
+        },
+        {
+          "desde_inclusive": 151,
+          "hasta_inclusive": 499,
+          "sku": "FSM-MSSP-DR-LIC-150-BILL",
+          "fila_precio_excel": 37
+        },
+        {
+          "desde_inclusive": 500,
+          "hasta_inclusive": 999,
+          "sku": "FSM-MSSP-DR-LIC-500-BILL",
+          "fila_precio_excel": 38
+        },
+        {
+          "desde_inclusive": 1000,
+          "hasta_inclusive": 1999,
+          "sku": "FSM-MSSP-DR-LIC-01K-BILL",
+          "fila_precio_excel": 39
+        },
+        {
+          "desde_inclusive": 2000,
+          "hasta_inclusive": 4999,
+          "sku": "FSM-MSSP-DR-LIC-02K-BILL",
+          "fila_precio_excel": 40
+        },
+        {
+          "desde_inclusive": 5000,
+          "hasta_inclusive": 9999,
+          "sku": "FSM-MSSP-DR-LIC-05K-BILL",
+          "fila_precio_excel": 41
+        },
+        {
+          "desde_inclusive": 10000,
+          "hasta_inclusive": 14999,
+          "sku": "FSM-MSSP-DR-LIC-10K-BILL",
+          "fila_precio_excel": 42
+        },
+        {
+          "desde_inclusive": 19999,
+          "hasta_inclusive": null,
+          "sku": "FSM-MSSP-DR-LIC-15K-BILL",
+          "fila_precio_excel": 43
+        }
+      ],
+      "origen_formula": "Costo vs usuarios!C25:AM25"
+    }
+  },
+  "ha_dr_compatibilidad_excel": {
+    "modo": "reproducir_orden_de_condiciones_de_la_formula_original",
+    "rango_sin_tarifa_numerica": [
+      {
+        "desde_inclusive": 150,
+        "hasta_inclusive": 150
+      },
+      {
+        "desde_inclusive": 15000,
+        "hasta_inclusive": 19998
+      }
+    ],
+    "accion_si_no_hay_tarifa": "señalar_error_de_modelo_y_no_emitir_costo_inventado",
+    "sku_definido_en_catalogo_pero_inalcanzable_por_formula": "FSM-MSSP-DR-LIC-20K-BILL",
+    "explicacion": "El IF de >=19999 selecciona el SKU de 15K antes del IF de >=20000, haciendo inalcanzable el de 20K. Para valores sin rama aplicable, el IF de Excel no devuelve una tarifa monetaria. No se corrigen los intervalos sin una nueva regla acordada.",
+    "fuente_excel": "Costo vs usuarios!C25:AM25; FortiSIEM MSSP!D43:I44"
+  },
+  "facturacion": {
+    "cuota_programa": {
+      "sku": "FC-10-FSMUL-946-02-12",
+      "periodicidad_meses": 12,
+      "primer_mes": 1,
+      "meses_de_la_plantilla": [
+        1,
+        13,
+        25,
+        37
+      ],
+      "origen_excel": "Costo vs usuarios!C26:AM26"
+    },
+    "consumo": {
+      "periodicidad": "mensual",
+      "desfase_facturacion_meses": 1,
+      "mes_1_sin_consumo_previo": true,
+      "origen_excel": "Costo vs usuarios!C22:AM25 y C27:E27"
+    },
+    "formula_factura_mes_n": "cuota_programa_si_corresponde_mes_n + consumo_total_del_mes_(n-1); para n=1 no hay consumo previo",
+    "nota_horizonte": "La plantilla muestra 37 meses: factura del primer mes con cuota anual; el consumo del mes 36 se factura en el mes 37, junto con la renovación del año 4. Si la proyección muestra n meses de consumo, distinguir el total consumido y la facturación observada de n o n+1 meses."
+  },
+  "escenario_inicial_excel": {
+    "mes": 1,
+    "dispositivos": 50,
+    "agentes_avanzados": 0,
+    "ueba": 0,
+    "ha_dr_dispositivos": 0,
+    "consumo_mes_usd": "1655.00",
+    "factura_mes_1_usd": "5000.00",
+    "factura_mes_2_si_se_mantiene_consumo_usd": "1655.00",
+    "referencia": "Costo vs usuarios!C17:D27"
+  }
+}

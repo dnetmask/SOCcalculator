@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0.0",
+  "moneda": "USD",
+  "descripcion": "Supuestos de costo del servicio SOC Netmask para calcular el precio de punto de equilibrio. Todos los importes son mensuales salvo que se indique. Reemplazar los marcados como supuesto por valores reales de nómina y facturación Azure.",
+  "clientes_punto_equilibrio": 3,
+  "tasa_cambio_cop_por_usd": "4000",
+  "plan_base": {
+    "dispositivos_incluidos": 25,
+    "agentes_avanzados_incluidos": 0,
+    "nota": "Dispositivo = fuente de log facturable en FortiSIEM (firewall, switch, servidor, consola EDR...). La POC SOC OT contempla máximo 12 fuentes."
+  },
+  "costos_fijos_mensuales": [
+    {
+      "concepto": "Azure consumo base: 2 VM FortiSIEM MSSP (Supervisor + Worker)",
+      "importe": "400",
+      "origen": "dato Netmask"
+    },
+    {
+      "concepto": "Herramientas SOC (ticketing, threat intel, acceso remoto)",
+      "importe": "150",
+      "origen": "supuesto"
+    }
+  ],
+  "costos_variables_por_cliente_mensuales": [
+    {
+      "concepto": "Azure almacenamiento de eventos por cliente",
+      "importe": "200",
+      "origen": "dato Netmask"
+    }
+  ],
+  "opciones_colector": {
+    "nota": "Opcional por cliente; no entra al punto de equilibrio porque se cobra aparte. Precio = costo / (1 - margen).",
+    "margen": "0",
+    "opciones": [
+      {"opcion": "VM o servidor del cliente", "costo_mensual": "0", "origen": "dato Netmask"},
+      {"opcion": "NUC industrial on-prem (USD 1500 financiado en 6 cuotas)", "costo_total": "1500", "cuotas": 6, "origen": "dato Netmask"},
+      {"opcion": "Colector en Azure", "costo_mensual": "200", "origen": "dato Netmask"}
+    ]
+  },
+  "factor_prestacional": "1.52",
+  "disponibilidad_fuera_de_horario_cop": "1500000",
+  "escenario_personal": "completo",
+  "escenarios_personal": {
+    "completo": {
+      "descripcion": "SOC OT con los dos equipos de la POC (incidentes y vulnerabilidades), horario extendido 8x5 + disponibilidad.",
+      "roles": [
+        {"rol": "Analista SOC N1 (monitoreo y triage)", "modulo": "incidentes", "cantidad": 2, "salario_mensual_cop": "5500000", "dedicacion": "1"},
+        {"rol": "Analista SOC N2 / respuesta a incidentes", "modulo": "incidentes", "cantidad": 1, "salario_mensual_cop": "9000000", "dedicacion": "1"},
+        {"rol": "Analista de vulnerabilidades OT", "modulo": "vulnerabilidades", "cantidad": 1, "salario_mensual_cop": "8000000", "dedicacion": "1"},
+        {"rol": "Ingeniero de plataforma FortiSIEM", "modulo": "compartido", "cantidad": 1, "salario_mensual_cop": "9000000", "dedicacion": "0.5"},
+        {"rol": "Líder SOC", "modulo": "compartido", "cantidad": 1, "salario_mensual_cop": "14000000", "dedicacion": "0.3"}
+      ]
+    },
+    "esbelto": {
+      "descripcion": "Arranque con equipo mínimo 8x5 + disponibilidad; vulnerabilidades a media dedicación.",
+      "roles": [
+        {"rol": "Analista SOC N1 (monitoreo y triage)", "modulo": "incidentes", "cantidad": 1, "salario_mensual_cop": "5500000", "dedicacion": "1"},
+        {"rol": "Analista SOC N2 / respuesta a incidentes", "modulo": "incidentes", "cantidad": 1, "salario_mensual_cop": "9000000", "dedicacion": "1"},
+        {"rol": "Analista de vulnerabilidades OT", "modulo": "vulnerabilidades", "cantidad": 1, "salario_mensual_cop": "8000000", "dedicacion": "0.5"},
+        {"rol": "Ingeniero de plataforma FortiSIEM", "modulo": "compartido", "cantidad": 1, "salario_mensual_cop": "9000000", "dedicacion": "0.3"},
+        {"rol": "Líder SOC", "modulo": "compartido", "cantidad": 1, "salario_mensual_cop": "14000000", "dedicacion": "0.2"}
+      ]
+    }
+  },
+  "contingencia_fraccion": "0.10",
+  "redondeo_precio_lista": "50",
+  "adicionales": {
+    "margen_dispositivo_adicional": "0.50",
+    "margen_agente_adicional": "0.50",
+    "nota": "Precio adicional = costo unitario de licencia del primer nivel (el más caro) / (1 - margen)."
+  },
+  "capacidad_max_clientes_sin_contratar": 6,
+  "estimador_almacenamiento": {
+    "nota": "Referencia para validar el costo de almacenamiento por cliente a partir de EPS; no entra al punto de equilibrio.",
+    "bytes_por_evento": 500,
+    "fraccion_tras_compresion": "0.15",
+    "retencion_dias": 365,
+    "costo_gb_mes_usd": "0.15"
+  }
+}
