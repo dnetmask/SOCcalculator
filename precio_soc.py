@@ -95,7 +95,12 @@ class FilaSensibilidad:
 class OpcionColector:
     opcion: str
     precio_mensual: Decimal
-    cuotas: int | None  # None = cargo recurrente mientras dure el servicio
+    meses_cobro: int | None  # None = cargo recurrente mientras dure el servicio
+    costo_total: Decimal | None = None
+
+    @property
+    def total_cobrado(self) -> Decimal | None:
+        return None if self.meses_cobro is None else self.precio_mensual * self.meses_cobro
 
 
 class ModeloPrecioSOC:
@@ -153,9 +158,10 @@ class ModeloPrecioSOC:
                 raise ErrorModelo("opciones_colector.margen debe estar en [0, 1)")
             for op in s["opciones_colector"]["opciones"]:
                 if ("costo_total" in op) == ("costo_mensual" in op):
-                    raise ErrorModelo(f"Colector {op['opcion']!r}: indicar costo_total+cuotas o costo_mensual")
-                if "costo_total" in op and _entero_no_negativo(op["cuotas"], "cuotas") < 1:
-                    raise ErrorModelo(f"Colector {op['opcion']!r}: cuotas debe ser al menos 1")
+                    raise ErrorModelo(f"Colector {op['opcion']!r}: indicar costo_total o costo_mensual")
+                if "costo_total" in op and min(_entero_no_negativo(op["divisor_mensual"], "divisor_mensual"),
+                                               _entero_no_negativo(op["meses_cobro"], "meses_cobro")) < 1:
+                    raise ErrorModelo(f"Colector {op['opcion']!r}: divisor_mensual y meses_cobro deben ser al menos 1")
                 if _decimal(op.get("costo_total", op.get("costo_mensual")), "costo_colector") < 0:
                     raise ErrorModelo(f"Colector {op['opcion']!r}: costo negativo")
             _entero_no_negativo(s["capacidad_max_clientes_sin_contratar"], "capacidad_max_clientes_sin_contratar")
@@ -231,16 +237,17 @@ class ModeloPrecioSOC:
         )
 
     def opciones_colector(self) -> list[OpcionColector]:
-        """Colector por cliente, cobrado aparte del plan: NUC financiado en cuotas o cargo mensual."""
+        """Colector por cliente, cobrado aparte del plan: NUC (costo/divisor durante meses_cobro) o cargo mensual."""
         cfg = self.s["opciones_colector"]
         factor = 1 - _decimal(cfg["margen"], "margen_colector")
         opciones = []
         for op in cfg["opciones"]:
             if "costo_total" in op:
-                mensual, cuotas = _decimal(op["costo_total"], "costo_total") / op["cuotas"], op["cuotas"]
+                total = _decimal(op["costo_total"], "costo_total")
+                opciones.append(OpcionColector(op["opcion"], _redondear_arriba(total / op["divisor_mensual"], CENTAVO), op["meses_cobro"], total))
             else:
-                mensual, cuotas = _decimal(op["costo_mensual"], "costo_mensual"), None
-            opciones.append(OpcionColector(op["opcion"], _redondear_arriba(mensual / factor, CENTAVO), cuotas))
+                mensual = _decimal(op["costo_mensual"], "costo_mensual")
+                opciones.append(OpcionColector(op["opcion"], _redondear_arriba(mensual / factor, CENTAVO), None))
         return opciones
 
     def sensibilidad(self, precio_mensual: Decimal, hasta_clientes: int = 10, escenario: str | None = None) -> list[FilaSensibilidad]:
@@ -320,9 +327,11 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         "",
         "## Colector FortiSIEM (opcional, se cobra aparte del plan)",
         "",
-        "| Opción | Mensual por cliente | Duración del cargo |",
-        "|---|---:|---|",
-        *[f"| {o.opcion} | {_m(o.precio_mensual)} | {f'{o.cuotas} cuotas' if o.cuotas else 'recurrente'} |"
+        "| Opción | Cargo adicional mensual | Duración del cargo | Total cobrado vs costo |",
+        "|---|---:|---|---|",
+        *[f"| {o.opcion} | {_m(o.precio_mensual)} | "
+          f"{f'{o.meses_cobro} meses' if o.meses_cobro else 'recurrente'} | "
+          f"{f'{_m(o.total_cobrado)} vs {_m(o.costo_total)}' if o.costo_total is not None else '—'} |"
           for o in modelo.opciones_colector()],
     ]
     alm = modelo.estimar_almacenamiento(200)

@@ -58,9 +58,9 @@ class TestPrecioSOC(unittest.TestCase):
     def test_opciones_colector(self):
         ops = {o.opcion: o for o in self.modelo.opciones_colector()}
         nuc = next(o for nombre, o in ops.items() if nombre.startswith("NUC"))
-        self.assertEqual((nuc.precio_mensual, nuc.cuotas), (Decimal("250.00"), 6))
+        self.assertEqual((nuc.precio_mensual, nuc.meses_cobro, nuc.total_cobrado), (Decimal("250.00"), 12, Decimal("3000.00")))
         self.assertEqual(ops["Colector en Azure"].precio_mensual, Decimal("200.00"))
-        self.assertIsNone(ops["Colector en Azure"].cuotas)
+        self.assertIsNone(ops["Colector en Azure"].meses_cobro)
 
     def test_colector_no_entra_al_punto_de_equilibrio(self):
         s = supuestos()
@@ -76,7 +76,7 @@ class TestPrecioSOC(unittest.TestCase):
             lambda s: s.update(clientes_punto_equilibrio=0),
             lambda s: s.update(escenario_personal="inexistente"),
             lambda s: s["adicionales"].update(margen_dispositivo_adicional="1"),
-            lambda s: s["opciones_colector"]["opciones"][1].update(cuotas=0),
+            lambda s: s["opciones_colector"]["opciones"][1].update(meses_cobro=0),
             lambda s: s["escenarios_personal"]["completo"]["roles"][0].update(modulo="otro"),
             lambda s: s.pop("factor_prestacional"),
         ):

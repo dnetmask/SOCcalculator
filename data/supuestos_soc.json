@@ -29,11 +29,11 @@
     }
   ],
   "opciones_colector": {
-    "nota": "Opcional por cliente; no entra al punto de equilibrio porque se cobra aparte. Precio = costo / (1 - margen).",
+    "nota": "Opcional por cliente; no entra al punto de equilibrio porque se cobra aparte. NUC: cargo mensual = costo_total / divisor_mensual durante meses_cobro. Otras: costo_mensual / (1 - margen).",
     "margen": "0",
     "opciones": [
       {"opcion": "VM o servidor del cliente", "costo_mensual": "0", "origen": "dato Netmask"},
-      {"opcion": "NUC industrial on-prem (USD 1500 financiado en 6 cuotas)", "costo_total": "1500", "cuotas": 6, "origen": "dato Netmask"},
+      {"opcion": "NUC industrial on-prem (costo USD 1500)", "costo_total": "1500", "divisor_mensual": 6, "meses_cobro": 12, "origen": "dato Netmask: cargo mensual = costo/6, adicionado a la mensualidad durante 12 meses"},
       {"opcion": "Colector en Azure", "costo_mensual": "200", "origen": "dato Netmask"}
     ]
   },

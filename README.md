@@ -1,41 +1,44 @@
 # SOC Calculator — Netmask
 
-The base is the FortiSIEM MSSP licensing calculator built by the SOC lead (`core.py`, `storage.py`, `ui.py`, `data/precios.json`, `data/reglas.json`). On top of it sits `precio_soc.py`, which estimates **what to charge clients for the SOC service** so that it **reaches break-even with 3 clients**.
+La base es la calculadora de licenciamiento FortiSIEM MSSP del líder del SOC (`core.py`, `storage.py`, `ui.py`, `data/precios.json`, `data/reglas.json`). Sobre ella, `precio_soc.py` estima **cuánto cobrar a los clientes por el servicio SOC** para que el servicio **llegue al punto de equilibrio con 3 clientes**.
 
-## Pricing model
+## Modelo de precio
 
-- **SOC base plan (monthly per client)**: incident management + platform, includes **25 devices** (`plan_base`).
-- **OT vulnerability management module**: priced separately, covers the vulnerability team's cost.
-- **Additional device / agent**: tier-1 FortiSIEM license cost (the most expensive) / (1 − margin).
-- **Collector (optional, billed outside the plan)**: client VM or server (no cost), industrial NUC USD 1,500 financed in 6 installments (USD 250/month), or a collector in Azure (USD 200/month).
+- **Plan SOC base (mensual por cliente)**: gestión de incidentes + plataforma; incluye **25 dispositivos** (`plan_base`).
+- **Módulo de gestión de vulnerabilidades OT**: precio aparte; cubre el costo del equipo de vulnerabilidades.
+- **Dispositivo / agente adicional**: costo de licencia FortiSIEM del primer nivel (el más caro) / (1 − margen).
+- **Colector (opcional, se cobra aparte del plan)**:
+  - VM o servidor del cliente: sin costo.
+  - NUC industrial de USD 1.500: cargo adicional de USD 250/mes (costo/6) durante 12 meses.
+  - Colector en Azure: USD 200/mes.
 
-Monthly cost with N clients:
+Costo mensual con N clientes:
 
 ```
-personnel (salary COP × benefits load factor / exchange rate) + on-call
-+ fixed costs (Azure base for 2 VMs USD 400, tools)
-+ FortiSIEM annual program fee / 12 (USD 5,000 / 12)
-+ FortiSIEM licenses on the aggregate devices of all clients (core.py engine)
-+ N × variable cost per client (Azure storage USD 200)
-+ contingency 10%
+personal (salario COP × factor prestacional / TRM) + disponibilidad
++ costos fijos (Azure base 2 VM USD 400, herramientas)
++ cuota anual del programa FortiSIEM / 12 (USD 5.000 / 12)
++ licencias FortiSIEM sobre los dispositivos agregados de todos los clientes (motor core.py)
++ N × costo variable por cliente (almacenamiento Azure USD 200)
++ contingencia 10 %
 ```
 
-Break-even price = cost(3) / 3, rounded up to multiples of USD 50.
+Precio de equilibrio = costo(3) / 3, redondeado hacia arriba a múltiplos de USD 50.
 
-## Usage
+## Uso
 
 ```bash
-python precio_soc.py                       # "completo" scenario, 3 clients
-python precio_soc.py --escenario esbelto   # minimal team
+python precio_soc.py                       # escenario "completo", 3 clientes
+python precio_soc.py --escenario esbelto   # equipo mínimo
 python precio_soc.py --clientes 4
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
-All assumptions live in `data/supuestos_soc.json`. Entries marked `"origen": "supuesto"` are estimates that need to be replaced with real payroll figures. The generated reports are in `docs/`.
+Todos los supuestos están en `data/supuestos_soc.json`. Los que tienen `"origen": "supuesto"` son estimaciones que hay que reemplazar por cifras reales de nómina. Los reportes generados están en `docs/`.
 
-## Notes on the sources
+## Observaciones sobre las fuentes
 
-- The licensing engine applies **mandatory minimums** (50 devices, 50 agents, 25 UEBA). That puts a floor of USD 1,655/month in licenses even with 0 agents and 0 UEBA. Fortinet's Business Case Excel does not apply them (it prices 20 devices in Year 1), so this should be confirmed with Fortinet.
-- Pricing tiers apply **a single rate to every unit** of the aggregate: going from 150 to 175 devices lowers the price from 25.52 to 20.01 per device. That is why the total cost drops between 6 and 7 clients.
-- Fortinet's Business Case projects 20 / 50 / 150 devices for years 1, 2 and 3. Three clients on the base plan already add up to 75 devices, so the projection should be updated.
-- In the Business Case Excel, the agent formula maps the 51–150 range to the price in row 88 (USD 2.97, the 1K SKU) because the rows are not sorted. The `core.py` engine uses the correct price (USD 4.97).
+- El motor de licencias aplica **mínimos obligatorios** (50 dispositivos, 50 agentes, 25 UEBA). Eso deja un piso de USD 1.655/mes en licencias aunque haya 0 agentes y 0 UEBA. El Excel de Business Case de Fortinet no los aplica (cotiza 20 dispositivos en el año 1), así que conviene confirmarlo con Fortinet.
+- Los niveles de precio aplican **una sola tarifa a todas las unidades** del agregado: al pasar de 150 a 175 dispositivos, el precio baja de 25,52 a 20,01 por dispositivo. Por eso el costo total baja entre 6 y 7 clientes.
+- El Business Case de Fortinet proyecta 20 / 50 / 150 dispositivos en los años 1, 2 y 3. Con 3 clientes en el plan base ya son 75 dispositivos, así que hay que actualizar la proyección.
+- En el Excel de Business Case, la fórmula de agentes asigna al rango 51–150 el precio de la fila 88 (USD 2,97, el SKU de 1K) porque las filas no están ordenadas. El motor `core.py` usa el precio correcto (USD 4,97).
