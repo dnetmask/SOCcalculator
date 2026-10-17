@@ -7,7 +7,13 @@
   "plan_base": {
     "dispositivos_incluidos": 25,
     "agentes_avanzados_incluidos": 0,
+    "ueba_incluidos": 0,
     "nota": "Dispositivo = fuente de log facturable en FortiSIEM (firewall, switch, servidor, consola EDR...). La POC SOC OT contempla máximo 12 fuentes."
+  },
+  "retencion_base": {
+    "en_linea_dias": 30,
+    "archivado_meses": 11,
+    "nota": "Retención incluida en el plan base: 1 mes de eventos en línea (búsqueda inmediata) y 11 meses archivados (recuperables), 12 meses en total. El costo está en el almacenamiento Azure por cliente."
   },
   "costos_fijos_mensuales": [
     {
@@ -67,14 +73,16 @@
   "adicionales": {
     "margen_dispositivo_adicional": "0.50",
     "margen_agente_adicional": "0.50",
-    "nota": "Precio adicional = costo unitario de licencia del primer nivel (el más caro) / (1 - margen)."
+    "margen_ueba_adicional": "0.50",
+    "nota": "Precio adicional = costo unitario de licencia del primer nivel (el más caro) / (1 - margen). UEBA se licencia por agente avanzado: no puede superar la cantidad de agentes."
   },
   "capacidad_max_clientes_sin_contratar": 6,
   "estimador_almacenamiento": {
-    "nota": "Referencia para validar el costo de almacenamiento por cliente a partir de EPS; no entra al punto de equilibrio.",
+    "nota": "Referencia para validar el costo de almacenamiento por cliente a partir de EPS con la retención base; no entra al punto de equilibrio. Precios Azure supuestos: disco Premium SSD en línea y Blob Cool para archivado.",
+    "eps_referencia": 200,
     "bytes_por_evento": 500,
     "fraccion_tras_compresion": "0.15",
-    "retencion_dias": 365,
-    "costo_gb_mes_usd": "0.15"
+    "costo_gb_mes_en_linea_usd": "0.15",
+    "costo_gb_mes_archivado_usd": "0.02"
   }
 }

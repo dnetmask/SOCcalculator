@@ -54,6 +54,7 @@ class TestPrecioSOC(unittest.TestCase):
         p = self.modelo.precio()
         self.assertEqual(p.precio_dispositivo_adicional, Decimal("52.00"))  # 25.52 / 0.5 redondeado arriba
         self.assertEqual(p.precio_agente_adicional, Decimal("10.00"))
+        self.assertEqual(p.precio_ueba_adicional, Decimal("11.00"))  # 5.22 / 0.5 redondeado arriba
 
     def test_opciones_colector(self):
         ops = {o.opcion: o for o in self.modelo.opciones_colector()}
@@ -69,7 +70,9 @@ class TestPrecioSOC(unittest.TestCase):
 
     def test_estimador_almacenamiento(self):
         r = self.modelo.estimar_almacenamiento(200)
-        self.assertEqual(r["gb_retenidos"], Decimal("473"))
+        # 200 EPS x 500 B x 86400 = 8.64 GB/día; x 0.15 = 1.296 GB/día; 30 días en línea y 330 archivados
+        self.assertEqual((r["gb_en_linea"], r["gb_archivado"]), (Decimal("39"), Decimal("428")))
+        self.assertEqual(r["costo_mensual"], Decimal("14.39"))
 
     def test_validaciones(self):
         for mutar in (

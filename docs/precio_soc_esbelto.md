@@ -2,6 +2,7 @@
 
 Escenario de personal: **esbelto** — Arranque con equipo mínimo 8x5 + disponibilidad; vulnerabilidades a media dedicación.
 Plan base por cliente: 25 dispositivos, 0 agentes avanzados. TRM supuesta: 4000 COP/USD.
+Retención base de eventos: 30 días en línea + 11 meses archivados.
 
 ## Precio propuesto (mensual por cliente, USD)
 
@@ -12,6 +13,7 @@ Plan base por cliente: 25 dispositivos, 0 agentes avanzados. TRM supuesta: 4000 
 | **SOC OT completo** | **$4,896.71** | **$4,950.00** |
 | Dispositivo adicional | — | $52.00 |
 | Agente avanzado adicional | — | $10.00 |
+| UEBA por agente avanzado (opcional) | — | $11.00 |
 
 ## Costos mensuales con 3 clientes (75 dispositivos agregados en FortiSIEM)
 
@@ -54,7 +56,7 @@ Plan base por cliente: 25 dispositivos, 0 agentes avanzados. TRM supuesta: 4000 
 | NUC industrial on-prem | $250.00 | 12 meses | $3,000.00 vs $1,500.00 |
 | Colector en Azure | $200.00 | recurrente | — |
 
-## Referencia: almacenamiento por EPS
+## Referencia: almacenamiento con la retención base
 
-Un cliente con 200 EPS promedio genera ~8.6 GB/día crudos; con compresión al 15% y 365 días de retención son ~473 GB → $70.96/mes a $0.15/GB-mes.
+Un cliente con 200 EPS promedio genera ~8.6 GB/día crudos. Con compresión al 15% mantiene ~39 GB en línea ($0.15/GB-mes) y ~428 GB archivados ($0.02/GB-mes): $14.39/mes. El presupuesto de almacenamiento por cliente cubre ~2781 EPS.
 

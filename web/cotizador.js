@@ -149,14 +149,18 @@
         dispositivosIncluidos: s.plan_base.dispositivos_incluidos,
         agentesIncluidos: s.plan_base.agentes_avanzados_incluidos,
         precioDispositivo: precioAdicional("dispositivos", "margen_dispositivo_adicional"),
+        uebaIncluidos: s.plan_base.ueba_incluidos || 0,
         precioAgente: precioAdicional("agentes_avanzados", "margen_agente_adicional"),
+        precioUeba: precioAdicional("ueba", "margen_ueba_adicional"),
         costoDispositivo: costoUnitarioPrimerNivel("dispositivos"),
         costoAgente: costoUnitarioPrimerNivel("agentes_avanzados"),
+        costoUeba: costoUnitarioPrimerNivel("ueba"),
+        retencion: { enLineaDias: s.retencion_base.en_linea_dias, archivadoMeses: s.retencion_base.archivado_meses },
       };
     }
 
     /* Oferta para un cliente.
-     * seleccion: { dispositivos, agentes, vulnerabilidades: bool, colector: id,
+     * seleccion: { dispositivos, agentes, ueba (≤ agentes), vulnerabilidades: bool, colector: id,
      *              descuento: fracción sobre servicios SOC, plazoMeses,
      *              clientesEquilibrio, escenario }
      */
@@ -164,6 +168,9 @@
       const p = precio(seleccion.clientesEquilibrio, seleccion.escenario);
       const extraDisp = Math.max(0, (seleccion.dispositivos || 0) - p.dispositivosIncluidos);
       const extraAg = Math.max(0, (seleccion.agentes || 0) - p.agentesIncluidos);
+      // UEBA se licencia por agente avanzado: nunca más que los agentes del cliente.
+      const ueba = Math.min(Math.max(0, seleccion.ueba || 0), Math.max(seleccion.agentes || 0, 0));
+      const extraUeba = Math.max(0, ueba - p.uebaIncluidos);
       const descuento = Math.min(Math.max(seleccion.descuento || 0, 0), 1);
       const plazo = seleccion.plazoMeses || 12;
 
@@ -182,6 +189,10 @@
       if (extraAg) {
         lineas.push({ id: "agt", concepto: "Agentes avanzados FortiSIEM", cantidad: extraAg,
                       unitario: p.precioAgente, costo: p.costoAgente, descontable: true, meses: null });
+      }
+      if (extraUeba) {
+        lineas.push({ id: "ueba", concepto: "UEBA por agente avanzado", cantidad: extraUeba,
+                      unitario: p.precioUeba, costo: p.costoUeba, descontable: true, meses: null });
       }
       const col = opcionesColector().find((o) => o.id === seleccion.colector);
       if (col && col.precioMensual > 0) {
@@ -204,6 +215,7 @@
       const mesesConCargoTemporal = Math.max(0, ...lineas.filter((l) => l.meses !== null).map((l) => l.mesesEnPlazo));
       return {
         precio: p,
+        uebaAplicado: ueba,
         lineas,
         descuento,
         plazoMeses: plazo,
@@ -230,8 +242,25 @@
       return filas;
     }
 
+    // Almacenamiento de un cliente con la retención base, en régimen estable (desde el mes 12).
+    function estimarAlmacenamiento(eps) {
+      const e = s.estimador_almacenamiento;
+      const r = s.retencion_base;
+      const gbDia = (Math.max(0, eps) * e.bytes_por_evento * 86400) / 1e9;
+      const comprimido = gbDia * num(e.fraccion_tras_compresion);
+      const enLinea = comprimido * r.en_linea_dias;
+      const archivado = comprimido * r.archivado_meses * 30;
+      const costo = enLinea * num(e.costo_gb_mes_en_linea_usd) + archivado * num(e.costo_gb_mes_archivado_usd);
+      const presupuesto = s.costos_variables_por_cliente_mensuales.reduce((a, i) => a + num(i.importe), 0);
+      return {
+        gbDia, gbEnLinea: enLinea, gbArchivado: archivado, costo: dinero(costo), presupuesto,
+        epsCubiertos: costo ? Math.round((presupuesto / costo) * eps) : 0,
+      };
+    }
+
     return {
       supuestos: s,
+      estimarAlmacenamiento,
       escenarios: Object.keys(s.escenarios_personal),
       licencias,
       costos,

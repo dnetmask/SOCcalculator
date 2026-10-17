@@ -7,176 +7,222 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,600..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-/* Layout: configurador a la izquierda, hoja de cotización (orden de trabajo) fija a la derecha. */
+/* Layout: hoja tipo datasheet. Barra blanca con marca, banda navy Netmask, configurador a la izquierda y propuesta fija a la derecha.
+   Netmask aporta navy + cian y la tipografía; FortiSIEM aporta el rojo, reservado a licenciamiento y a la barra de firma. */
 :root {
-  --bg: #eef1f4;
+  --bg: #f4f6f8;
   --surface: #ffffff;
-  --sunken: #f6f8fa;
-  --ink: #142029;
-  --muted: #586773;
-  --line: #d3dae0;
-  --accent: #9a5800;
-  --accent-strong: #c27a12;
-  --accent-soft: #fbecd4;
-  --ok: #1d6f47;
-  --ok-soft: #dcf1e5;
-  --bad: #a8261c;
-  --bad-soft: #fbe2df;
-  --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
-  --f-body: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --f-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  --r: 6px;
+  --sunken: #f4f6f8;
+  --ink: #0a243f;
+  --body: #2c3e4d;
+  --muted: #607080;
+  --line: #e3e7eb;
+  --line-strong: #c7d2dd;
+  --cyan: #0079b0;
+  --cyan-bright: #00aff4;
+  --cyan-soft: #e3f5fd;
+  --red: #da291c;
+  --red-soft: #fde7e5;
+  --band: #0a243f;
+  --band-ink: #ffffff;
+  --ok: #17784a;
+  --ok-soft: #ddf2e6;
+  --bad: #c0261a;
+  --bad-soft: #fde4e1;
+  --f-sans: "Host Grotesk", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e151b; --surface: #16202a; --sunken: #111a22; --ink: #e4eaef; --muted: #93a2af; --line: #2a3742;
-    --accent: #f0a540; --accent-strong: #f0a540; --accent-soft: #3a2a12;
-    --ok: #57c48f; --ok-soft: #12301f; --bad: #ff8a7f; --bad-soft: #3a1714; color-scheme: dark;
+    --bg: #071423; --surface: #0d2136; --sunken: #0a1b2d; --ink: #e8f0f7; --body: #c4d2de; --muted: #8fa3b5;
+    --line: #1c3651; --line-strong: #2a4a69; --cyan: #4fcaff; --cyan-bright: #00aff4; --cyan-soft: #0b3550;
+    --red: #ff5b4f; --red-soft: #3d1613; --band: #0d2a47; --band-ink: #ffffff;
+    --ok: #5fd197; --ok-soft: #0f3324; --bad: #ff7d72; --bad-soft: #3d1613; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e151b; --surface: #16202a; --sunken: #111a22; --ink: #e4eaef; --muted: #93a2af; --line: #2a3742;
-  --accent: #f0a540; --accent-strong: #f0a540; --accent-soft: #3a2a12;
-  --ok: #57c48f; --ok-soft: #12301f; --bad: #ff8a7f; --bad-soft: #3a1714; color-scheme: dark;
+  --bg: #071423; --surface: #0d2136; --sunken: #0a1b2d; --ink: #e8f0f7; --body: #c4d2de; --muted: #8fa3b5;
+  --line: #1c3651; --line-strong: #2a4a69; --cyan: #4fcaff; --cyan-bright: #00aff4; --cyan-soft: #0b3550;
+  --red: #ff5b4f; --red-soft: #3d1613; --band: #0d2a47; --band-ink: #ffffff;
+  --ok: #5fd197; --ok-soft: #0f3324; --bad: #ff7d72; --bad-soft: #3d1613; color-scheme: dark;
 }
 * { box-sizing: border-box; }
-body {
-  margin: 0; background: var(--bg); color: var(--ink);
-  font: 15px/1.5 var(--f-body);
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 24px 48px;
-}
-.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 24px; }
-h1, h2, h3 { font-family: var(--f-display); font-stretch: 85%; margin: 0; text-wrap: balance; }
-h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.01em; }
-h2 { font-size: 1.15rem; font-weight: 700; }
-.eyebrow { font: 500 0.72rem/1.2 var(--f-data); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+body { margin: 0; background: var(--bg); color: var(--body); font: 15px/1.55 var(--f-sans); }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: 1240px; margin: 0 auto; }
+h1, h2, h3 { color: var(--ink); margin: 0; font-weight: 700; text-wrap: balance; letter-spacing: -0.01em; }
+.eyebrow { font: 600 0.7rem/1.2 var(--f-data); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .num { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
 
-header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; border-bottom: 2px solid var(--ink); padding-bottom: 14px; }
-header.top p { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
-.hazard { height: 6px; border-radius: 3px; background: repeating-linear-gradient(-45deg, var(--accent-strong) 0 10px, transparent 10px 20px); opacity: .8; width: 120px; }
+/* Barra de marca y banda */
+.brandbar { background: var(--surface); border-bottom: 1px solid var(--line); }
+.brandbar .inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.logo img { height: 34px; width: auto; display: block; }
+.logo .chip { background: #ffffff; border-radius: 4px; padding: 4px 6px; display: inline-flex; }
+.cobrand { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .82rem; }
+.cobrand b { color: var(--ink); font-weight: 700; }
+.cobrand .fortibar { width: 22px; height: 14px; background: var(--red); border-radius: 2px; flex: none; }
+.band { background: var(--band); color: var(--band-ink); position: relative; overflow: hidden; }
+.band .inner { padding-block: 28px 30px; display: grid; gap: 8px; position: relative; z-index: 1; }
+.band h1 { color: var(--band-ink); font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 800; }
+.band p { margin: 0; max-width: 64ch; color: #c9d7e4; }
+.band .eyebrow { color: var(--cyan-bright); }
+.chevrons { position: absolute; right: max(16px, 4vw); top: 50%; transform: translateY(-50%); display: flex; gap: 6px; opacity: .9; z-index: 0; }
+.chevrons span { width: 26px; height: 64px; background: var(--cyan-bright); clip-path: polygon(0 0, 35% 0, 100% 50%, 35% 100%, 0 100%, 65% 50%); }
+.chevrons span:nth-child(2) { opacity: .75; } .chevrons span:nth-child(3) { opacity: .5; } .chevrons span:nth-child(4) { opacity: .28; }
+@media (max-width: 700px) { .chevrons { display: none; } }
 
+main.inner { display: grid; gap: 24px; padding-block: 24px 56px; }
 .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 24px; align-items: start; }
-@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 920px) { .grid { grid-template-columns: minmax(0, 1fr); } }
 
 .config { display: grid; gap: 16px; min-width: 0; }
-section.block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+section.block { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: grid; gap: 14px; min-width: 0; }
 .block-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h2 { font-size: 1.12rem; }
 
 .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
 label.f { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); }
-input, select { font: inherit; color: var(--ink); background: var(--sunken); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; width: 100%; min-width: 0; }
-input:focus-visible, select:focus-visible, button:focus-visible, .opt:focus-within, summary:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+input, select { font: inherit; color: var(--ink); background: var(--sunken); border: 1px solid var(--line-strong); border-radius: 4px; padding: 8px 10px; width: 100%; min-width: 0; }
+input:focus-visible, select:focus-visible, button:focus-visible, .opt:focus-within, summary:focus-visible { outline: 2px solid var(--cyan-bright); outline-offset: 2px; }
 
-.plan { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 14px; border-radius: 4px; background: var(--accent-soft); }
-.plan .price { font: 600 1.35rem/1.1 var(--f-data); align-self: center; }
-.plan ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink); font-size: .9rem; }
-.tag { display: inline-block; font: 500 .7rem/1 var(--f-data); letter-spacing: .08em; text-transform: uppercase; padding: 4px 6px; border-radius: 3px; background: var(--ink); color: var(--surface); }
+.plan { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; padding: 16px; border-radius: 4px; background: var(--cyan-soft); border-left: 4px solid var(--cyan-bright); }
+.plan .price { font: 600 1.35rem/1.1 var(--f-data); color: var(--ink); align-self: start; white-space: nowrap; }
+.plan ul { margin: 6px 0 0; padding-left: 18px; font-size: .9rem; display: grid; gap: 2px; }
+.plan strong { color: var(--ink); }
+.retention { grid-column: 1 / -1; display: grid; gap: 6px; }
+.retention .track { display: grid; grid-template-columns: 1fr 11fr; height: 12px; border-radius: 3px; overflow: hidden; }
+.retention .track span:first-child { background: var(--cyan-bright); }
+.retention .track span:last-child { background: repeating-linear-gradient(90deg, var(--line-strong) 0 calc(100% / 11 - 2px), transparent calc(100% / 11 - 2px) calc(100% / 11)); }
+.retention .legend { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); }
+.retention .legend b { color: var(--ink); font-weight: 600; }
+.tag { display: inline-block; font: 600 .68rem/1 var(--f-data); letter-spacing: .08em; text-transform: uppercase; padding: 5px 7px; border-radius: 3px; background: var(--ink); color: var(--surface); }
+.tag.forti { background: var(--red); color: #ffffff; }
 
-.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 16px; padding-block: 12px; border-top: 1px dashed var(--line); }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 16px; padding-block: 12px; border-top: 1px solid var(--line); }
 .row:first-of-type { border-top: 0; padding-top: 0; }
-.row .what strong { display: block; font-weight: 600; }
+.row .what strong { display: block; font-weight: 600; color: var(--ink); }
 .row .what span { font-size: .85rem; color: var(--muted); }
+.row.sub { padding-left: 16px; border-left: 2px solid var(--red); border-top-style: dashed; }
+.row.disabled { opacity: .55; }
 
-.stepper { display: inline-flex; align-items: stretch; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--sunken); }
+.stepper { display: inline-flex; align-items: stretch; border: 1px solid var(--line-strong); border-radius: 4px; overflow: hidden; background: var(--sunken); }
 .stepper button { font: 600 1rem/1 var(--f-data); width: 36px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
-.stepper button:hover { background: var(--accent-soft); }
-.stepper input { width: 72px; border: 0; border-inline: 1px solid var(--line); border-radius: 0; text-align: center; font-family: var(--f-data); background: var(--surface); }
+.stepper button:hover:not(:disabled) { background: var(--cyan-soft); }
+.stepper button:disabled { cursor: not-allowed; }
+.stepper input { width: 72px; border: 0; border-inline: 1px solid var(--line-strong); border-radius: 0; text-align: center; font-family: var(--f-data); background: var(--surface); }
 
 .switch { position: relative; width: 46px; height: 26px; flex: none; }
 .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
-.switch span { position: absolute; inset: 0; border-radius: 13px; background: var(--line); transition: background .15s; pointer-events: none; }
-.switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); transition: transform .15s; box-shadow: 0 1px 2px rgb(0 0 0 / .25); }
-.switch input:checked + span { background: var(--accent-strong); }
+.switch span { position: absolute; inset: 0; border-radius: 13px; background: var(--line-strong); transition: background .15s; pointer-events: none; }
+.switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #ffffff; transition: transform .15s; box-shadow: 0 1px 2px rgb(0 0 0 / .25); }
+.switch input:checked + span { background: var(--cyan-bright); }
 .switch input:checked + span::after { transform: translateX(20px); }
-.switch input:focus-visible + span { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+.switch input:focus-visible + span { outline: 2px solid var(--cyan-bright); outline-offset: 2px; }
 
-.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
-.opt { position: relative; display: grid; gap: 4px; padding: 12px; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; background: var(--sunken); }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.opt { position: relative; display: grid; gap: 4px; align-content: start; padding: 12px; border: 1px solid var(--line-strong); border-radius: 4px; cursor: pointer; background: var(--sunken); }
 .opt input { position: absolute; opacity: 0; }
-.opt:has(input:checked) { border-color: var(--accent-strong); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent-strong); }
-.opt strong { font-size: .9rem; }
-.opt .num { font-size: .95rem; }
+.opt:has(input:checked) { border-color: var(--cyan-bright); background: var(--cyan-soft); box-shadow: inset 0 0 0 1px var(--cyan-bright); }
+.opt strong { font-size: .9rem; color: var(--ink); }
 .opt small { color: var(--muted); }
 
 .range { display: flex; align-items: center; gap: 12px; }
-.range input[type=range] { flex: 1; padding: 0; accent-color: var(--accent-strong); background: transparent; border: 0; }
-.range output { min-width: 4ch; text-align: right; font: 600 1rem var(--f-data); }
+.range input[type=range] { flex: 1; padding: 0; accent-color: var(--cyan-bright); background: transparent; border: 0; }
+.range output { min-width: 4ch; text-align: right; font: 600 1rem var(--f-data); color: var(--ink); }
 
-/* Hoja de cotización */
-.sheet { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--ink); border-radius: var(--r); padding: 22px; display: grid; gap: 18px; min-width: 0; }
-@media (max-width: 900px) { .sheet { position: static; } }
-.sheet-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.sheet-head .client { font: 700 1.3rem/1.2 var(--f-display); font-stretch: 85%; }
-.meta { display: grid; gap: 2px; text-align: right; font-size: .82rem; color: var(--muted); }
+/* Propuesta */
+.sheet { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; display: grid; min-width: 0; }
+@media (max-width: 920px) { .sheet { position: static; } }
+.sheet-top { background: var(--band); color: var(--band-ink); padding: 18px 22px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sheet-top .eyebrow { color: var(--cyan-bright); }
+.sheet-top .client { font: 700 1.3rem/1.2 var(--f-sans); color: var(--band-ink); }
+.sheet-top .contact { color: #c9d7e4; font-size: .9rem; }
+.meta { display: grid; gap: 2px; text-align: right; font-size: .8rem; color: #c9d7e4; }
+.sheet-body { padding: 18px 22px 22px; display: grid; gap: 18px; position: relative; }
+.sheet-body::after { content: ""; position: absolute; right: 0; bottom: 0; width: 72px; height: 10px; background: var(--red); }
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-th { font: 500 .7rem/1.2 var(--f-data); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--ink); }
-td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 .68rem/1.2 var(--f-data); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--ink); }
+td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); }
 td.r, th.r { text-align: right; white-space: nowrap; }
 td small { display: block; color: var(--muted); }
+td .lic { display: inline-block; width: 6px; height: 6px; border-radius: 1px; background: var(--red); margin-right: 6px; vertical-align: middle; }
 tfoot td { border-bottom: 0; padding-block: 5px; }
 tfoot tr.disc td { color: var(--ok); }
-.totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-.total { padding: 12px; border-radius: 4px; background: var(--sunken); display: grid; gap: 2px; }
-.total.main { background: var(--ink); color: var(--surface); }
-.total.main .eyebrow { color: inherit; opacity: .75; }
-.total b { font: 600 1.25rem/1.2 var(--f-data); font-variant-numeric: tabular-nums; }
-.total small { font-size: .78rem; opacity: .8; }
+.totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.total { padding: 12px; border-radius: 4px; background: var(--sunken); display: grid; gap: 2px; border: 1px solid var(--line); }
+.total.main { background: var(--cyan-soft); border-color: var(--cyan-bright); }
+.total b { font: 600 1.2rem/1.2 var(--f-data); color: var(--ink); font-variant-numeric: tabular-nums; }
+.total small { font-size: .78rem; color: var(--muted); }
+.includes { margin: 0; padding: 12px 14px; border-radius: 4px; background: var(--sunken); font-size: .82rem; display: grid; gap: 4px; }
+.includes b { color: var(--ink); }
+.terms { font-size: .78rem; color: var(--muted); margin: 0; padding-left: 18px; display: grid; gap: 2px; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-button.primary, button.ghost { font: 600 .9rem var(--f-body); padding: 9px 14px; border-radius: 4px; cursor: pointer; }
-button.primary { background: var(--accent-strong); color: #1a1104; border: 1px solid var(--accent-strong); }
-button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+button.primary, button.ghost { font: 600 .9rem var(--f-sans); padding: 9px 14px; border-radius: 4px; cursor: pointer; }
+button.primary { background: var(--cyan-bright); color: #04263b; border: 1px solid var(--cyan-bright); }
+button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line-strong); }
 .toast { font-size: .85rem; color: var(--ok); }
-.terms { font-size: .8rem; color: var(--muted); margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.powered { display: flex; align-items: center; gap: 8px; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+.powered .fortibar { width: 16px; height: 10px; background: var(--red); border-radius: 1px; }
 
 /* Vista interna */
-details.internal { background: var(--surface); border: 1px dashed var(--muted); border-radius: var(--r); padding: 14px 18px; }
-details.internal summary { cursor: pointer; font: 700 1rem var(--f-display); font-stretch: 85%; }
-.internal-body { display: grid; gap: 16px; margin-top: 14px; }
+details.internal { background: var(--surface); border: 1px dashed var(--line-strong); border-radius: 6px; padding: 14px 20px; }
+details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink); }
+.internal-body { display: grid; gap: 18px; margin-top: 14px; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-.kpi { border-left: 3px solid var(--line); padding: 4px 10px; display: grid; gap: 2px; }
-.kpi b { font: 600 1.1rem var(--f-data); font-variant-numeric: tabular-nums; }
+.kpi { border-left: 3px solid var(--line-strong); padding: 4px 10px; display: grid; gap: 2px; align-content: start; }
+.kpi b { font: 600 1.1rem var(--f-data); color: var(--ink); font-variant-numeric: tabular-nums; }
+.kpi small { color: var(--muted); }
 .kpi.ok { border-color: var(--ok); } .kpi.bad { border-color: var(--bad); }
-.pill { display: inline-flex; align-items: center; gap: 6px; font: 600 .78rem/1 var(--f-body); padding: 6px 10px; border-radius: 999px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font: 600 .76rem/1 var(--f-sans); padding: 6px 10px; border-radius: 999px; justify-self: start; }
 .pill.ok { background: var(--ok-soft); color: var(--ok); }
 .pill.bad { background: var(--bad-soft); color: var(--bad); }
 .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; }
+@media (max-width: 820px) { .split { grid-template-columns: minmax(0, 1fr); } }
 .bars { display: grid; gap: 6px; }
-.bar { display: grid; grid-template-columns: 7ch minmax(0, 1fr) 11ch; gap: 10px; align-items: center; font-size: .82rem; }
+.bar { display: grid; grid-template-columns: 7ch minmax(0, 1fr) 11ch; gap: 10px; align-items: center; font-size: .82rem; color: var(--ink); }
 .bar .track { position: relative; height: 14px; background: var(--sunken); border-radius: 2px; overflow: hidden; }
 .bar .fill { position: absolute; top: 0; bottom: 0; }
 .bar .fill.pos { left: 50%; background: var(--ok); }
 .bar .fill.neg { right: 50%; background: var(--bad); }
 .bar .track::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--muted); }
 .bar .r { text-align: right; }
-.error { padding: 14px; border-radius: var(--r); background: var(--bad-soft); color: var(--bad); }
+.storage { display: grid; gap: 10px; align-content: start; }
+.storage dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; margin: 0; font-size: .85rem; }
+.storage dt { color: var(--muted); } .storage dd { margin: 0; text-align: right; color: var(--ink); }
+.error { padding: 14px; border-radius: 6px; background: var(--bad-soft); color: var(--bad); }
 @media (max-width: 560px) {
   .plan { grid-template-columns: minmax(0, 1fr); }
-  .plan .price { justify-self: start; }
   th:nth-child(3), td:nth-child(3) { display: none; }
-  tfoot td[colspan] { display: table-cell; }
   .meta { text-align: left; }
+  .logo img { height: 28px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <div>
-      <div class="eyebrow">Netmask · SOC OT · FortiSIEM MSSP</div>
-      <h1>Cotizador SOC</h1>
-      <p>Arma la oferta mensual: plan SOC base con dispositivos incluidos y complementos. Los precios salen del modelo de punto de equilibrio.</p>
-    </div>
-    <div class="hazard" aria-hidden="true"></div>
-  </header>
+<div class="brandbar gutter">
+  <div class="inner">
+    <div class="logo"><span class="chip"><img src="assets/netmask-logo.png" alt="Netmask Industrial Networking" width="148" height="34"></span></div>
+    <div class="cobrand"><span class="fortibar" aria-hidden="true"></span><span>SOC OT sobre <b>FortiSIEM® MSSP</b> · Partner MSSP de Fortinet</span></div>
+  </div>
+</div>
+<header class="band gutter">
+  <div class="inner">
+    <div class="eyebrow">Cotizador · Servicio gestionado</div>
+    <h1>SOC OT Netmask</h1>
+    <p>Arma la propuesta mensual: plan base con dispositivos y retención incluidos, más los complementos que necesita cada planta.</p>
+  </div>
+  <div class="chevrons" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+</header>
 
+<main class="inner gutter">
   <div id="error" class="error" hidden></div>
 
   <div class="grid">
@@ -200,11 +246,16 @@ details.internal summary { cursor: pointer; font: 700 1rem var(--f-display); fon
             <ul>
               <li>Monitoreo de eventos IPS/IDS, EDR, servidores y OT</li>
               <li>Depuración de falsos positivos y respuesta a incidentes</li>
-              <li>Plataforma FortiSIEM Netmask en Azure</li>
+              <li>FortiSIEM MSSP en Azure con IOC de FortiGuard</li>
+              <li>CMDB de activos y monitoreo de disponibilidad</li>
               <li><span id="incluidos">25</span> dispositivos incluidos</li>
             </ul>
           </div>
           <div class="price num" id="precioBase">—</div>
+          <div class="retention" aria-label="Retención de eventos incluida">
+            <div class="track"><span></span><span></span></div>
+            <div class="legend"><span><b id="retLinea">1 mes</b> en línea · búsqueda inmediata</span><span><b id="retArch">11 meses</b> archivados · recuperables</span></div>
+          </div>
         </div>
       </section>
 
@@ -219,11 +270,15 @@ details.internal summary { cursor: pointer; font: 700 1rem var(--f-display); fon
           <div class="stepper"><button type="button" data-step="dispositivos" data-d="-1" aria-label="Quitar dispositivo">−</button><input id="dispositivos" type="number" min="0" step="1" value="30" inputmode="numeric" aria-label="Dispositivos"><button type="button" data-step="dispositivos" data-d="1" aria-label="Agregar dispositivo">+</button></div>
         </div>
         <div class="row">
-          <div class="what"><strong>Agentes avanzados FortiSIEM</strong><span>Servidores y estaciones con agente · <span class="num" id="precioAgente">—</span>/mes c/u</span></div>
-          <div class="stepper"><button type="button" data-step="agentes" data-d="-1" aria-label="Quitar agente">−</button><input id="agentes" type="number" min="0" step="1" value="0" inputmode="numeric" aria-label="Agentes avanzados"><button type="button" data-step="agentes" data-d="1" aria-label="Agregar agente">+</button></div>
+          <div class="what"><strong>Agentes avanzados FortiSIEM</strong><span>Windows y Linux: integridad de archivos, cambios de registro · <span class="num" id="precioAgente">—</span>/mes c/u</span></div>
+          <div class="stepper"><button type="button" data-step="agentes" data-d="-1" aria-label="Quitar agente">−</button><input id="agentes" type="number" min="0" step="1" value="20" inputmode="numeric" aria-label="Agentes avanzados"><button type="button" data-step="agentes" data-d="1" aria-label="Agregar agente">+</button></div>
+        </div>
+        <div class="row sub" id="filaUeba">
+          <div class="what"><strong>UEBA por agente</strong><span id="uebaAyuda">Analítica de comportamiento de usuarios y entidades · <span class="num" id="precioUeba">—</span>/mes c/u</span></div>
+          <div class="stepper"><button type="button" data-step="ueba" data-d="-1" aria-label="Quitar UEBA">−</button><input id="ueba" type="number" min="0" step="1" value="10" inputmode="numeric" aria-label="Agentes con UEBA"><button type="button" data-step="ueba" data-d="1" aria-label="Agregar UEBA">+</button></div>
         </div>
         <div class="row" style="grid-template-columns: minmax(0,1fr);">
-          <div class="what"><strong>Colector FortiSIEM en sitio</strong><span>Se cobra aparte del plan</span></div>
+          <div class="what"><strong>Colector FortiSIEM en sitio</strong><span>Recolecta, normaliza y cifra los eventos de la planta · se cobra aparte del plan</span></div>
           <div class="opts" id="colectores" role="radiogroup" aria-label="Colector"></div>
         </div>
       </section>
@@ -236,33 +291,38 @@ details.internal summary { cursor: pointer; font: 700 1rem var(--f-display); fon
     </form>
 
     <aside class="sheet" aria-live="polite">
-      <div class="sheet-head">
+      <div class="sheet-top">
         <div>
           <div class="eyebrow">Propuesta económica</div>
           <div class="client" id="hClient">—</div>
-          <div class="muted" id="hContact"></div>
+          <div class="contact" id="hContact"></div>
         </div>
         <div class="meta"><span class="num" id="hNum"></span><span id="hDate"></span><span id="hPlazo"></span></div>
       </div>
-      <div class="tablewrap">
-        <table>
-          <thead><tr><th>Concepto</th><th class="r">Cant.</th><th class="r">Unitario</th><th class="r">Mensual</th></tr></thead>
-          <tbody id="lineas"></tbody>
-          <tfoot id="pie"></tfoot>
-        </table>
+      <div class="sheet-body">
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Concepto</th><th class="r">Cant.</th><th class="r">Unitario</th><th class="r">Mensual</th></tr></thead>
+            <tbody id="lineas"></tbody>
+            <tfoot id="pie"></tfoot>
+          </table>
+        </div>
+        <div class="totals" id="totales"></div>
+        <p class="includes" id="incluye"></p>
+        <ul class="terms">
+          <li>Valores en USD antes de impuestos, facturación mensual.</li>
+          <li>Dispositivo = fuente de log integrada al FortiSIEM (firewall, switch, servidor, consola EDR).</li>
+          <li>UEBA se contrata por agente avanzado: no puede superar la cantidad de agentes.</li>
+          <li id="termColector" hidden></li>
+        </ul>
+        <div class="actions">
+          <button type="button" class="primary" id="copiar">Copiar oferta</button>
+          <button type="button" class="ghost" id="reiniciar">Nueva cotización</button>
+          <span class="toast" id="toast" role="status"></span>
+        </div>
+        <textarea id="copiaTexto" hidden readonly aria-label="Texto de la oferta"></textarea>
+        <div class="powered"><span class="fortibar" aria-hidden="true"></span>Servicio Netmask operado sobre FortiSIEM® MSSP. FortiSIEM es marca registrada de Fortinet, Inc.</div>
       </div>
-      <div class="totals" id="totales"></div>
-      <ul class="terms">
-        <li>Valores en USD antes de impuestos, facturación mensual.</li>
-        <li>Dispositivo = fuente de log integrada al FortiSIEM (firewall, switch, servidor, consola EDR).</li>
-        <li id="termColector" hidden></li>
-      </ul>
-      <div class="actions">
-        <button type="button" class="primary" id="copiar">Copiar oferta</button>
-        <button type="button" class="ghost" id="reiniciar">Nueva cotización</button>
-        <span class="toast" id="toast" role="status"></span>
-      </div>
-      <textarea id="copiaTexto" hidden readonly aria-label="Texto de la oferta"></textarea>
     </aside>
   </div>
 
@@ -274,14 +334,21 @@ details.internal summary { cursor: pointer; font: 700 1rem var(--f-display); fon
         <label class="f">Clientes para punto de equilibrio<input id="clientesEq" type="number" min="1" max="20" value="3"></label>
       </div>
       <div class="kpis" id="kpis"></div>
-      <div>
-        <div class="eyebrow" style="margin-bottom:8px">Utilidad mensual del SOC si todos los clientes pagan esta oferta</div>
-        <div class="bars" id="bars"></div>
+      <div class="split">
+        <div>
+          <div class="eyebrow" style="margin-bottom:8px">Utilidad mensual del SOC si todos los clientes pagan este plan</div>
+          <div class="bars" id="bars"></div>
+        </div>
+        <div class="storage">
+          <div class="eyebrow">Almacenamiento con la retención base</div>
+          <label class="f">EPS promedio del cliente<input id="eps" type="number" min="0" step="50" value="200" inputmode="numeric"></label>
+          <dl id="almacenamiento"></dl>
+        </div>
       </div>
       <p class="muted" id="notaInterna" style="margin:0;font-size:.85rem"></p>
     </div>
   </details>
-</div>
+</main>
 
 <script src="cotizador.js"></script>
 <script src="app.js"></script>

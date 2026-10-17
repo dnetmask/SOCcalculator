@@ -7,7 +7,8 @@
   const usd0 = new Intl.NumberFormat("es-CO", { style: "currency", currency: "USD", currencyDisplay: "code", maximumFractionDigits: 0 });
   const pct = new Intl.NumberFormat("es-CO", { style: "percent", maximumFractionDigits: 1 });
   const CLAVE = "cotizador-soc-borrador";
-  const CAMPOS = ["cliente", "contacto", "plazo", "vuln", "dispositivos", "agentes", "descuento", "escenario", "clientesEq"];
+  const CAMPOS = ["cliente", "contacto", "plazo", "vuln", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "eps"];
+  const LICENCIAS = new Set(["disp", "agt", "ueba"]);
 
   let modelo = null;
   let ultima = null;
@@ -36,6 +37,7 @@
     return {
       dispositivos: entero("dispositivos"),
       agentes: entero("agentes"),
+      ueba: entero("ueba"),
       vulnerabilidades: $("vuln").checked,
       colector: col ? Number(col.value) : 0,
       descuento: Number($("descuento").value) / 100,
@@ -53,7 +55,24 @@
     return `NM-SOC-${f}-${String(h % 1000).padStart(3, "0")}`;
   }
 
+  function retencionTexto(p) {
+    const r = p.retencion;
+    const linea = r.enLineaDias % 30 === 0 ? `${r.enLineaDias / 30} ${r.enLineaDias === 30 ? "mes" : "meses"}` : `${r.enLineaDias} días`;
+    return { linea, archivo: `${r.archivadoMeses} ${r.archivadoMeses === 1 ? "mes" : "meses"}` };
+  }
+
+  // UEBA depende de los agentes: se limita y se desactiva cuando no hay agentes.
+  function sincronizarUeba() {
+    const agentes = entero("agentes");
+    if (entero("ueba") > agentes) $("ueba").value = agentes;
+    const sinAgentes = agentes === 0;
+    $("ueba").disabled = sinAgentes;
+    document.querySelectorAll('[data-step="ueba"]').forEach((b) => { b.disabled = sinAgentes; });
+    $("filaUeba").classList.toggle("disabled", sinAgentes);
+  }
+
   function render() {
+    sincronizarUeba();
     const sel = seleccion();
     const q = modelo.cotizar(sel);
     ultima = q;
@@ -63,6 +82,10 @@
     $("precioVuln").textContent = usd0.format(p.listaVulnerabilidades);
     $("precioDisp").textContent = usd0.format(p.precioDispositivo);
     $("precioAgente").textContent = usd0.format(p.precioAgente);
+    $("precioUeba").textContent = usd0.format(p.precioUeba);
+    const ret = retencionTexto(p);
+    $("retLinea").textContent = ret.linea;
+    $("retArch").textContent = ret.archivo;
     $("incluidos").textContent = $("incluidos2").textContent = p.dispositivosIncluidos;
     $("descuentoOut").textContent = `${$("descuento").value} %`;
 
@@ -75,7 +98,7 @@
 
     $("lineas").innerHTML = q.lineas.map((l) => `
       <tr>
-        <td>${esc(l.concepto)}${l.meses ? `<small>Cargo durante ${l.meses} meses</small>` : ""}</td>
+        <td>${LICENCIAS.has(l.id) ? '<span class="lic" title="Licencia FortiSIEM MSSP"></span>' : ""}${esc(l.concepto)}${l.meses ? `<small>Cargo durante ${l.meses} meses</small>` : ""}</td>
         <td class="r num">${l.cantidad}</td>
         <td class="r num">${usd.format(l.unitario)}</td>
         <td class="r num">${usd.format(l.subtotal)}</td>
@@ -91,6 +114,8 @@
       <div class="total main"><span class="eyebrow">${temporal ? `Mensualidad meses 1–${q.mesesConCargoTemporal}` : "Mensualidad"}</span><b>${usd.format(q.mensualInicial)}</b><small>USD + impuestos</small></div>
       ${temporal ? `<div class="total"><span class="eyebrow">Desde el mes ${q.mesesConCargoTemporal + 1}</span><b>${usd.format(q.mensualRecurrente)}</b><small>sin cargo de colector</small></div>` : ""}
       <div class="total"><span class="eyebrow">Valor del contrato</span><b>${usd.format(q.valorContrato)}</b><small>${q.plazoMeses} meses</small></div>`;
+
+    $("incluye").innerHTML = `<b>El plan incluye</b> ${p.dispositivosIncluidos} dispositivos, retención de eventos de ${ret.linea} en línea + ${ret.archivo} archivados, plataforma FortiSIEM MSSP en Azure con IOC de FortiGuard y soporte del SOC.`;
 
     const col = q.lineas.find((l) => l.id === "col");
     $("termColector").hidden = !col;
@@ -124,6 +149,16 @@
         <span class="track"><span class="fill ${f.utilidad >= 0 ? "pos" : "neg"}" style="width:${w}%"></span></span>
         <span class="num r">${usd0.format(f.utilidad)}</span></div>`;
     }).join("");
+    const a = modelo.estimarAlmacenamiento(entero("eps"));
+    const gb = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
+    $("almacenamiento").innerHTML = `
+      <dt>Volumen diario crudo</dt><dd class="num">${new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 }).format(a.gbDia)} GB</dd>
+      <dt>En línea (${p.retencion.enLineaDias} días)</dt><dd class="num">${gb.format(a.gbEnLinea)} GB</dd>
+      <dt>Archivado (${p.retencion.archivadoMeses} meses)</dt><dd class="num">${gb.format(a.gbArchivado)} GB</dd>
+      <dt>Costo estimado Azure</dt><dd class="num">${usd.format(a.costo)}/mes</dd>
+      <dt>Presupuesto por cliente</dt><dd class="num">${usd.format(a.presupuesto)}/mes</dd>
+      <dt>EPS que cubre el presupuesto</dt><dd class="num">~${gb.format(a.epsCubiertos)}</dd>`;
+
     $("notaInterna").textContent =
       `Plan neto ${usd0.format(plan)}/mes por cliente (base${sel.vulnerabilidades ? " + vulnerabilidades" : ""}, sin adicionales ni colector). ` +
       `* Supera la capacidad del equipo actual (${modelo.supuestos.capacidad_max_clientes_sin_contratar} clientes); habría que contratar. ` +
@@ -137,6 +172,7 @@
       `Propuesta SOC Netmask ${$("hNum").textContent}`,
       `Cliente: ${$("hClient").textContent}${$("hContact").textContent ? ` · ${$("hContact").textContent}` : ""}`,
       `Plazo: ${q.plazoMeses} meses`,
+      `Incluye: ${q.precio.dispositivosIncluidos} dispositivos y retención de ${retencionTexto(q.precio).linea} en línea + ${retencionTexto(q.precio).archivo} archivados.`,
       "",
       ...lineas,
       q.descuentoMensual ? `- Descuento ${pct.format(q.descuento)} sobre servicios SOC: −${usd.format(q.descuentoMensual)}/mes` : null,
@@ -196,6 +232,7 @@
     $("vuln").checked = false;
     $("dispositivos").value = modelo.supuestos.plan_base.dispositivos_incluidos;
     $("agentes").value = 0;
+    $("ueba").value = 0;
     $("descuento").value = 0;
     document.querySelector('input[name="colector"]').checked = true;
     $("ejemplo").hidden = true;

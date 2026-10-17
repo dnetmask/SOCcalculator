@@ -6,7 +6,8 @@ La base es la calculadora de licenciamiento FortiSIEM MSSP del líder del SOC (`
 
 - **Plan SOC base (mensual por cliente)**: gestión de incidentes + plataforma; incluye **25 dispositivos** (`plan_base`).
 - **Módulo de gestión de vulnerabilidades OT**: precio aparte; cubre el costo del equipo de vulnerabilidades.
-- **Dispositivo / agente adicional**: costo de licencia FortiSIEM del primer nivel (el más caro) / (1 − margen).
+- **Retención base incluida**: 1 mes de eventos en línea + 11 meses archivados (12 meses en total), cubierta por el almacenamiento Azure por cliente.
+- **Dispositivo / agente / UEBA adicional**: costo de licencia FortiSIEM del primer nivel (el más caro) / (1 − margen). UEBA se contrata por agente avanzado y no puede superar la cantidad de agentes.
 - **Colector (opcional, se cobra aparte del plan)**:
   - VM o servidor del cliente: sin costo.
   - NUC industrial de USD 1.500: cargo adicional de USD 250/mes (costo/6) durante 12 meses.
@@ -38,7 +39,7 @@ Todos los supuestos están en `data/supuestos_soc.json`. Los que tienen `"origen
 
 ## Cotizador web (`web/`)
 
-Aplicación estática en HTML + JavaScript, sin compilación. Arma la oferta en tiempo real: plan base, módulo de vulnerabilidades OT, dispositivos y agentes adicionales, colector, descuento y plazo. Muestra la mensualidad, la mensualidad sin colector y el valor del contrato. Incluye una vista interna con el piso de equilibrio, la contribución de la oferta y la utilidad del SOC según el número de clientes.
+Aplicación estática en HTML + JavaScript, sin compilación, con la imagen combinada Netmask + FortiSIEM. Arma la oferta en tiempo real: plan base con retención incluida, módulo de vulnerabilidades OT, dispositivos, agentes avanzados y UEBA, colector, descuento y plazo. Muestra la mensualidad, la mensualidad sin colector y el valor del contrato. Incluye una vista interna con el piso de equilibrio, la contribución de la oferta, la utilidad del SOC según el número de clientes y una estimación del almacenamiento por EPS con la retención base.
 
 - `web/cotizador.js`: motor de cálculo. Replica `core.py` y `precio_soc.py` y lee los mismos `data/*.json`, así que al cambiar un supuesto cambian a la vez el cotizador y el reporte Python.
 - `web/app.js` y `web/index.html`: interfaz.

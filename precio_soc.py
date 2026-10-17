@@ -71,6 +71,7 @@ class PrecioSOC:
     dispositivos_incluidos: int
     precio_dispositivo_adicional: Decimal
     precio_agente_adicional: Decimal
+    precio_ueba_adicional: Decimal
 
     @property
     def equilibrio_total(self) -> Decimal:
@@ -140,7 +141,7 @@ class ModeloPrecioSOC:
                     raise ErrorModelo(f"{clave} no puede ser negativo")
             if _decimal(s["redondeo_precio_lista"], "redondeo_precio_lista") <= 0:
                 raise ErrorModelo("redondeo_precio_lista debe ser positivo")
-            for clave in ("margen_dispositivo_adicional", "margen_agente_adicional"):
+            for clave in ("margen_dispositivo_adicional", "margen_agente_adicional", "margen_ueba_adicional"):
                 if not Decimal(0) <= _decimal(s["adicionales"][clave], clave) < 1:
                     raise ErrorModelo(f"{clave} debe estar en [0, 1)")
             if s["escenario_personal"] not in s["escenarios_personal"]:
@@ -164,6 +165,8 @@ class ModeloPrecioSOC:
                     raise ErrorModelo(f"Colector {op['opcion']!r}: divisor_mensual y meses_cobro deben ser al menos 1")
                 if _decimal(op.get("costo_total", op.get("costo_mensual")), "costo_colector") < 0:
                     raise ErrorModelo(f"Colector {op['opcion']!r}: costo negativo")
+            _entero_no_negativo(s["retencion_base"]["en_linea_dias"], "retencion_base.en_linea_dias")
+            _entero_no_negativo(s["retencion_base"]["archivado_meses"], "retencion_base.archivado_meses")
             _entero_no_negativo(s["capacidad_max_clientes_sin_contratar"], "capacidad_max_clientes_sin_contratar")
         except (KeyError, TypeError, AttributeError) as exc:
             raise ErrorModelo(f"Falta una clave o tiene un tipo incorrecto en supuestos_soc.json: {exc}") from exc
@@ -234,6 +237,7 @@ class ModeloPrecioSOC:
             self.s["plan_base"]["dispositivos_incluidos"],
             self._precio_adicional("dispositivos", "margen_dispositivo_adicional"),
             self._precio_adicional("agentes_avanzados", "margen_agente_adicional"),
+            self._precio_adicional("ueba", "margen_ueba_adicional"),
         )
 
     def opciones_colector(self) -> list[OpcionColector]:
@@ -262,14 +266,21 @@ class ModeloPrecioSOC:
         return filas
 
     def estimar_almacenamiento(self, eps: int) -> dict[str, Decimal]:
-        """Costo mensual de almacenamiento de un cliente a partir de sus EPS promedio."""
+        """Costo mensual de almacenamiento de un cliente con la retención base (régimen estable, mes 12+)."""
         e = self.s["estimador_almacenamiento"]
+        r = self.s["retencion_base"]
         gb_dia = Decimal(_entero_no_negativo(eps, "eps")) * e["bytes_por_evento"] * 86400 / Decimal(10) ** 9
-        gb_retenidos = gb_dia * _decimal(e["fraccion_tras_compresion"], "compresion") * e["retencion_dias"]
+        comprimido = gb_dia * _decimal(e["fraccion_tras_compresion"], "compresion")
+        en_linea = comprimido * r["en_linea_dias"]
+        archivado = comprimido * r["archivado_meses"] * 30
+        costo = en_linea * _decimal(e["costo_gb_mes_en_linea_usd"], "costo_en_linea") + archivado * _decimal(e["costo_gb_mes_archivado_usd"], "costo_archivado")
+        presupuesto = sum((_decimal(i["importe"], "variable") for i in self.s["costos_variables_por_cliente_mensuales"]), Decimal(0))
         return {
             "gb_dia_crudo": gb_dia.quantize(Decimal("0.1")),
-            "gb_retenidos": gb_retenidos.quantize(Decimal(1)),
-            "costo_mensual": _dinero(gb_retenidos * _decimal(e["costo_gb_mes_usd"], "costo_gb")),
+            "gb_en_linea": en_linea.quantize(Decimal(1)),
+            "gb_archivado": archivado.quantize(Decimal(1)),
+            "costo_mensual": _dinero(costo),
+            "eps_cubiertos_por_presupuesto": (presupuesto / costo * eps).to_integral_value(rounding=ROUND_HALF_UP) if costo else Decimal(0),
         }
 
 
@@ -287,6 +298,7 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         f"Escenario de personal: **{p.escenario}** — {s['escenarios_personal'][p.escenario]['descripcion']}",
         f"Plan base por cliente: {p.dispositivos_incluidos} dispositivos, "
         f"{s['plan_base']['agentes_avanzados_incluidos']} agentes avanzados. TRM supuesta: {s['tasa_cambio_cop_por_usd']} COP/USD.",
+        f"Retención base de eventos: {s['retencion_base']['en_linea_dias']} días en línea + {s['retencion_base']['archivado_meses']} meses archivados.",
         "",
         "## Precio propuesto (mensual por cliente, USD)",
         "",
@@ -297,6 +309,7 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         f"| **SOC OT completo** | **{_m(p.equilibrio_total)}** | **{_m(p.lista_total)}** |",
         f"| Dispositivo adicional | — | {_m(p.precio_dispositivo_adicional)} |",
         f"| Agente avanzado adicional | — | {_m(p.precio_agente_adicional)} |",
+        f"| UEBA por agente avanzado (opcional) | — | {_m(p.precio_ueba_adicional)} |",
         "",
         f"## Costos mensuales con {c.clientes} clientes ({c.dispositivos} dispositivos agregados en FortiSIEM)",
         "",
@@ -334,15 +347,17 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
           f"{f'{_m(o.total_cobrado)} vs {_m(o.costo_total)}' if o.costo_total is not None else '—'} |"
           for o in modelo.opciones_colector()],
     ]
-    alm = modelo.estimar_almacenamiento(200)
     e = s["estimador_almacenamiento"]
+    alm = modelo.estimar_almacenamiento(e["eps_referencia"])
     lin += [
         "",
-        "## Referencia: almacenamiento por EPS",
+        "## Referencia: almacenamiento con la retención base",
         "",
-        f"Un cliente con 200 EPS promedio genera ~{alm['gb_dia_crudo']} GB/día crudos; con compresión al "
-        f"{Decimal(e['fraccion_tras_compresion']) * 100:.0f}% y {e['retencion_dias']} días de retención son "
-        f"~{alm['gb_retenidos']} GB → {_m(alm['costo_mensual'])}/mes a {_m(Decimal(e['costo_gb_mes_usd']))}/GB-mes.",
+        f"Un cliente con {e['eps_referencia']} EPS promedio genera ~{alm['gb_dia_crudo']} GB/día crudos. Con compresión al "
+        f"{Decimal(e['fraccion_tras_compresion']) * 100:.0f}% mantiene ~{alm['gb_en_linea']} GB en línea "
+        f"({_m(Decimal(e['costo_gb_mes_en_linea_usd']))}/GB-mes) y ~{alm['gb_archivado']} GB archivados "
+        f"({_m(Decimal(e['costo_gb_mes_archivado_usd']))}/GB-mes): {_m(alm['costo_mensual'])}/mes. "
+        f"El presupuesto de almacenamiento por cliente cubre ~{alm['eps_cubiertos_por_presupuesto']} EPS.",
         "",
     ]
     return "\n".join(lin)

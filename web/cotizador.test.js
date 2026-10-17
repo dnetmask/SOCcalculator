@@ -24,6 +24,7 @@ test("punto de equilibrio igual a precio_soc.py", () => {
   assert.equal(p.listaVulnerabilidades, 1150);
   assert.equal(p.precioDispositivo, 52);
   assert.equal(p.precioAgente, 10);
+  assert.equal(p.precioUeba, 11);
   const e = modelo.precio(3, "esbelto");
   assert.equal(e.listaBase + e.listaVulnerabilidades, 4950);
 });
@@ -55,4 +56,21 @@ test("sin adicionales ni colector la oferta es solo el plan base", () => {
   const q = modelo.cotizar({ dispositivos: 10, agentes: 0, vulnerabilidades: false, colector: vm });
   assert.deepEqual(q.lineas.map((l) => l.id), ["base"]);
   assert.equal(q.mensualInicial, 5600);
+});
+
+test("UEBA se cobra por agente y nunca supera los agentes", () => {
+  const vm = modelo.opcionesColector().find((o) => o.precioMensual === 0).id;
+  const q = modelo.cotizar({ dispositivos: 25, agentes: 10, ueba: 40, colector: vm });
+  const l = q.lineas.find((x) => x.id === "ueba");
+  assert.equal(l.cantidad, 10);
+  assert.equal(l.subtotal, 110);
+  assert.equal(modelo.cotizar({ dispositivos: 25, agentes: 0, ueba: 5, colector: vm }).lineas.some((x) => x.id === "ueba"), false);
+});
+
+test("almacenamiento con retención base igual a precio_soc.py", () => {
+  const r = modelo.estimarAlmacenamiento(200);
+  assert.equal(Math.round(r.gbEnLinea), 39);
+  assert.equal(Math.round(r.gbArchivado), 428);
+  assert.equal(r.costo, 14.39);
+  assert.equal(r.epsCubiertos, 2781);
 });
