@@ -53,7 +53,7 @@ Para usarlo localmente, sirve la raíz del repositorio y abre `web/`:
 python -m http.server 8000   # luego abrir http://localhost:8000/web/
 ```
 
-Para publicarlo (Vercel, Azure Static Web Apps, GitHub Pages…), despliega la raíz del repositorio: el cotizador busca los JSON en `data/` o en `../data/`.
+Despliegue en Vercel: `vercel.json` copia solo `web/` y `data/` a `public/` (sin el código Python ni las pruebas) y marca el sitio como `noindex`. Cada push a la rama de producción del repositorio despliega una nueva versión.
 
 ## Observaciones sobre las fuentes
 
