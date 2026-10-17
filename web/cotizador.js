@@ -136,16 +136,22 @@
       const n = clientes || s.clientes_punto_equilibrio;
       if (!(n >= 1)) throw new Error("Se requiere al menos 1 cliente para el punto de equilibrio");
       const c = costos(n, nombreEscenario);
-      const vulnerabilidades = dinero((c.personal.vulnerabilidades * (1 + contingencia)) / n);
-      const base = dinero(dinero(c.total / n) - vulnerabilidades);
+      const v = s.gestion_vulnerabilidades;
+      const costoVuln = costoVulnerabilidades(nombreEscenario);
+      const base = dinero((c.total - costoVuln) / n);
+      const sedesEq = n * v.sedes_promedio_por_cliente;
+      const precioSede = num(v.precio_por_sede_usd);
       const paso = num(s.redondeo_precio_lista);
       return {
         clientes: n,
         costos: c,
         equilibrioBase: base,
-        equilibrioVulnerabilidades: vulnerabilidades,
         listaBase: redondearArriba(base, paso),
-        listaVulnerabilidades: redondearArriba(vulnerabilidades, paso),
+        costoVulnerabilidades: costoVuln,
+        sedesEquilibrio: sedesEq,
+        equilibrioPorSede: dinero(costoVuln / sedesEq),
+        precioPorSede: precioSede,
+        sedesMinimas: Math.ceil(costoVuln / precioSede - 1e-9),
         dispositivosIncluidos: s.plan_base.dispositivos_incluidos,
         agentesIncluidos: s.plan_base.agentes_avanzados_incluidos,
         precioDispositivo: precioAdicional("dispositivos", "margen_dispositivo_adicional"),
@@ -159,13 +165,21 @@
       };
     }
 
-    /* Oferta para un cliente.
-     * seleccion: { dispositivos, agentes, ueba (≤ agentes), vulnerabilidades: bool, colector: id,
-     *              descuento: fracción sobre servicios SOC, plazoMeses,
-     *              clientesEquilibrio, escenario }
+    // Equipo de vulnerabilidades al mes (con contingencia): lo cubre el servicio por sede.
+    function costoVulnerabilidades(nombreEscenario) {
+      return dinero(personalPorModulo(nombreEscenario).vulnerabilidades * (1 + contingencia));
+    }
+
+    /* Oferta para un cliente. Los dos servicios se venden juntos o por separado.
+     * seleccion: { soc: bool (SOC de incidentes; por defecto true), dispositivos, agentes,
+     *              ueba (≤ agentes), colector: id, vulnerabilidades: bool, sedes,
+     *              descuento: fracción sobre servicios, plazoMeses, clientesEquilibrio, escenario }
+     * Sin SOC de incidentes no hay licencias FortiSIEM ni colector.
      */
     function cotizar(seleccion) {
       const p = precio(seleccion.clientesEquilibrio, seleccion.escenario);
+      const soc = seleccion.soc !== false;
+      const sedes = seleccion.vulnerabilidades ? Math.max(0, Math.floor(seleccion.sedes || 0)) : 0;
       const extraDisp = Math.max(0, (seleccion.dispositivos || 0) - p.dispositivosIncluidos);
       const extraAg = Math.max(0, (seleccion.agentes || 0) - p.agentesIncluidos);
       // UEBA se licencia por agente avanzado: nunca más que los agentes del cliente.
@@ -174,28 +188,29 @@
       const descuento = Math.min(Math.max(seleccion.descuento || 0, 0), 1);
       const plazo = seleccion.plazoMeses || 12;
 
-      const lineas = [
-        { id: "base", concepto: `SOC base: gestión de incidentes, plataforma FortiSIEM y ${p.dispositivosIncluidos} dispositivos`,
-          cantidad: 1, unitario: p.listaBase, costo: p.equilibrioBase, descontable: true, meses: null },
-      ];
-      if (seleccion.vulnerabilidades) {
-        lineas.push({ id: "vuln", concepto: "Módulo gestión de vulnerabilidades OT", cantidad: 1,
-                      unitario: p.listaVulnerabilidades, costo: p.equilibrioVulnerabilidades, descontable: true, meses: null });
+      const lineas = [];
+      if (soc) {
+        lineas.push({ id: "base", concepto: `SOC de incidentes: plataforma FortiSIEM y ${p.dispositivosIncluidos} dispositivos`,
+                      cantidad: 1, unitario: p.listaBase, costo: p.equilibrioBase, descontable: true, meses: null });
       }
-      if (extraDisp) {
+      if (sedes) {
+        lineas.push({ id: "vuln", concepto: "Gestión de vulnerabilidades OT por sede", cantidad: sedes,
+                      unitario: p.precioPorSede, costo: p.equilibrioPorSede, descontable: true, meses: null });
+      }
+      if (soc && extraDisp) {
         lineas.push({ id: "disp", concepto: "Dispositivos adicionales", cantidad: extraDisp,
                       unitario: p.precioDispositivo, costo: p.costoDispositivo, descontable: true, meses: null });
       }
-      if (extraAg) {
+      if (soc && extraAg) {
         lineas.push({ id: "agt", concepto: "Agentes avanzados FortiSIEM", cantidad: extraAg,
                       unitario: p.precioAgente, costo: p.costoAgente, descontable: true, meses: null });
       }
-      if (extraUeba) {
+      if (soc && extraUeba) {
         lineas.push({ id: "ueba", concepto: "UEBA por agente avanzado", cantidad: extraUeba,
                       unitario: p.precioUeba, costo: p.costoUeba, descontable: true, meses: null });
       }
       const col = opcionesColector().find((o) => o.id === seleccion.colector);
-      if (col && col.precioMensual > 0) {
+      if (soc && col && col.precioMensual > 0) {
         lineas.push({ id: "col", concepto: `Colector: ${col.opcion}`, cantidad: 1, unitario: col.precioMensual,
                       costo: col.costoMensual, descontable: false, meses: col.mesesCobro });
       }
@@ -215,7 +230,10 @@
       const mesesConCargoTemporal = Math.max(0, ...lineas.filter((l) => l.meses !== null).map((l) => l.mesesEnPlazo));
       return {
         precio: p,
-        uebaAplicado: ueba,
+        soc,
+        sedes,
+        vacia: lineas.length === 0,
+        uebaAplicado: soc ? ueba : 0,
         lineas,
         descuento,
         plazoMeses: plazo,
@@ -231,12 +249,26 @@
       };
     }
 
+    // SOC de incidentes por número de clientes; el equipo de vulnerabilidades queda fuera.
     function sensibilidad(precioMensual, hasta, nombreEscenario) {
       const capacidad = s.capacidad_max_clientes_sin_contratar;
+      const costoVuln = costoVulnerabilidades(nombreEscenario);
       const filas = [];
       for (let n = 1; n <= hasta; n++) {
-        const costo = costos(n, nombreEscenario).total;
+        const costo = dinero(costos(n, nombreEscenario).total - costoVuln);
         const ingreso = dinero(precioMensual * n);
+        filas.push({ clientes: n, ingreso, costo, utilidad: dinero(ingreso - costo), excedeCapacidad: n > capacidad });
+      }
+      return filas;
+    }
+
+    // Servicio de vulnerabilidades por número de sedes vendidas.
+    function sensibilidadVulnerabilidades(precioSede, hasta, nombreEscenario) {
+      const costo = costoVulnerabilidades(nombreEscenario);
+      const capacidad = s.gestion_vulnerabilidades.capacidad_max_sedes;
+      const filas = [];
+      for (let n = 1; n <= hasta; n++) {
+        const ingreso = dinero(precioSede * n);
         filas.push({ clientes: n, ingreso, costo, utilidad: dinero(ingreso - costo), excedeCapacidad: n > capacidad });
       }
       return filas;
@@ -267,6 +299,7 @@
       precio,
       opcionesColector,
       cotizar,
+      sensibilidadVulnerabilidades,
       sensibilidad,
     };
   }

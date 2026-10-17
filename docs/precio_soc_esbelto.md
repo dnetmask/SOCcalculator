@@ -8,12 +8,13 @@ Retención base de eventos: 30 días en línea + 11 meses archivados.
 
 | Componente | Equilibrio | Precio lista |
 |---|---:|---:|
-| SOC base (incidentes + plataforma + 25 dispositivos) | $4,339.38 | $4,350.00 |
-| Módulo gestión de vulnerabilidades OT | $557.33 | $600.00 |
-| **SOC OT completo** | **$4,896.71** | **$4,950.00** |
+| SOC de incidentes, plan base (plataforma + 25 dispositivos) | $4,339.38 | $4,350.00 |
+| Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | $278.67 | $560.00 |
 | Dispositivo adicional | — | $52.00 |
 | Agente avanzado adicional | — | $10.00 |
 | UEBA por agente avanzado (opcional) | — | $11.00 |
+
+Los dos servicios se venden juntos o por separado. El equilibrio por sede supone 2 sedes por cliente (6 sedes con 3 clientes). El equipo de vulnerabilidades cuesta $1,672.00/mes: a $560.00 por sede se cubre desde 3 sedes.
 
 ## Costos mensuales con 3 clientes (75 dispositivos agregados en FortiSIEM)
 
@@ -33,20 +34,39 @@ Retención base de eventos: 30 días en línea + 11 meses archivados.
 | Contingencia (10%) | $1,335.47 |
 | **Total** | **$14,690.13** |
 
-## Sensibilidad al número de clientes (precio lista SOC OT completo $4,950.00)
+## SOC de incidentes: sensibilidad al número de clientes (plan base $4,350.00)
+
+Costo sin el equipo de vulnerabilidades, que lo cubre su propio servicio.
 
 | Clientes | Ingreso | Costo | Utilidad | Margen |
 |---:|---:|---:|---:|---:|
-| 1 | $4,950.00 | $13,548.33 | $-8,598.33 | -173.70% |
-| 2 | $9,900.00 | $13,768.33 | $-3,868.33 | -39.07% |
-| 3 | $14,850.00 | $14,690.13 | $159.87 | 1.08% |
-| 4 | $19,800.00 | $15,611.93 | $4,188.07 | 21.15% |
-| 5 | $24,750.00 | $16,533.73 | $8,216.27 | 33.20% |
-| 6 | $29,700.00 | $17,455.53 | $12,244.47 | 41.23% |
-| 7 ⚠️ requiere ampliar equipo | $34,650.00 | $17,316.66 | $17,333.34 | 50.02% |
-| 8 ⚠️ requiere ampliar equipo | $39,600.00 | $18,086.93 | $21,513.07 | 54.33% |
-| 9 ⚠️ requiere ampliar equipo | $44,550.00 | $18,857.21 | $25,692.79 | 57.67% |
-| 10 ⚠️ requiere ampliar equipo | $49,500.00 | $19,627.48 | $29,872.52 | 60.35% |
+| 1 | $4,350.00 | $11,876.33 | $-7,526.33 | -173.02% |
+| 2 | $8,700.00 | $12,096.33 | $-3,396.33 | -39.04% |
+| 3 | $13,050.00 | $13,018.13 | $31.87 | 0.24% |
+| 4 | $17,400.00 | $13,939.93 | $3,460.07 | 19.89% |
+| 5 | $21,750.00 | $14,861.73 | $6,888.27 | 31.67% |
+| 6 | $26,100.00 | $15,783.53 | $10,316.47 | 39.53% |
+| 7 ⚠️ requiere ampliar equipo | $30,450.00 | $15,644.66 | $14,805.34 | 48.62% |
+| 8 ⚠️ requiere ampliar equipo | $34,800.00 | $16,414.93 | $18,385.07 | 52.83% |
+| 9 ⚠️ requiere ampliar equipo | $39,150.00 | $17,185.21 | $21,964.79 | 56.10% |
+| 10 ⚠️ requiere ampliar equipo | $43,500.00 | $17,955.48 | $25,544.52 | 58.72% |
+
+## Gestión de vulnerabilidades: sensibilidad al número de sedes ($560.00 por sede)
+
+| Sedes | Ingreso | Costo equipo | Utilidad | Margen |
+|---:|---:|---:|---:|---:|
+| 1 | $560.00 | $1,672.00 | $-1,112.00 | -198.57% |
+| 2 | $1,120.00 | $1,672.00 | $-552.00 | -49.29% |
+| 3 | $1,680.00 | $1,672.00 | $8.00 | 0.48% |
+| 4 | $2,240.00 | $1,672.00 | $568.00 | 25.36% |
+| 5 | $2,800.00 | $1,672.00 | $1,128.00 | 40.29% |
+| 6 | $3,360.00 | $1,672.00 | $1,688.00 | 50.24% |
+| 7 | $3,920.00 | $1,672.00 | $2,248.00 | 57.35% |
+| 8 | $4,480.00 | $1,672.00 | $2,808.00 | 62.68% |
+| 9 | $5,040.00 | $1,672.00 | $3,368.00 | 66.83% |
+| 10 | $5,600.00 | $1,672.00 | $3,928.00 | 70.14% |
+| 11 ⚠️ requiere ampliar equipo | $6,160.00 | $1,672.00 | $4,488.00 | 72.86% |
+| 12 ⚠️ requiere ampliar equipo | $6,720.00 | $1,672.00 | $5,048.00 | 75.12% |
 
 ## Colector FortiSIEM (opcional, se cobra aparte del plan)
 

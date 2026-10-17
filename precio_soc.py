@@ -9,8 +9,11 @@ Modelo:
                     + n * variable_por_cliente) * (1 + contingencia)
     precio_equilibrio = costo_mes(N) / N
 
-El precio se separa en dos módulos: «base» (incidentes, plataforma y
-licencias) y «vulnerabilidades» (personal del equipo de vulnerabilidades OT).
+Se venden dos servicios, juntos o por separado:
+  - SOC de incidentes (plan base): personal de incidentes y compartido,
+    plataforma, licencias FortiSIEM y almacenamiento; equilibrio en N clientes.
+  - Gestión de vulnerabilidades OT: precio por sede sin licencias; lo cubre el
+    personal del módulo vulnerabilidades; equilibrio en N × sedes promedio.
 
 Uso:
     python precio_soc.py                     # reporte Markdown con los supuestos por defecto
@@ -65,26 +68,25 @@ class PrecioSOC:
     escenario: str
     costos: CostosMensuales
     equilibrio_base: Decimal
-    equilibrio_vulnerabilidades: Decimal
     lista_base: Decimal
-    lista_vulnerabilidades: Decimal
     dispositivos_incluidos: int
     precio_dispositivo_adicional: Decimal
     precio_agente_adicional: Decimal
     precio_ueba_adicional: Decimal
+    costo_vulnerabilidades: Decimal  # equipo de vulnerabilidades al mes, con contingencia
+    sedes_equilibrio: int
+    equilibrio_por_sede: Decimal
+    precio_por_sede: Decimal
 
     @property
-    def equilibrio_total(self) -> Decimal:
-        return self.equilibrio_base + self.equilibrio_vulnerabilidades
-
-    @property
-    def lista_total(self) -> Decimal:
-        return self.lista_base + self.lista_vulnerabilidades
+    def sedes_minimas_con_precio_lista(self) -> int:
+        """Sedes que cubren el equipo de vulnerabilidades al precio por sede vigente."""
+        return int((self.costo_vulnerabilidades / self.precio_por_sede).to_integral_value(rounding=ROUND_CEILING))
 
 
 @dataclass(frozen=True)
 class FilaSensibilidad:
-    clientes: int
+    clientes: int  # clientes del SOC o sedes de vulnerabilidades, según la tabla
     ingreso: Decimal
     costo: Decimal
     utilidad: Decimal
@@ -165,6 +167,12 @@ class ModeloPrecioSOC:
                     raise ErrorModelo(f"Colector {op['opcion']!r}: divisor_mensual y meses_cobro deben ser al menos 1")
                 if _decimal(op.get("costo_total", op.get("costo_mensual")), "costo_colector") < 0:
                     raise ErrorModelo(f"Colector {op['opcion']!r}: costo negativo")
+            v = s["gestion_vulnerabilidades"]
+            if _decimal(v["precio_por_sede_usd"], "precio_por_sede_usd") <= 0:
+                raise ErrorModelo("gestion_vulnerabilidades.precio_por_sede_usd debe ser positivo")
+            if _entero_no_negativo(v["sedes_promedio_por_cliente"], "sedes_promedio_por_cliente") < 1:
+                raise ErrorModelo("gestion_vulnerabilidades.sedes_promedio_por_cliente debe ser al menos 1")
+            _entero_no_negativo(v["capacidad_max_sedes"], "capacidad_max_sedes")
             _entero_no_negativo(s["retencion_base"]["en_linea_dias"], "retencion_base.en_linea_dias")
             _entero_no_negativo(s["retencion_base"]["archivado_meses"], "retencion_base.archivado_meses")
             _entero_no_negativo(s["capacidad_max_clientes_sin_contratar"], "capacidad_max_clientes_sin_contratar")
@@ -226,19 +234,24 @@ class ModeloPrecioSOC:
             raise ErrorModelo("Se requiere al menos 1 cliente para el punto de equilibrio")
         nombre = self._escenario(escenario)
         costos = self.costos(n, escenario=nombre)
-        contingencia = 1 + _decimal(self.s["contingencia_fraccion"], "contingencia")
-        vulnerabilidades = _dinero(costos.personal_por_modulo["vulnerabilidades"] * contingencia / n)
-        total = costos.total / n
-        base = _dinero(total) - vulnerabilidades
+        v = self.s["gestion_vulnerabilidades"]
+        costo_vuln = self.costo_vulnerabilidades(nombre)
+        base = _dinero((costos.total - costo_vuln) / n)
+        sedes = n * v["sedes_promedio_por_cliente"]
         paso = _decimal(self.s["redondeo_precio_lista"], "redondeo")
         return PrecioSOC(
-            n, nombre, costos, base, vulnerabilidades,
-            _redondear_arriba(base, paso), _redondear_arriba(vulnerabilidades, paso),
+            n, nombre, costos, base, _redondear_arriba(base, paso),
             self.s["plan_base"]["dispositivos_incluidos"],
             self._precio_adicional("dispositivos", "margen_dispositivo_adicional"),
             self._precio_adicional("agentes_avanzados", "margen_agente_adicional"),
             self._precio_adicional("ueba", "margen_ueba_adicional"),
+            costo_vuln, sedes, _dinero(costo_vuln / sedes), _dinero(_decimal(v["precio_por_sede_usd"], "precio_por_sede")),
         )
+
+    def costo_vulnerabilidades(self, escenario: str | None = None) -> Decimal:
+        """Costo mensual del equipo de vulnerabilidades (con contingencia): no depende de clientes ni licencias."""
+        contingencia = 1 + _decimal(self.s["contingencia_fraccion"], "contingencia")
+        return _dinero(self.personal_por_modulo(escenario)["vulnerabilidades"] * contingencia)
 
     def opciones_colector(self) -> list[OpcionColector]:
         """Colector por cliente, cobrado aparte del plan: NUC (costo/divisor durante meses_cobro) o cargo mensual."""
@@ -255,14 +268,30 @@ class ModeloPrecioSOC:
         return opciones
 
     def sensibilidad(self, precio_mensual: Decimal, hasta_clientes: int = 10, escenario: str | None = None) -> list[FilaSensibilidad]:
-        """Resultado mensual si cada cliente paga `precio_mensual` (sin adicionales) y el equipo no cambia."""
+        """SOC de incidentes: resultado mensual si cada cliente paga `precio_mensual` (sin adicionales).
+
+        El equipo de vulnerabilidades queda fuera: lo cubre su propio servicio por sede.
+        """
         capacidad = self.s["capacidad_max_clientes_sin_contratar"]
+        costo_vuln = self.costo_vulnerabilidades(escenario)
         filas = []
         for n in range(1, hasta_clientes + 1):
-            costo = self.costos(n, escenario=escenario).total
+            costo = self.costos(n, escenario=escenario).total - costo_vuln
             ingreso = _dinero(precio_mensual * n)
             utilidad = ingreso - costo
             filas.append(FilaSensibilidad(n, ingreso, costo, utilidad, _dinero(utilidad / ingreso * 100), n > capacidad))
+        return filas
+
+    def sensibilidad_vulnerabilidades(self, hasta_sedes: int = 12, escenario: str | None = None) -> list[FilaSensibilidad]:
+        """Servicio de vulnerabilidades: resultado mensual según las sedes vendidas al precio por sede."""
+        v = self.s["gestion_vulnerabilidades"]
+        precio_sede = _decimal(v["precio_por_sede_usd"], "precio_por_sede")
+        costo = self.costo_vulnerabilidades(escenario)
+        filas = []
+        for sedes in range(1, hasta_sedes + 1):
+            ingreso = _dinero(precio_sede * sedes)
+            utilidad = ingreso - costo
+            filas.append(FilaSensibilidad(sedes, ingreso, costo, utilidad, _dinero(utilidad / ingreso * 100), sedes > v["capacidad_max_sedes"]))
         return filas
 
     def estimar_almacenamiento(self, eps: int) -> dict[str, Decimal]:
@@ -304,12 +333,16 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         "",
         "| Componente | Equilibrio | Precio lista |",
         "|---|---:|---:|",
-        f"| SOC base (incidentes + plataforma + {p.dispositivos_incluidos} dispositivos) | {_m(p.equilibrio_base)} | {_m(p.lista_base)} |",
-        f"| Módulo gestión de vulnerabilidades OT | {_m(p.equilibrio_vulnerabilidades)} | {_m(p.lista_vulnerabilidades)} |",
-        f"| **SOC OT completo** | **{_m(p.equilibrio_total)}** | **{_m(p.lista_total)}** |",
+        f"| SOC de incidentes, plan base (plataforma + {p.dispositivos_incluidos} dispositivos) | {_m(p.equilibrio_base)} | {_m(p.lista_base)} |",
+        f"| Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | {_m(p.equilibrio_por_sede)} | {_m(p.precio_por_sede)} |",
         f"| Dispositivo adicional | — | {_m(p.precio_dispositivo_adicional)} |",
         f"| Agente avanzado adicional | — | {_m(p.precio_agente_adicional)} |",
         f"| UEBA por agente avanzado (opcional) | — | {_m(p.precio_ueba_adicional)} |",
+        "",
+        f"Los dos servicios se venden juntos o por separado. El equilibrio por sede supone "
+        f"{s['gestion_vulnerabilidades']['sedes_promedio_por_cliente']} sedes por cliente ({p.sedes_equilibrio} sedes con "
+        f"{p.clientes_equilibrio} clientes). El equipo de vulnerabilidades cuesta {_m(p.costo_vulnerabilidades)}/mes: "
+        f"a {_m(p.precio_por_sede)} por sede se cubre desde {p.sedes_minimas_con_precio_lista} sedes.",
         "",
         f"## Costos mensuales con {c.clientes} clientes ({c.dispositivos} dispositivos agregados en FortiSIEM)",
         "",
@@ -328,12 +361,24 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         f"| Contingencia ({Decimal(s['contingencia_fraccion']) * 100:.0f}%) | {_m(c.contingencia)} |",
         f"| **Total** | **{_m(c.total)}** |",
         "",
-        f"## Sensibilidad al número de clientes (precio lista SOC OT completo {_m(p.lista_total)})",
+        f"## SOC de incidentes: sensibilidad al número de clientes (plan base {_m(p.lista_base)})",
+        "",
+        "Costo sin el equipo de vulnerabilidades, que lo cubre su propio servicio.",
         "",
         "| Clientes | Ingreso | Costo | Utilidad | Margen |",
         "|---:|---:|---:|---:|---:|",
     ]
-    for f in modelo.sensibilidad(p.lista_total, escenario=p.escenario):
+    for f in modelo.sensibilidad(p.lista_base, escenario=p.escenario):
+        nota = " ⚠️ requiere ampliar equipo" if f.excede_capacidad else ""
+        lin.append(f"| {f.clientes}{nota} | {_m(f.ingreso)} | {_m(f.costo)} | {_m(f.utilidad)} | {f.margen}% |")
+    lin += [
+        "",
+        f"## Gestión de vulnerabilidades: sensibilidad al número de sedes ({_m(p.precio_por_sede)} por sede)",
+        "",
+        "| Sedes | Ingreso | Costo equipo | Utilidad | Margen |",
+        "|---:|---:|---:|---:|---:|",
+    ]
+    for f in modelo.sensibilidad_vulnerabilidades(escenario=p.escenario):
         nota = " ⚠️ requiere ampliar equipo" if f.excede_capacidad else ""
         lin.append(f"| {f.clientes}{nota} | {_m(f.ingreso)} | {_m(f.costo)} | {_m(f.utilidad)} | {f.margen}% |")
     lin += [

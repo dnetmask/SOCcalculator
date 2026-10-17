@@ -37,18 +37,33 @@ class TestPrecioSOC(unittest.TestCase):
     def test_precio_equilibrio_cubre_costo_con_n_clientes(self):
         p = self.modelo.precio()
         self.assertEqual(p.clientes_equilibrio, 3)
-        self.assertLessEqual(abs(p.equilibrio_total * 3 - p.costos.total), Decimal("0.03"))
-        self.assertGreaterEqual(p.lista_total, p.equilibrio_total)
+        # SOC de incidentes x 3 clientes + equipo de vulnerabilidades = costo total
+        self.assertLessEqual(abs(p.equilibrio_base * 3 + p.costo_vulnerabilidades - p.costos.total), Decimal("0.03"))
+        self.assertGreaterEqual(p.lista_base, p.equilibrio_base)
         self.assertEqual(p.lista_base % 50, 0)
+
+    def test_vulnerabilidades_por_sede(self):
+        p = self.modelo.precio()
+        self.assertEqual(p.costo_vulnerabilidades, Decimal("3344.00"))  # 3040 x 1.10
+        self.assertEqual(p.sedes_equilibrio, 6)  # 3 clientes x 2 sedes
+        self.assertEqual(p.equilibrio_por_sede, Decimal("557.33"))
+        self.assertEqual(p.precio_por_sede, Decimal("560.00"))
+        self.assertEqual(p.sedes_minimas_con_precio_lista, 6)
+        filas = self.modelo.sensibilidad_vulnerabilidades(12)
+        self.assertLess(filas[4].utilidad, 0)
+        self.assertGreater(filas[5].utilidad, 0)
+        self.assertTrue(filas[10].excede_capacidad)
 
     def test_sensibilidad_cruza_cero_en_punto_de_equilibrio(self):
         p = self.modelo.precio()
-        filas = self.modelo.sensibilidad(p.lista_total, 4)
+        filas = self.modelo.sensibilidad(p.lista_base, 4)
         self.assertLess(filas[1].utilidad, 0)
         self.assertGreaterEqual(filas[2].utilidad, 0)
 
     def test_escenario_esbelto_es_mas_barato(self):
-        self.assertLess(self.modelo.precio(escenario="esbelto").lista_total, self.modelo.precio().lista_total)
+        esbelto, completo = self.modelo.precio(escenario="esbelto"), self.modelo.precio()
+        self.assertLess(esbelto.lista_base, completo.lista_base)
+        self.assertLess(esbelto.equilibrio_por_sede, completo.equilibrio_por_sede)
 
     def test_adicionales_con_margen(self):
         p = self.modelo.precio()
@@ -82,6 +97,8 @@ class TestPrecioSOC(unittest.TestCase):
             lambda s: s["opciones_colector"]["opciones"][1].update(meses_cobro=0),
             lambda s: s["escenarios_personal"]["completo"]["roles"][0].update(modulo="otro"),
             lambda s: s.pop("factor_prestacional"),
+            lambda s: s["gestion_vulnerabilidades"].update(precio_por_sede_usd="0"),
+            lambda s: s["gestion_vulnerabilidades"].update(sedes_promedio_por_cliente=0),
         ):
             s = copy.deepcopy(supuestos())
             mutar(s)

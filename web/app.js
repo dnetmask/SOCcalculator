@@ -7,7 +7,7 @@
   const usd0 = new Intl.NumberFormat("es-CO", { style: "currency", currency: "USD", currencyDisplay: "code", maximumFractionDigits: 0 });
   const pct = new Intl.NumberFormat("es-CO", { style: "percent", maximumFractionDigits: 1 });
   const CLAVE = "cotizador-soc-borrador";
-  const CAMPOS = ["cliente", "contacto", "plazo", "vuln", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "eps"];
+  const CAMPOS = ["cliente", "contacto", "plazo", "soc", "vuln", "sedes", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "eps"];
   const LICENCIAS = new Set(["disp", "agt", "ueba"]);
 
   let modelo = null;
@@ -38,7 +38,9 @@
       dispositivos: entero("dispositivos"),
       agentes: entero("agentes"),
       ueba: entero("ueba"),
+      soc: $("soc").checked,
       vulnerabilidades: $("vuln").checked,
+      sedes: entero("sedes"),
       colector: col ? Number(col.value) : 0,
       descuento: Number($("descuento").value) / 100,
       plazoMeses: Number($("plazo").value),
@@ -71,7 +73,21 @@
     $("filaUeba").classList.toggle("disabled", sinAgentes);
   }
 
+  // Cada servicio se activa por separado; sin SOC de incidentes no aplican sus complementos.
+  function sincronizarServicios() {
+    const soc = $("soc").checked;
+    const vuln = $("vuln").checked;
+    $("cardSoc").classList.toggle("off", !soc);
+    $("cardVuln").classList.toggle("off", !vuln);
+    $("seccionSoc").hidden = !soc;
+    if (vuln && entero("sedes") < 1) $("sedes").value = 1;
+    $("sedes").disabled = !vuln;
+    document.querySelectorAll('[data-step="sedes"]').forEach((b) => { b.disabled = !vuln; });
+    $("sinServicio").hidden = soc || vuln;
+  }
+
   function render() {
+    sincronizarServicios();
     sincronizarUeba();
     const sel = seleccion();
     const q = modelo.cotizar(sel);
@@ -79,7 +95,7 @@
     const p = q.precio;
 
     $("precioBase").textContent = usd0.format(p.listaBase) + "/mes";
-    $("precioVuln").textContent = usd0.format(p.listaVulnerabilidades);
+    $("precioSede").textContent = usd0.format(p.precioPorSede);
     $("precioDisp").textContent = usd0.format(p.precioDispositivo);
     $("precioAgente").textContent = usd0.format(p.precioAgente);
     $("precioUeba").textContent = usd0.format(p.precioUeba);
@@ -96,7 +112,9 @@
     $("hDate").textContent = new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
     $("hPlazo").textContent = `Plazo ${q.plazoMeses} meses`;
 
-    $("lineas").innerHTML = q.lineas.map((l) => `
+    $("lineas").innerHTML = q.vacia
+      ? `<tr><td colspan="4" class="muted">Activa el SOC de incidentes o la gestión de vulnerabilidades para armar la propuesta.</td></tr>`
+      : q.lineas.map((l) => `
       <tr>
         <td>${LICENCIAS.has(l.id) ? '<span class="lic" title="Licencia FortiSIEM MSSP"></span>' : ""}${esc(l.concepto)}${l.meses ? `<small>Cargo durante ${l.meses} meses</small>` : ""}</td>
         <td class="r num">${l.cantidad}</td>
@@ -106,7 +124,7 @@
 
     $("pie").innerHTML = q.descuentoMensual
       ? `<tr><td colspan="3">Subtotal</td><td class="r num">${usd.format(q.subtotalMensual)}</td></tr>
-         <tr class="disc"><td colspan="3">Descuento ${pct.format(q.descuento)} sobre servicios SOC</td><td class="r num">−${usd.format(q.descuentoMensual)}</td></tr>`
+         <tr class="disc"><td colspan="3">Descuento ${pct.format(q.descuento)} sobre servicios</td><td class="r num">−${usd.format(q.descuentoMensual)}</td></tr>`
       : "";
 
     const temporal = q.mesesConCargoTemporal && q.mensualInicial !== q.mensualRecurrente;
@@ -115,7 +133,11 @@
       ${temporal ? `<div class="total"><span class="eyebrow">Desde el mes ${q.mesesConCargoTemporal + 1}</span><b>${usd.format(q.mensualRecurrente)}</b><small>sin cargo de colector</small></div>` : ""}
       <div class="total"><span class="eyebrow">Valor del contrato</span><b>${usd.format(q.valorContrato)}</b><small>${q.plazoMeses} meses</small></div>`;
 
-    $("incluye").innerHTML = `<b>El plan incluye</b> ${p.dispositivosIncluidos} dispositivos, retención de eventos de ${ret.linea} en línea + ${ret.archivo} archivados, plataforma FortiSIEM MSSP en Azure con IOC de FortiGuard y soporte del SOC.`;
+    $("incluye").innerHTML = textoIncluye(q).map((x) => `<span>${x}</span>`).join("");
+    $("incluye").hidden = q.vacia;
+    $("termUeba").hidden = !q.soc;
+    $("termDisp").hidden = !q.soc;
+    $("termSonda").hidden = !q.sedes;
 
     const col = q.lineas.find((l) => l.id === "col");
     $("termColector").hidden = !col;
@@ -129,26 +151,41 @@
     guardarBorrador();
   }
 
-  function renderInterna(q, sel) {
+  function textoIncluye(q) {
     const p = q.precio;
-    const ok = q.contribucion >= 0;
-    const plan = q.lineas.filter((l) => l.id === "base" || l.id === "vuln").reduce((a, l) => a + l.neto, 0);
-    const eqPlan = p.equilibrioBase + (sel.vulnerabilidades ? p.equilibrioVulnerabilidades : 0);
-    $("kpis").innerHTML = `
-      <div class="kpi"><span class="eyebrow">Equilibrio del plan</span><b>${usd.format(eqPlan)}</b><small class="muted">por cliente con ${p.clientes} clientes</small></div>
-      <div class="kpi"><span class="eyebrow">Piso de esta oferta</span><b>${usd.format(q.pisoEquilibrio)}</b><small class="muted">equilibrio + costo de adicionales y colector</small></div>
-      <div class="kpi ${ok ? "ok" : "bad"}"><span class="eyebrow">Contribución mensual</span><b>${usd.format(q.contribucion)}</b><span class="pill ${ok ? "ok" : "bad"}">${ok ? "Sobre equilibrio" : "Bajo equilibrio"} · ${pct.format(q.margenSobrePiso)}</span></div>
-      <div class="kpi"><span class="eyebrow">Costo SOC mensual</span><b>${usd.format(p.costos.total)}</b><small class="muted">${p.costos.dispositivos} dispositivos agregados</small></div>`;
+    const ret = retencionTexto(p);
+    const partes = [];
+    if (q.soc) partes.push(`<b>SOC de incidentes:</b> ${p.dispositivosIncluidos} dispositivos, retención de eventos de ${ret.linea} en línea + ${ret.archivo} archivados, plataforma FortiSIEM MSSP en Azure con IOC de FortiGuard.`);
+    if (q.sedes) partes.push(`<b>Vulnerabilidades OT:</b> ${q.sedes} ${q.sedes === 1 ? "sede" : "sedes"} con inventario de activos, priorización por CVE, virtual patching y ciclo de parches ISA/IEC 62443-2-3.`);
+    return partes;
+  }
 
-    const filas = modelo.sensibilidad(plan, 8, sel.escenario);
+  function barras(filas, unidad) {
     const maxAbs = Math.max(1, ...filas.map((f) => Math.abs(f.utilidad)));
-    $("bars").innerHTML = filas.map((f) => {
+    return filas.map((f) => {
       const w = (Math.abs(f.utilidad) / maxAbs) * 50;
       return `<div class="bar" title="Ingreso ${usd0.format(f.ingreso)} · costo ${usd0.format(f.costo)}">
-        <span class="num">${f.clientes} cl.${f.excedeCapacidad ? " *" : ""}</span>
+        <span class="num">${f.clientes} ${unidad}${f.excedeCapacidad ? " *" : ""}</span>
         <span class="track"><span class="fill ${f.utilidad >= 0 ? "pos" : "neg"}" style="width:${w}%"></span></span>
         <span class="num r">${usd0.format(f.utilidad)}</span></div>`;
     }).join("");
+  }
+
+  function renderInterna(q, sel) {
+    const p = q.precio;
+    const ok = q.contribucion >= 0;
+    const base = q.lineas.find((l) => l.id === "base");
+    const vuln = q.lineas.find((l) => l.id === "vuln");
+    const planSoc = base ? base.neto : p.listaBase;
+    const precioSedeNeto = vuln ? vuln.neto / vuln.cantidad : p.precioPorSede;
+    $("kpis").innerHTML = `
+      <div class="kpi"><span class="eyebrow">Equilibrio SOC incidentes</span><b>${usd.format(p.equilibrioBase)}</b><small>por cliente con ${p.clientes} clientes</small></div>
+      <div class="kpi"><span class="eyebrow">Equilibrio vulnerabilidades</span><b>${usd.format(p.equilibrioPorSede)}</b><small>por sede con ${p.sedesEquilibrio} sedes · equipo ${usd0.format(p.costoVulnerabilidades)}/mes</small></div>
+      <div class="kpi"><span class="eyebrow">Piso de esta oferta</span><b>${usd.format(q.pisoEquilibrio)}</b><small>equilibrio + costo de adicionales y colector</small></div>
+      <div class="kpi ${ok ? "ok" : "bad"}"><span class="eyebrow">Contribución mensual</span><b>${usd.format(q.contribucion)}</b><span class="pill ${ok ? "ok" : "bad"}">${ok ? "Sobre equilibrio" : "Bajo equilibrio"} · ${pct.format(q.margenSobrePiso)}</span></div>`;
+
+    $("bars").innerHTML = barras(modelo.sensibilidad(planSoc, 8, sel.escenario), "cl.");
+    $("barsVuln").innerHTML = barras(modelo.sensibilidadVulnerabilidades(precioSedeNeto, 12, sel.escenario), "sed.");
     const a = modelo.estimarAlmacenamiento(entero("eps"));
     const gb = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
     $("almacenamiento").innerHTML = `
@@ -160,8 +197,9 @@
       <dt>EPS que cubre el presupuesto</dt><dd class="num">~${gb.format(a.epsCubiertos)}</dd>`;
 
     $("notaInterna").textContent =
-      `Plan neto ${usd0.format(plan)}/mes por cliente (base${sel.vulnerabilidades ? " + vulnerabilidades" : ""}, sin adicionales ni colector). ` +
-      `* Supera la capacidad del equipo actual (${modelo.supuestos.capacidad_max_clientes_sin_contratar} clientes); habría que contratar. ` +
+      `SOC de incidentes a ${usd0.format(planSoc)}/mes por cliente, sin adicionales ni colector; su costo excluye el equipo de vulnerabilidades. ` +
+      `Vulnerabilidades a ${usd0.format(precioSedeNeto)} por sede: cubre su equipo desde ${Math.ceil(p.costoVulnerabilidades / precioSedeNeto - 1e-9)} sedes. ` +
+      `* Supera la capacidad del equipo actual (${modelo.supuestos.capacidad_max_clientes_sin_contratar} clientes / ${modelo.supuestos.gestion_vulnerabilidades.capacidad_max_sedes} sedes). ` +
       `Supuestos editables en data/supuestos_soc.json.`;
   }
 
@@ -172,10 +210,11 @@
       `Propuesta SOC Netmask ${$("hNum").textContent}`,
       `Cliente: ${$("hClient").textContent}${$("hContact").textContent ? ` · ${$("hContact").textContent}` : ""}`,
       `Plazo: ${q.plazoMeses} meses`,
-      `Incluye: ${q.precio.dispositivosIncluidos} dispositivos y retención de ${retencionTexto(q.precio).linea} en línea + ${retencionTexto(q.precio).archivo} archivados.`,
+      ...textoIncluye(q).map((x) => x.replace(/<\/?b>/g, "")),
+      q.sedes ? "No incluye la licencia de la sonda OT, que aporta el cliente." : null,
       "",
       ...lineas,
-      q.descuentoMensual ? `- Descuento ${pct.format(q.descuento)} sobre servicios SOC: −${usd.format(q.descuentoMensual)}/mes` : null,
+      q.descuentoMensual ? `- Descuento ${pct.format(q.descuento)} sobre servicios: −${usd.format(q.descuentoMensual)}/mes` : null,
       "",
       `Mensualidad: ${usd.format(q.mensualInicial)}` + (q.mensualInicial !== q.mensualRecurrente ? ` (desde el mes ${q.mesesConCargoTemporal + 1}: ${usd.format(q.mensualRecurrente)})` : ""),
       `Valor del contrato: ${usd.format(q.valorContrato)}`,
@@ -229,7 +268,9 @@
     $("cliente").value = "";
     $("contacto").value = "";
     $("plazo").value = "12";
+    $("soc").checked = true;
     $("vuln").checked = false;
+    $("sedes").value = 1;
     $("dispositivos").value = modelo.supuestos.plan_base.dispositivos_incluidos;
     $("agentes").value = 0;
     $("ueba").value = 0;

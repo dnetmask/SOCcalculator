@@ -4,8 +4,10 @@ La base es la calculadora de licenciamiento FortiSIEM MSSP del líder del SOC (`
 
 ## Modelo de precio
 
-- **Plan SOC base (mensual por cliente)**: gestión de incidentes + plataforma; incluye **25 dispositivos** (`plan_base`).
-- **Módulo de gestión de vulnerabilidades OT**: precio aparte; cubre el costo del equipo de vulnerabilidades.
+Se venden dos servicios, juntos o por separado:
+
+- **SOC de gestión de incidentes (mensual por cliente)**: plataforma FortiSIEM e incluye **25 dispositivos** (`plan_base`). Su punto de equilibrio excluye el equipo de vulnerabilidades.
+- **Gestión de vulnerabilidades OT (mensual por sede)**: USD 560 por sede, sin licencias FortiSIEM ni colector. No incluye la licencia de la sonda OT, que aporta el cliente. Cubre el equipo de vulnerabilidades (USD 3.344/mes): con 2 sedes por cliente, 3 clientes = 6 sedes, el equilibrio es USD 557,33 por sede.
 - **Retención base incluida**: 1 mes de eventos en línea + 11 meses archivados (12 meses en total), cubierta por el almacenamiento Azure por cliente.
 - **Dispositivo / agente / UEBA adicional**: costo de licencia FortiSIEM del primer nivel (el más caro) / (1 − margen). UEBA se contrata por agente avanzado y no puede superar la cantidad de agentes.
 - **Colector (opcional, se cobra aparte del plan)**:
@@ -24,7 +26,7 @@ personal (salario COP × factor prestacional / TRM) + disponibilidad
 + contingencia 10 %
 ```
 
-Precio de equilibrio = costo(3) / 3, redondeado hacia arriba a múltiplos de USD 50.
+Precio de equilibrio del SOC de incidentes = (costo(3) − equipo de vulnerabilidades) / 3, redondeado hacia arriba a múltiplos de USD 50. Vulnerabilidades: equilibrio por sede = equipo de vulnerabilidades / (3 clientes × sedes promedio).
 
 ## Uso
 
@@ -39,7 +41,7 @@ Todos los supuestos están en `data/supuestos_soc.json`. Los que tienen `"origen
 
 ## Cotizador web (`web/`)
 
-Aplicación estática en HTML + JavaScript, sin compilación, con la imagen combinada Netmask + FortiSIEM. Arma la oferta en tiempo real: plan base con retención incluida, módulo de vulnerabilidades OT, dispositivos, agentes avanzados y UEBA, colector, descuento y plazo. Muestra la mensualidad, la mensualidad sin colector y el valor del contrato. Incluye una vista interna con el piso de equilibrio, la contribución de la oferta, la utilidad del SOC según el número de clientes y una estimación del almacenamiento por EPS con la retención base.
+Aplicación estática en HTML + JavaScript, sin compilación, con la imagen combinada Netmask + FortiSIEM. Arma la oferta en tiempo real: SOC de incidentes (con retención incluida, dispositivos, agentes avanzados, UEBA y colector) y gestión de vulnerabilidades OT por sede, juntos o por separado, con descuento y plazo. Muestra la mensualidad, la mensualidad sin colector y el valor del contrato. Incluye una vista interna con el piso de equilibrio, la contribución de la oferta, la utilidad del SOC según el número de clientes y una estimación del almacenamiento por EPS con la retención base.
 
 - `web/cotizador.js`: motor de cálculo. Replica `core.py` y `precio_soc.py` y lee los mismos `data/*.json`, así que al cambiar un supuesto cambian a la vez el cotizador y el reporte Python.
 - `web/app.js` y `web/index.html`: interfaz.

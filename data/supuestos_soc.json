@@ -15,6 +15,14 @@
     "archivado_meses": 11,
     "nota": "Retención incluida en el plan base: 1 mes de eventos en línea (búsqueda inmediata) y 11 meses archivados (recuperables), 12 meses en total. El costo está en el almacenamiento Azure por cliente."
   },
+  "gestion_vulnerabilidades": {
+    "nota": "Servicio que se vende solo o junto al SOC de incidentes. No usa licencias FortiSIEM ni colector. No incluye la licencia de la sonda OT (licencia OT de Fortinet, Nozomi, Claroty, TXOne...), que aporta el cliente. Lo cubre el personal del módulo vulnerabilidades.",
+    "precio_por_sede_usd": "560",
+    "origen_precio": "dato Netmask",
+    "sedes_promedio_por_cliente": 2,
+    "capacidad_max_sedes": 10,
+    "origen_sedes_y_capacidad": "supuesto"
+  },
   "costos_fijos_mensuales": [
     {
       "concepto": "Azure consumo base: 2 VM FortiSIEM MSSP (Supervisor + Worker)",

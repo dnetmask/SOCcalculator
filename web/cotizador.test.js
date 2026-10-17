@@ -18,15 +18,18 @@ test("licencias iguales a core.py", () => {
 test("punto de equilibrio igual a precio_soc.py", () => {
   const p = modelo.precio();
   assert.equal(p.costos.total, 19998.73);
-  assert.equal(p.equilibrioBase, 5551.57);
-  assert.equal(p.equilibrioVulnerabilidades, 1114.67);
+  assert.equal(p.equilibrioBase, 5551.58);
   assert.equal(p.listaBase, 5600);
-  assert.equal(p.listaVulnerabilidades, 1150);
+  assert.equal(p.costoVulnerabilidades, 3344);
+  assert.equal(p.sedesEquilibrio, 6);
+  assert.equal(p.equilibrioPorSede, 557.33);
+  assert.equal(p.precioPorSede, 560);
+  assert.equal(p.sedesMinimas, 6);
   assert.equal(p.precioDispositivo, 52);
   assert.equal(p.precioAgente, 10);
   assert.equal(p.precioUeba, 11);
   const e = modelo.precio(3, "esbelto");
-  assert.equal(e.listaBase + e.listaVulnerabilidades, 4950);
+  assert.equal(e.listaBase, 4350);
 });
 
 test("colector NUC: 250/mes durante 12 meses", () => {
@@ -37,17 +40,17 @@ test("colector NUC: 250/mes durante 12 meses", () => {
 
 test("cotización con base, módulo, adicionales y colector", () => {
   const nuc = modelo.opcionesColector().find((o) => o.opcion.startsWith("NUC")).id;
-  const q = modelo.cotizar({ dispositivos: 30, agentes: 20, vulnerabilidades: true, colector: nuc, descuento: 0.1, plazoMeses: 24 });
-  // 5600 + 1150 + 5x52 + 20x10 = 7210; 10% = 721; + 250 NUC
-  assert.equal(q.subtotalMensual, 7460);
-  assert.equal(q.descuentoMensual, 721);
-  assert.equal(q.mensualInicial, 6739);
-  assert.equal(q.mensualRecurrente, 6489);
+  const q = modelo.cotizar({ dispositivos: 30, agentes: 20, vulnerabilidades: true, sedes: 2, colector: nuc, descuento: 0.1, plazoMeses: 24 });
+  // 5600 + 2x560 + 5x52 + 20x10 = 7180; 10% = 718; + 250 NUC
+  assert.equal(q.subtotalMensual, 7430);
+  assert.equal(q.descuentoMensual, 718);
+  assert.equal(q.mensualInicial, 6712);
+  assert.equal(q.mensualRecurrente, 6462);
   assert.equal(q.mesesConCargoTemporal, 12);
-  assert.equal(q.valorContrato, 6489 * 24 + 250 * 12);
-  // Con 10 % de descuento el plan base (5040) queda bajo su equilibrio (5551.57).
+  assert.equal(q.valorContrato, 6462 * 24 + 250 * 12);
+  // Con 10 % de descuento el plan base (5040) queda bajo su equilibrio (5551.58).
   assert.ok(q.contribucion < 0);
-  const sinDescuento = modelo.cotizar({ dispositivos: 30, agentes: 20, vulnerabilidades: true, colector: nuc });
+  const sinDescuento = modelo.cotizar({ dispositivos: 30, agentes: 20, vulnerabilidades: true, sedes: 2, colector: nuc });
   assert.ok(sinDescuento.contribucion > 0);
 });
 
@@ -73,4 +76,24 @@ test("almacenamiento con retención base igual a precio_soc.py", () => {
   assert.equal(Math.round(r.gbArchivado), 428);
   assert.equal(r.costo, 14.39);
   assert.equal(r.epsCubiertos, 2781);
+});
+
+test("vulnerabilidades sola: por sede, sin licencias ni colector", () => {
+  const nuc = modelo.opcionesColector().find((o) => o.opcion.startsWith("NUC")).id;
+  const q = modelo.cotizar({ soc: false, dispositivos: 80, agentes: 10, ueba: 10, colector: nuc, vulnerabilidades: true, sedes: 3 });
+  assert.deepEqual(q.lineas.map((l) => l.id), ["vuln"]);
+  assert.equal(q.mensualInicial, 1680);
+  assert.equal(q.pisoEquilibrio, 1671.99);
+});
+
+test("sin servicios la oferta queda vacía", () => {
+  const q = modelo.cotizar({ soc: false, vulnerabilidades: false });
+  assert.equal(q.vacia, true);
+  assert.equal(q.mensualInicial, 0);
+});
+
+test("sensibilidad de vulnerabilidades cruza cero en 6 sedes", () => {
+  const f = modelo.sensibilidadVulnerabilidades(560, 12);
+  assert.ok(f[4].utilidad < 0 && f[5].utilidad > 0);
+  assert.equal(f[10].excedeCapacidad, true);
 });
