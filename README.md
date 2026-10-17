@@ -36,6 +36,22 @@ python -m unittest discover -s tests -p "test_*.py"
 
 Todos los supuestos están en `data/supuestos_soc.json`. Los que tienen `"origen": "supuesto"` son estimaciones que hay que reemplazar por cifras reales de nómina. Los reportes generados están en `docs/`.
 
+## Cotizador web (`web/`)
+
+Aplicación estática en HTML + JavaScript, sin compilación. Arma la oferta en tiempo real: plan base, módulo de vulnerabilidades OT, dispositivos y agentes adicionales, colector, descuento y plazo. Muestra la mensualidad, la mensualidad sin colector y el valor del contrato. Incluye una vista interna con el piso de equilibrio, la contribución de la oferta y la utilidad del SOC según el número de clientes.
+
+- `web/cotizador.js`: motor de cálculo. Replica `core.py` y `precio_soc.py` y lee los mismos `data/*.json`, así que al cambiar un supuesto cambian a la vez el cotizador y el reporte Python.
+- `web/app.js` y `web/index.html`: interfaz.
+- Pruebas: `node --test web/cotizador.test.js` (comparan con los valores del modelo Python).
+
+Para usarlo localmente, sirve la raíz del repositorio y abre `web/`:
+
+```bash
+python -m http.server 8000   # luego abrir http://localhost:8000/web/
+```
+
+Para publicarlo (Vercel, Azure Static Web Apps, GitHub Pages…), despliega la raíz del repositorio: el cotizador busca los JSON en `data/` o en `../data/`.
+
 ## Observaciones sobre las fuentes
 
 - El motor de licencias aplica **mínimos obligatorios** (50 dispositivos, 50 agentes, 25 UEBA). Eso deja un piso de USD 1.655/mes en licencias aunque haya 0 agentes y 0 UEBA. El Excel de Business Case de Fortinet no los aplica (cotiza 20 dispositivos en el año 1), así que conviene confirmarlo con Fortinet.

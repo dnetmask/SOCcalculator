@@ -33,7 +33,7 @@
     "margen": "0",
     "opciones": [
       {"opcion": "VM o servidor del cliente", "costo_mensual": "0", "origen": "dato Netmask"},
-      {"opcion": "NUC industrial on-prem (costo USD 1500)", "costo_total": "1500", "divisor_mensual": 6, "meses_cobro": 12, "origen": "dato Netmask: cargo mensual = costo/6, adicionado a la mensualidad durante 12 meses"},
+      {"opcion": "NUC industrial on-prem", "costo_total": "1500", "divisor_mensual": 6, "meses_cobro": 12, "origen": "dato Netmask: cargo mensual = costo/6, adicionado a la mensualidad durante 12 meses"},
       {"opcion": "Colector en Azure", "costo_mensual": "200", "origen": "dato Netmask"}
     ]
   },

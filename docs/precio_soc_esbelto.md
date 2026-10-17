@@ -51,7 +51,7 @@ Plan base por cliente: 25 dispositivos, 0 agentes avanzados. TRM supuesta: 4000 
 | Opción | Cargo adicional mensual | Duración del cargo | Total cobrado vs costo |
 |---|---:|---|---|
 | VM o servidor del cliente | $0.00 | recurrente | — |
-| NUC industrial on-prem (costo USD 1500) | $250.00 | 12 meses | $3,000.00 vs $1,500.00 |
+| NUC industrial on-prem | $250.00 | 12 meses | $3,000.00 vs $1,500.00 |
 | Colector en Azure | $200.00 | recurrente | — |
 
 ## Referencia: almacenamiento por EPS
