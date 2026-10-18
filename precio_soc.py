@@ -341,7 +341,7 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         f"# Precio SOC Netmask — punto de equilibrio con {p.clientes_equilibrio} clientes",
         "",
         f"Escenario de personal: **{p.escenario}** — {s['escenarios_personal'][p.escenario]['descripcion']}",
-        f"Plan base por cliente: {p.dispositivos_incluidos} dispositivos, "
+        f"Plan base por cliente: {p.dispositivos_incluidos} dispositivos/consolas fuente, "
         f"{s['plan_base']['agentes_avanzados_incluidos']} agentes avanzados. TRM supuesta: {s['tasa_cambio_cop_por_usd']} COP/USD.",
         f"Retención base de eventos: {s['retencion_base']['en_linea_dias']} días en línea + {s['retencion_base']['archivado_meses']} meses archivados.",
         "",
@@ -349,12 +349,12 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         "",
         "| Componente | Equilibrio | Precio lista |",
         "|---|---:|---:|",
-        f"| SOC de incidentes, plan base (plataforma + {p.dispositivos_incluidos} dispositivos) | {_m(p.equilibrio_base)} | {_m(p.lista_base)} |",
+        f"| SOC de incidentes, plan base (plataforma + {p.dispositivos_incluidos} dispositivos/consolas fuente) | {_m(p.equilibrio_base)} | {_m(p.lista_base)} |",
         f"| Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | {_m(p.equilibrio_por_sede)} | {_m(p.precio_por_sede)} |",
         f"| Vulnerabilidades desde la sede {s['gestion_vulnerabilidades']['descuento_volumen']['desde_sede']} del contrato "
         f"({Decimal(s['gestion_vulnerabilidades']['descuento_volumen']['descuento_fraccion']) * 100:.0f} % de descuento) | — | "
         f"{_m(modelo.tramos_vulnerabilidades(s['gestion_vulnerabilidades']['descuento_volumen']['desde_sede'])[-1][1])} |",
-        f"| Dispositivo adicional | — | {_m(p.precio_dispositivo_adicional)} |",
+        f"| Dispositivo/Consola fuente adicional | — | {_m(p.precio_dispositivo_adicional)} |",
         f"| Agente avanzado adicional | — | {_m(p.precio_agente_adicional)} |",
         f"| UEBA por agente avanzado (opcional) | — | {_m(p.precio_ueba_adicional)} |",
         "",
@@ -363,7 +363,7 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         f"{p.clientes_equilibrio} clientes). El equipo de vulnerabilidades cuesta {_m(p.costo_vulnerabilidades)}/mes: "
         f"a {_m(p.precio_por_sede)} por sede se cubre desde {p.sedes_minimas_con_precio_lista} sedes.",
         "",
-        f"## Costos mensuales con {c.clientes} clientes ({c.dispositivos} dispositivos agregados en FortiSIEM)",
+        f"## Costos mensuales con {c.clientes} clientes ({c.dispositivos} dispositivos/consolas fuente agregados en FortiSIEM)",
         "",
         "| Concepto | USD/mes |",
         "|---|---:|",

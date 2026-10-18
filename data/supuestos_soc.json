@@ -2,13 +2,13 @@
   "schema_version": "1.0.0",
   "moneda": "USD",
   "descripcion": "Supuestos de costo del servicio SOC Netmask para calcular el precio de punto de equilibrio. Todos los importes son mensuales salvo que se indique. Reemplazar los marcados como supuesto por valores reales de nómina y facturación Azure.",
-  "clientes_punto_equilibrio": 3,
+  "clientes_punto_equilibrio": 4,
   "tasa_cambio_cop_por_usd": "4000",
   "plan_base": {
-    "dispositivos_incluidos": 25,
+    "dispositivos_incluidos": 10,
     "agentes_avanzados_incluidos": 0,
     "ueba_incluidos": 0,
-    "nota": "Dispositivo = fuente de log facturable en FortiSIEM (firewall, switch, servidor, consola EDR...). La POC SOC OT contempla máximo 12 fuentes."
+    "nota": "Dispositivo/Consola fuente = fuente de log facturable en FortiSIEM (firewall, switch, servidor, consola EDR o de gestión...). La POC SOC OT contempla máximo 12 fuentes."
   },
   "retencion_base": {
     "en_linea_dias": 30,

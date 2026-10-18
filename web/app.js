@@ -157,7 +157,7 @@
     const p = q.precio;
     const ret = retencionTexto(p);
     const partes = [];
-    if (q.soc) partes.push(`<b>SOC de incidentes:</b> ${p.dispositivosIncluidos} dispositivos, retención de eventos de ${ret.linea} en línea + ${ret.archivo} archivados, plataforma FortiSIEM MSSP en Azure con IOC de FortiGuard.`);
+    if (q.soc) partes.push(`<b>SOC de incidentes:</b> ${p.dispositivosIncluidos} dispositivos/consolas fuente, retención de eventos de ${ret.linea} en línea + ${ret.archivo} archivados, plataforma FortiSIEM MSSP en Azure con IOC de FortiGuard.`);
     if (q.sedes) partes.push(`<b>Vulnerabilidades OT:</b> ${q.sedes} ${q.sedes === 1 ? "sede" : "sedes"} con inventario de activos, priorización por CVE, virtual patching y ciclo de parches ISA/IEC 62443-2-3.`);
     return partes;
   }

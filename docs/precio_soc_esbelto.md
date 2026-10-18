@@ -1,23 +1,23 @@
-# Precio SOC Netmask — punto de equilibrio con 3 clientes
+# Precio SOC Netmask — punto de equilibrio con 4 clientes
 
 Escenario de personal: **esbelto** — Arranque con equipo mínimo 8x5 + disponibilidad; vulnerabilidades a media dedicación.
-Plan base por cliente: 25 dispositivos, 0 agentes avanzados. TRM supuesta: 4000 COP/USD.
+Plan base por cliente: 10 dispositivos/consolas fuente, 0 agentes avanzados. TRM supuesta: 4000 COP/USD.
 Retención base de eventos: 30 días en línea + 11 meses archivados.
 
 ## Precio propuesto (mensual por cliente, USD)
 
 | Componente | Equilibrio | Precio lista |
 |---|---:|---:|
-| SOC de incidentes, plan base (plataforma + 25 dispositivos) | $4,339.38 | $4,350.00 |
-| Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | $278.67 | $560.00 |
+| SOC de incidentes, plan base (plataforma + 10 dispositivos/consolas fuente) | $3,134.08 | $3,150.00 |
+| Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | $209.00 | $560.00 |
 | Vulnerabilidades desde la sede 11 del contrato (50 % de descuento) | — | $280.00 |
-| Dispositivo adicional | — | $52.00 |
+| Dispositivo/Consola fuente adicional | — | $52.00 |
 | Agente avanzado adicional | — | $10.00 |
 | UEBA por agente avanzado (opcional) | — | $11.00 |
 
-Los dos servicios se venden juntos o por separado. El equilibrio por sede supone 2 sedes por cliente (6 sedes con 3 clientes). El equipo de vulnerabilidades cuesta $1,672.00/mes: a $560.00 por sede se cubre desde 3 sedes.
+Los dos servicios se venden juntos o por separado. El equilibrio por sede supone 2 sedes por cliente (8 sedes con 4 clientes). El equipo de vulnerabilidades cuesta $1,672.00/mes: a $560.00 por sede se cubre desde 3 sedes.
 
-## Costos mensuales con 3 clientes (75 dispositivos agregados en FortiSIEM)
+## Costos mensuales con 4 clientes (40 dispositivos/consolas fuente agregados en FortiSIEM)
 
 | Concepto | USD/mes |
 |---|---:|
@@ -28,29 +28,29 @@ Los dos servicios se venden juntos o por separado. El equilibrio por sede supone
 | Azure consumo base: 2 VM FortiSIEM MSSP (Supervisor + Worker) | $400.00 |
 | Herramientas SOC (ticketing, threat intel, acceso remoto) | $150.00 |
 | Cuota anual programa FortiSIEM MSSP (prorrateada /12) | $416.67 |
-| Licencia FortiSIEM dispositivos (75 facturables × $25.52) | $1,914.00 |
+| Licencia FortiSIEM dispositivos (50 facturables × $25.52) | $1,276.00 |
 | Licencia FortiSIEM agentes_avanzados (50 facturables × $4.97) | $248.50 |
 | Licencia FortiSIEM ueba (25 facturables × $5.22) | $130.50 |
-| Azure almacenamiento de eventos por cliente × 3 | $600.00 |
-| Contingencia (10%) | $1,335.47 |
-| **Total** | **$14,690.13** |
+| Azure almacenamiento de eventos por cliente × 4 | $800.00 |
+| Contingencia (10%) | $1,291.67 |
+| **Total** | **$14,208.33** |
 
-## SOC de incidentes: sensibilidad al número de clientes (plan base $4,350.00)
+## SOC de incidentes: sensibilidad al número de clientes (plan base $3,150.00)
 
 Costo sin el equipo de vulnerabilidades, que lo cubre su propio servicio.
 
 | Clientes | Ingreso | Costo | Utilidad | Margen |
 |---:|---:|---:|---:|---:|
-| 1 | $4,350.00 | $11,876.33 | $-7,526.33 | -173.02% |
-| 2 | $8,700.00 | $12,096.33 | $-3,396.33 | -39.04% |
-| 3 | $13,050.00 | $13,018.13 | $31.87 | 0.24% |
-| 4 | $17,400.00 | $13,939.93 | $3,460.07 | 19.89% |
-| 5 | $21,750.00 | $14,861.73 | $6,888.27 | 31.67% |
-| 6 | $26,100.00 | $15,783.53 | $10,316.47 | 39.53% |
-| 7 ⚠️ requiere ampliar equipo | $30,450.00 | $15,644.66 | $14,805.34 | 48.62% |
-| 8 ⚠️ requiere ampliar equipo | $34,800.00 | $16,414.93 | $18,385.07 | 52.83% |
-| 9 ⚠️ requiere ampliar equipo | $39,150.00 | $17,185.21 | $21,964.79 | 56.10% |
-| 10 ⚠️ requiere ampliar equipo | $43,500.00 | $17,955.48 | $25,544.52 | 58.72% |
+| 1 | $3,150.00 | $11,876.33 | $-8,726.33 | -277.03% |
+| 2 | $6,300.00 | $12,096.33 | $-5,796.33 | -92.01% |
+| 3 | $9,450.00 | $12,316.33 | $-2,866.33 | -30.33% |
+| 4 | $12,600.00 | $12,536.33 | $63.67 | 0.51% |
+| 5 | $15,750.00 | $12,756.33 | $2,993.67 | 19.01% |
+| 6 | $18,900.00 | $13,257.05 | $5,642.95 | 29.86% |
+| 7 ⚠️ requiere ampliar equipo | $22,050.00 | $13,757.77 | $8,292.23 | 37.61% |
+| 8 ⚠️ requiere ampliar equipo | $25,200.00 | $14,258.49 | $10,941.51 | 43.42% |
+| 9 ⚠️ requiere ampliar equipo | $28,350.00 | $14,759.21 | $13,590.79 | 47.94% |
+| 10 ⚠️ requiere ampliar equipo | $31,500.00 | $15,259.93 | $16,240.07 | 51.56% |
 
 ## Gestión de vulnerabilidades: sensibilidad al número de sedes ($560.00 por sede)
 

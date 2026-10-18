@@ -203,7 +203,7 @@
 
       const lineas = [];
       if (soc) {
-        lineas.push({ id: "base", concepto: `SOC de incidentes: plataforma FortiSIEM y ${p.dispositivosIncluidos} dispositivos`,
+        lineas.push({ id: "base", concepto: `SOC de incidentes: plataforma FortiSIEM y ${p.dispositivosIncluidos} dispositivos/consolas fuente`,
                       cantidad: 1, unitario: p.listaBase, costo: p.equilibrioBase, descontable: true, meses: null });
       }
       if (sedes) {
@@ -220,7 +220,7 @@
         }
       }
       if (soc && extraDisp) {
-        lineas.push({ id: "disp", concepto: "Dispositivos adicionales", cantidad: extraDisp,
+        lineas.push({ id: "disp", concepto: "Dispositivos/consolas fuente adicionales", cantidad: extraDisp,
                       unitario: p.precioDispositivo, costo: p.costoDispositivo, descontable: true, meses: null });
       }
       if (soc && extraAg) {

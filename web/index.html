@@ -266,7 +266,7 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
               <li>Depuración de falsos positivos y respuesta a incidentes</li>
               <li>FortiSIEM MSSP en Azure con IOC de FortiGuard</li>
               <li>CMDB de activos y monitoreo de disponibilidad</li>
-              <li><span id="incluidos">25</span> dispositivos incluidos</li>
+              <li><span id="incluidos">10</span> dispositivos/consolas fuente incluidos</li>
             </ul>
           </div>
           <div class="price num" id="precioBase">—</div>
@@ -306,8 +306,8 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
       <section class="block" id="seccionSoc">
         <div class="block-head"><h2>Complementos del SOC de incidentes</h2></div>
         <div class="row">
-          <div class="what"><strong>Dispositivos monitoreados</strong><span><span id="incluidos2">25</span> incluidos · adicional <span class="num" id="precioDisp">—</span>/mes c/u</span></div>
-          <div class="stepper"><button type="button" data-step="dispositivos" data-d="-1" aria-label="Quitar dispositivo">−</button><input id="dispositivos" type="number" min="0" step="1" value="30" inputmode="numeric" aria-label="Dispositivos"><button type="button" data-step="dispositivos" data-d="1" aria-label="Agregar dispositivo">+</button></div>
+          <div class="what"><strong>Dispositivo/Consola fuente</strong><span><span id="incluidos2">10</span> incluidos · adicional <span class="num" id="precioDisp">—</span>/mes c/u</span></div>
+          <div class="stepper"><button type="button" data-step="dispositivos" data-d="-1" aria-label="Quitar dispositivo/consola fuente">−</button><input id="dispositivos" type="number" min="0" step="1" value="12" inputmode="numeric" aria-label="Dispositivos/consolas fuente"><button type="button" data-step="dispositivos" data-d="1" aria-label="Agregar dispositivo/consola fuente">+</button></div>
         </div>
         <div class="row">
           <div class="what"><strong>Agentes avanzados FortiSIEM</strong><span>Windows y Linux: integridad de archivos, cambios de registro · <span class="num" id="precioAgente">—</span>/mes c/u</span></div>
@@ -351,7 +351,7 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
         <p class="includes" id="incluye"></p>
         <ul class="terms">
           <li>Valores en USD antes de impuestos, facturación mensual.</li>
-          <li id="termDisp">Dispositivo = fuente de log integrada al FortiSIEM (firewall, switch, servidor, consola EDR).</li>
+          <li id="termDisp">Dispositivo/Consola fuente = fuente de log integrada al FortiSIEM (firewall, switch, servidor, consola EDR o de gestión).</li>
           <li id="termUeba">UEBA se contrata por agente avanzado: no puede superar la cantidad de agentes.</li>
           <li id="termSonda">Gestión de vulnerabilidades: no incluye la licencia de la sonda OT, que aporta el cliente.</li>
           <li id="termColector" hidden></li>

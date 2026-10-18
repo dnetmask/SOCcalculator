@@ -29,24 +29,25 @@ class TestPrecioSOC(unittest.TestCase):
         self.assertEqual(p["vulnerabilidades"], Decimal("3040"))
 
     def test_licencias_usan_motor_con_dispositivos_agregados(self):
-        c = self.modelo.costos(3)
-        self.assertEqual(c.dispositivos, 75)
-        self.assertEqual(c.licencias.consumo_total, Decimal("2293.00"))
+        c = self.modelo.costos(4)
+        self.assertEqual(c.dispositivos, 40)  # 4 clientes x 10; FortiSIEM factura el mínimo de 50
+        self.assertEqual(c.licencias.consumo_total, Decimal("1655.00"))
         self.assertEqual(c.cuota_programa_mensual, Decimal("416.67"))
 
     def test_precio_equilibrio_cubre_costo_con_n_clientes(self):
         p = self.modelo.precio()
-        self.assertEqual(p.clientes_equilibrio, 3)
-        # SOC de incidentes x 3 clientes + equipo de vulnerabilidades = costo total
-        self.assertLessEqual(abs(p.equilibrio_base * 3 + p.costo_vulnerabilidades - p.costos.total), Decimal("0.03"))
+        self.assertEqual(p.clientes_equilibrio, 4)
+        self.assertEqual(p.lista_base, Decimal("4050.00"))
+        # SOC de incidentes x 4 clientes + equipo de vulnerabilidades = costo total
+        self.assertLessEqual(abs(p.equilibrio_base * 4 + p.costo_vulnerabilidades - p.costos.total), Decimal("0.03"))
         self.assertGreaterEqual(p.lista_base, p.equilibrio_base)
         self.assertEqual(p.lista_base % 50, 0)
 
     def test_vulnerabilidades_por_sede(self):
         p = self.modelo.precio()
         self.assertEqual(p.costo_vulnerabilidades, Decimal("3344.00"))  # 3040 x 1.10
-        self.assertEqual(p.sedes_equilibrio, 6)  # 3 clientes x 2 sedes
-        self.assertEqual(p.equilibrio_por_sede, Decimal("557.33"))
+        self.assertEqual(p.sedes_equilibrio, 8)  # 4 clientes x 2 sedes
+        self.assertEqual(p.equilibrio_por_sede, Decimal("418.00"))
         self.assertEqual(p.precio_por_sede, Decimal("560.00"))
         self.assertEqual(p.sedes_minimas_con_precio_lista, 6)
         filas = self.modelo.sensibilidad_vulnerabilidades(12)
@@ -61,9 +62,9 @@ class TestPrecioSOC(unittest.TestCase):
 
     def test_sensibilidad_cruza_cero_en_punto_de_equilibrio(self):
         p = self.modelo.precio()
-        filas = self.modelo.sensibilidad(p.lista_base, 4)
-        self.assertLess(filas[1].utilidad, 0)
-        self.assertGreaterEqual(filas[2].utilidad, 0)
+        filas = self.modelo.sensibilidad(p.lista_base, 5)
+        self.assertLess(filas[2].utilidad, 0)
+        self.assertGreaterEqual(filas[3].utilidad, 0)
 
     def test_escenario_esbelto_es_mas_barato(self):
         esbelto, completo = self.modelo.precio(escenario="esbelto"), self.modelo.precio()
@@ -113,7 +114,7 @@ class TestPrecioSOC(unittest.TestCase):
 
     def test_reporte_markdown(self):
         texto = reporte_markdown(self.modelo)
-        self.assertIn("punto de equilibrio con 3 clientes", texto)
+        self.assertIn("punto de equilibrio con 4 clientes", texto)
         self.assertIn("Colector en Azure", texto)
 
 
