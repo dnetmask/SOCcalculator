@@ -7,7 +7,7 @@
   const usd0 = new Intl.NumberFormat("es-CO", { style: "currency", currency: "USD", currencyDisplay: "code", maximumFractionDigits: 0 });
   const pct = new Intl.NumberFormat("es-CO", { style: "percent", maximumFractionDigits: 1 });
   const CLAVE = "cotizador-soc-borrador";
-  const CAMPOS = ["cliente", "contacto", "plazo", "soc", "vuln", "sedes", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "eps", "cantColector"];
+  const CAMPOS = ["cliente", "contacto", "plazo", "soc", "vuln", "sedes", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "eps"];
   const LICENCIAS = new Set(["disp", "agt", "ueba"]);
 
   let modelo = null;
@@ -32,8 +32,14 @@
     return Number.isFinite(v) && v >= 0 ? v : 0;
   }
 
+  // Cantidad por tipo de colector con costo (NUC, Azure); cada uno es independiente.
+  function cantidadesColector() {
+    return Object.fromEntries(modelo.opcionesColector()
+      .filter((o) => o.precioMensual > 0)
+      .map((o) => [o.id, entero(`colN${o.id}`)]));
+  }
+
   function seleccion() {
-    const col = document.querySelector('input[name="colector"]:checked');
     return {
       dispositivos: entero("dispositivos"),
       agentes: entero("agentes"),
@@ -41,8 +47,7 @@
       soc: $("soc").checked,
       vulnerabilidades: $("vuln").checked,
       sedes: entero("sedes"),
-      colector: col ? Number(col.value) : 0,
-      colectores: Math.max(1, entero("cantColector")),
+      colectores: cantidadesColector(),
       descuento: Number($("descuento").value) / 100,
       plazoMeses: Number($("plazo").value),
       clientesEquilibrio: Math.max(1, entero("clientesEq") || 1),
@@ -87,12 +92,15 @@
     $("sinServicio").hidden = soc || vuln;
   }
 
-  // La cantidad solo aplica a colectores con costo (NUC o Azure); siempre al menos 1.
+  // Resalta cada tipo con cantidad > 0; sin colectores pagos, el cliente aporta la VM.
   function sincronizarColector() {
-    const col = document.querySelector('input[name="colector"]:checked');
-    const op = col && modelo.opcionesColector().find((o) => o.id === Number(col.value));
-    $("filaCantColector").hidden = !(op && op.precioMensual > 0);
-    if (entero("cantColector") < 1) $("cantColector").value = 1;
+    let alguno = false;
+    for (const [id, n] of Object.entries(cantidadesColector())) {
+      $(`colCard${id}`).classList.toggle("activo", n > 0);
+      alguno = alguno || n > 0;
+    }
+    const vm = modelo.opcionesColector().find((o) => o.precioMensual === 0);
+    if (vm) $(`colCard${vm.id}`).classList.toggle("activo", !alguno);
   }
 
   function render() {
@@ -142,7 +150,7 @@
     const temporal = q.mesesConCargoTemporal && q.mensualInicial !== q.mensualRecurrente;
     $("totales").innerHTML = `
       <div class="total main"><span class="eyebrow">${temporal ? `Mensualidad meses 1–${q.mesesConCargoTemporal}` : "Mensualidad"}</span><b>${usd.format(q.mensualInicial)}</b><small>USD + impuestos</small></div>
-      ${temporal ? `<div class="total"><span class="eyebrow">Desde el mes ${q.mesesConCargoTemporal + 1}</span><b>${usd.format(q.mensualRecurrente)}</b><small>sin cargo de colector</small></div>` : ""}
+      ${temporal ? `<div class="total"><span class="eyebrow">Desde el mes ${q.mesesConCargoTemporal + 1}</span><b>${usd.format(q.mensualRecurrente)}</b><small>sin el cargo temporal del NUC</small></div>` : ""}
       <div class="total"><span class="eyebrow">Valor del contrato</span><b>${usd.format(q.valorContrato)}</b><small>${q.plazoMeses} meses</small></div>`;
 
     $("incluye").innerHTML = textoIncluye(q).map((x) => `<span>${x}</span>`).join("");
@@ -151,14 +159,12 @@
     $("termDisp").hidden = !q.soc;
     $("termSonda").hidden = !q.sedes;
 
-    const col = q.lineas.find((l) => l.id === "col");
-    $("termColector").hidden = !col;
-    if (col) {
-      const cuantos = col.cantidad === 1 ? "El colector se cobra" : `Cada uno de los ${col.cantidad} colectores se cobra`;
-      $("termColector").textContent = col.meses
-        ? `${cuantos} ${usd.format(col.unitario)} al mes durante ${col.meses} meses, sumado a la mensualidad.`
-        : `${cuantos} ${usd.format(col.unitario)} al mes mientras dure el servicio.`;
-    }
+    const cols = q.lineas.filter((l) => l.id.startsWith("col"));
+    $("termColector").hidden = !cols.length;
+    $("termColector").textContent = cols.map((c) => {
+      const que = `${c.cantidad} × ${c.concepto.replace("Colector: ", "")} a ${usd.format(c.unitario)}`;
+      return c.meses ? `${que} al mes durante ${c.meses} meses` : `${que} al mes mientras dure el servicio`;
+    }).join("; ") + (cols.length ? ", sumados a la mensualidad." : "");
 
     renderInterna(q, sel);
     guardarBorrador();
@@ -256,7 +262,7 @@
   function guardarBorrador() {
     try {
       const datos = Object.fromEntries(CAMPOS.map((id) => [id, $(id).type === "checkbox" ? $(id).checked : $(id).value]));
-      datos.colector = (document.querySelector('input[name="colector"]:checked') || {}).value;
+      datos.colectores = cantidadesColector();
       localStorage.setItem(CLAVE, JSON.stringify(datos));
     } catch (_) { /* sin almacenamiento: la página funciona igual */ }
   }
@@ -270,8 +276,9 @@
         if ($(id).type === "checkbox") $(id).checked = datos[id];
         else $(id).value = datos[id];
       }
-      const radio = document.querySelector(`input[name="colector"][value="${datos.colector}"]`);
-      if (radio) radio.checked = true;
+      for (const [id, n] of Object.entries(datos.colectores || {})) {
+        if ($(`colN${id}`)) $(`colN${id}`).value = n;
+      }
       $("ejemplo").hidden = true;
     } catch (_) { /* borrador ilegible: se ignora */ }
   }
@@ -287,9 +294,8 @@
     $("dispositivos").value = modelo.supuestos.plan_base.dispositivos_incluidos;
     $("agentes").value = 0;
     $("ueba").value = 0;
-    $("cantColector").value = 1;
+    for (const id of Object.keys(cantidadesColector())) $(`colN${id}`).value = 0;
     $("descuento").value = 0;
-    document.querySelector('input[name="colector"]').checked = true;
     $("ejemplo").hidden = true;
     $("copiaTexto").hidden = true;
     render();
@@ -311,15 +317,14 @@
       `<option value="${esc(n)}"${n === modelo.supuestos.escenario_personal ? " selected" : ""}>${esc(n)}</option>`).join("");
     $("clientesEq").value = modelo.supuestos.clientes_punto_equilibrio;
 
-    const ops = modelo.opcionesColector();
-    const nuc = ops.find((o) => o.mesesCobro) || ops[0];
-    $("colectores").innerHTML = ops.map((o) => `
-      <label class="opt">
-        <input type="radio" name="colector" id="colector-${o.id}" value="${o.id}"${o.id === nuc.id ? " checked" : ""}>
+    // Ejemplo inicial: un NUC industrial.
+    $("colectores").innerHTML = modelo.opcionesColector().map((o) => `
+      <div class="opt" id="colCard${o.id}">
         <strong>${esc(o.opcion)}</strong>
-        <span class="num">${o.precioMensual ? usd0.format(o.precioMensual) + "/mes" : "Sin costo"}</span>
-        <small>${o.mesesCobro ? `Equipo de ${usd0.format(o.costoTotal)} · durante ${o.mesesCobro} meses` : o.precioMensual ? "Recurrente" : "El cliente aporta la VM"}</small>
-      </label>`).join("");
+        <span class="num">${o.precioMensual ? usd0.format(o.precioMensual) + "/mes c/u" : "Sin costo"}</span>
+        <small>${o.mesesCobro ? `Equipo de ${usd0.format(o.costoTotal)} · durante ${o.mesesCobro} meses` : o.precioMensual ? "Recurrente" : "Aplica si no se cotizan colectores"}</small>
+        ${o.precioMensual ? `<div class="stepper"><button type="button" data-step="colN${o.id}" data-d="-1" aria-label="Quitar ${esc(o.opcion)}">−</button><input id="colN${o.id}" type="number" min="0" step="1" value="${o.mesesCobro ? 1 : 0}" inputmode="numeric" aria-label="Cantidad de ${esc(o.opcion)}"><button type="button" data-step="colN${o.id}" data-d="1" aria-label="Agregar ${esc(o.opcion)}">+</button></div>` : ""}
+      </div>`).join("");
 
     cargarBorrador();
 

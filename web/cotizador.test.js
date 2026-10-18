@@ -40,7 +40,7 @@ test("colector NUC: 250/mes durante 12 meses", () => {
 
 test("cotización con base, módulo, adicionales y colector", () => {
   const nuc = modelo.opcionesColector().find((o) => o.opcion.startsWith("NUC")).id;
-  const q = modelo.cotizar({ dispositivos: 30, agentes: 20, vulnerabilidades: true, sedes: 2, colector: nuc, descuento: 0.1, plazoMeses: 24 });
+  const q = modelo.cotizar({ dispositivos: 30, agentes: 20, vulnerabilidades: true, sedes: 2, colectores: { [nuc]: 1 }, descuento: 0.1, plazoMeses: 24 });
   // 4050 + 2x560 + 20x52 + 20x10 = 6410; 10% = 641; + 250 NUC
   assert.equal(q.subtotalMensual, 6660);
   assert.equal(q.descuentoMensual, 641);
@@ -52,24 +52,24 @@ test("cotización con base, módulo, adicionales y colector", () => {
   // aunque el margen de los adicionales compensa la oferta completa.
   assert.ok(q.lineas.find((l) => l.id === "base").neto < q.precio.equilibrioBase);
   assert.ok(q.contribucion > 0);
-  const sinDescuento = modelo.cotizar({ dispositivos: 30, agentes: 20, vulnerabilidades: true, sedes: 2, colector: nuc });
+  const sinDescuento = modelo.cotizar({ dispositivos: 30, agentes: 20, vulnerabilidades: true, sedes: 2, colectores: { [nuc]: 1 } });
   assert.ok(sinDescuento.contribucion > 0);
 });
 
 test("sin adicionales ni colector la oferta es solo el plan base", () => {
   const vm = modelo.opcionesColector().find((o) => o.precioMensual === 0).id;
-  const q = modelo.cotizar({ dispositivos: 10, agentes: 0, vulnerabilidades: false, colector: vm });
+  const q = modelo.cotizar({ dispositivos: 10, agentes: 0, vulnerabilidades: false, colectores: {} });
   assert.deepEqual(q.lineas.map((l) => l.id), ["base"]);
   assert.equal(q.mensualInicial, 4050);
 });
 
 test("UEBA se cobra por agente y nunca supera los agentes", () => {
   const vm = modelo.opcionesColector().find((o) => o.precioMensual === 0).id;
-  const q = modelo.cotizar({ dispositivos: 25, agentes: 10, ueba: 40, colector: vm });
+  const q = modelo.cotizar({ dispositivos: 25, agentes: 10, ueba: 40 });
   const l = q.lineas.find((x) => x.id === "ueba");
   assert.equal(l.cantidad, 10);
   assert.equal(l.subtotal, 110);
-  assert.equal(modelo.cotizar({ dispositivos: 25, agentes: 0, ueba: 5, colector: vm }).lineas.some((x) => x.id === "ueba"), false);
+  assert.equal(modelo.cotizar({ dispositivos: 25, agentes: 0, ueba: 5 }).lineas.some((x) => x.id === "ueba"), false);
 });
 
 test("almacenamiento con retención base igual a precio_soc.py", () => {
@@ -82,7 +82,7 @@ test("almacenamiento con retención base igual a precio_soc.py", () => {
 
 test("vulnerabilidades sola: por sede, sin licencias ni colector", () => {
   const nuc = modelo.opcionesColector().find((o) => o.opcion.startsWith("NUC")).id;
-  const q = modelo.cotizar({ soc: false, dispositivos: 80, agentes: 10, ueba: 10, colector: nuc, vulnerabilidades: true, sedes: 3 });
+  const q = modelo.cotizar({ soc: false, dispositivos: 80, agentes: 10, ueba: 10, colectores: { [nuc]: 2 }, vulnerabilidades: true, sedes: 3 });
   assert.deepEqual(q.lineas.map((l) => l.id), ["vuln"]);
   assert.equal(q.mensualInicial, 1680);
   assert.equal(q.pisoEquilibrio, 1254);
@@ -109,14 +109,15 @@ test("vulnerabilidades: 50 % de descuento desde la sede 11", () => {
   assert.equal(modelo.cotizar({ soc: false, vulnerabilidades: true, sedes: 10 }).lineas.length, 1);
 });
 
-test("cantidad de colectores NUC", () => {
-  const nuc = modelo.opcionesColector().find((o) => o.opcion.startsWith("NUC")).id;
-  const q = modelo.cotizar({ dispositivos: 10, colector: nuc, colectores: 3, plazoMeses: 24 });
-  const l = q.lineas.find((x) => x.id === "col");
-  assert.equal(l.cantidad, 3);
-  assert.equal(l.subtotal, 750);
-  assert.equal(q.mensualInicial, 4050 + 750);
-  assert.equal(q.mensualRecurrente, 4050);
-  assert.equal(q.valorContrato, 4050 * 24 + 750 * 12);
-  assert.equal(modelo.cotizar({ dispositivos: 10, colector: nuc, colectores: 0 }).lineas.find((x) => x.id === "col").cantidad, 1);
+test("colectores NUC y Azure independientes", () => {
+  const ops = modelo.opcionesColector();
+  const nuc = ops.find((o) => o.opcion.startsWith("NUC")).id;
+  const azure = ops.find((o) => o.opcion.includes("Azure")).id;
+  const q = modelo.cotizar({ dispositivos: 10, colectores: { [nuc]: 3, [azure]: 2 }, plazoMeses: 24 });
+  const cols = q.lineas.filter((x) => x.id.startsWith("col"));
+  assert.deepEqual(cols.map((l) => [l.cantidad, l.unitario, l.meses]), [[3, 250, 12], [2, 200, null]]);
+  assert.equal(q.mensualInicial, 4050 + 750 + 400);
+  assert.equal(q.mensualRecurrente, 4050 + 400);
+  assert.equal(q.valorContrato, (4050 + 400) * 24 + 750 * 12);
+  assert.equal(modelo.cotizar({ dispositivos: 10, colectores: { [nuc]: 0, [azure]: 0 } }).lineas.length, 1);
 });

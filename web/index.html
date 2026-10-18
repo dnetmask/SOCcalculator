@@ -139,9 +139,13 @@ input:focus-visible, select:focus-visible, button:focus-visible, .opt:focus-with
 
 .opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
 .opt { position: relative; display: grid; gap: 4px; align-content: start; padding: 12px; border: 1px solid var(--line-strong); border-radius: 4px; cursor: pointer; background: var(--sunken); }
-.opt input { position: absolute; opacity: 0; }
+.opt > input { position: absolute; opacity: 0; }
 .opt:has(input:checked) { border-color: var(--cyan-bright); background: var(--cyan-soft); box-shadow: inset 0 0 0 1px var(--cyan-bright); }
 .opt strong { font-size: .9rem; color: var(--ink); }
+.opt.activo { border-color: var(--cyan-bright); background: var(--cyan-soft); box-shadow: inset 0 0 0 1px var(--cyan-bright); }
+.opt .stepper { margin-top: 6px; justify-self: start; }
+.opt .stepper input { width: 52px; }
+div.opt { cursor: default; }
 .opt small { color: var(--muted); }
 
 .range { display: flex; align-items: center; gap: 12px; }
@@ -318,12 +322,8 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
           <div class="stepper"><button type="button" data-step="ueba" data-d="-1" aria-label="Quitar UEBA">−</button><input id="ueba" type="number" min="0" step="1" value="10" inputmode="numeric" aria-label="Agentes con UEBA"><button type="button" data-step="ueba" data-d="1" aria-label="Agregar UEBA">+</button></div>
         </div>
         <div class="row" style="grid-template-columns: minmax(0,1fr);">
-          <div class="what"><strong>Colector FortiSIEM en sitio</strong><span>Recolecta, normaliza y cifra los eventos de la planta · se cobra aparte del plan</span></div>
-          <div class="opts" id="colectores" role="radiogroup" aria-label="Colector"></div>
-          <div class="sedes-row" id="filaCantColector">
-            <span>Cantidad de colectores</span>
-            <div class="stepper"><button type="button" data-step="cantColector" data-d="-1" aria-label="Quitar colector">−</button><input id="cantColector" type="number" min="1" step="1" value="1" inputmode="numeric" aria-label="Cantidad de colectores"><button type="button" data-step="cantColector" data-d="1" aria-label="Agregar colector">+</button></div>
-          </div>
+          <div class="what"><strong>Colectores FortiSIEM</strong><span>Recolectan, normalizan y cifran los eventos de cada planta · se cobran aparte del plan · se pueden combinar</span></div>
+          <div class="opts" id="colectores" aria-label="Colectores"></div>
         </div>
       </section>
 

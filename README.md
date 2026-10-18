@@ -10,7 +10,7 @@ Se venden dos servicios, juntos o por separado:
 - **Gestión de vulnerabilidades OT (mensual por sede)**: USD 560 por sede (sedes 1 a 10 del contrato; desde la sede 11, 50 % de descuento: USD 280), sin licencias FortiSIEM ni colector. No incluye la licencia de la sonda OT, que aporta el cliente. Cubre el equipo de vulnerabilidades (USD 3.344/mes): con 2 sedes por cliente, 4 clientes = 8 sedes, el equilibrio es USD 418 por sede.
 - **Retención base incluida**: 1 mes de eventos en línea + 11 meses archivados (12 meses en total), cubierta por el almacenamiento Azure por cliente.
 - **Dispositivo/Consola fuente, agente o UEBA adicional**: costo de licencia FortiSIEM del primer nivel (el más caro) / (1 − margen). UEBA se contrata por agente avanzado y no puede superar la cantidad de agentes.
-- **Colector (opcional, se cobra aparte del plan; se elige la cantidad de colectores NUC o Azure)**:
+- **Colectores (opcionales, se cobran aparte del plan; NUC y Azure se combinan, cada uno con su cantidad)**:
   - VM o servidor del cliente: sin costo.
   - NUC industrial de USD 1.500: cargo adicional de USD 250/mes (costo/6) durante 12 meses.
   - Colector en Azure: USD 200/mes.

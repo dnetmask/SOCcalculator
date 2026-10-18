@@ -185,8 +185,8 @@
 
     /* Oferta para un cliente. Los dos servicios se venden juntos o por separado.
      * seleccion: { soc: bool (SOC de incidentes; por defecto true), dispositivos, agentes,
-     *              ueba (≤ agentes), colector: id, colectores (cantidad, mínimo 1),
-     *              vulnerabilidades: bool, sedes,
+     *              ueba (≤ agentes), colectores: { [id de opción]: cantidad } (cada tipo
+     *              independiente: p. ej. NUC y Azure en la misma oferta), vulnerabilidades: bool, sedes,
      *              descuento: fracción sobre servicios, plazoMeses, clientesEquilibrio, escenario }
      * Sin SOC de incidentes no hay licencias FortiSIEM ni colector.
      */
@@ -232,10 +232,11 @@
         lineas.push({ id: "ueba", concepto: "UEBA por agente avanzado", cantidad: extraUeba,
                       unitario: p.precioUeba, costo: p.costoUeba, descontable: true, meses: null });
       }
-      const col = opcionesColector().find((o) => o.id === seleccion.colector);
-      if (soc && col && col.precioMensual > 0) {
-        const cantidad = Math.max(1, Math.floor(seleccion.colectores || 1));
-        lineas.push({ id: "col", concepto: `Colector: ${col.opcion}`, cantidad, unitario: col.precioMensual,
+      const cantidades = seleccion.colectores || {};
+      for (const col of soc ? opcionesColector() : []) {
+        const cantidad = Math.max(0, Math.floor(cantidades[col.id] || 0));
+        if (!cantidad || col.precioMensual <= 0) continue;
+        lineas.push({ id: `col${col.id}`, concepto: `Colector: ${col.opcion}`, cantidad, unitario: col.precioMensual,
                       costo: col.costoMensual, descontable: false, meses: col.mesesCobro });
       }
 
