@@ -108,3 +108,15 @@ test("vulnerabilidades: 50 % de descuento desde la sede 11", () => {
   assert.equal(q.pisoEquilibrio, 3344 + 3 * 334.4);
   assert.equal(modelo.cotizar({ soc: false, vulnerabilidades: true, sedes: 10 }).lineas.length, 1);
 });
+
+test("cantidad de colectores NUC", () => {
+  const nuc = modelo.opcionesColector().find((o) => o.opcion.startsWith("NUC")).id;
+  const q = modelo.cotizar({ dispositivos: 10, colector: nuc, colectores: 3, plazoMeses: 24 });
+  const l = q.lineas.find((x) => x.id === "col");
+  assert.equal(l.cantidad, 3);
+  assert.equal(l.subtotal, 750);
+  assert.equal(q.mensualInicial, 4050 + 750);
+  assert.equal(q.mensualRecurrente, 4050);
+  assert.equal(q.valorContrato, 4050 * 24 + 750 * 12);
+  assert.equal(modelo.cotizar({ dispositivos: 10, colector: nuc, colectores: 0 }).lineas.find((x) => x.id === "col").cantidad, 1);
+});

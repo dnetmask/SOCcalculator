@@ -185,7 +185,8 @@
 
     /* Oferta para un cliente. Los dos servicios se venden juntos o por separado.
      * seleccion: { soc: bool (SOC de incidentes; por defecto true), dispositivos, agentes,
-     *              ueba (≤ agentes), colector: id, vulnerabilidades: bool, sedes,
+     *              ueba (≤ agentes), colector: id, colectores (cantidad, mínimo 1),
+     *              vulnerabilidades: bool, sedes,
      *              descuento: fracción sobre servicios, plazoMeses, clientesEquilibrio, escenario }
      * Sin SOC de incidentes no hay licencias FortiSIEM ni colector.
      */
@@ -233,7 +234,8 @@
       }
       const col = opcionesColector().find((o) => o.id === seleccion.colector);
       if (soc && col && col.precioMensual > 0) {
-        lineas.push({ id: "col", concepto: `Colector: ${col.opcion}`, cantidad: 1, unitario: col.precioMensual,
+        const cantidad = Math.max(1, Math.floor(seleccion.colectores || 1));
+        lineas.push({ id: "col", concepto: `Colector: ${col.opcion}`, cantidad, unitario: col.precioMensual,
                       costo: col.costoMensual, descontable: false, meses: col.mesesCobro });
       }
 

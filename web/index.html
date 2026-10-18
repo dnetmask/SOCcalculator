@@ -320,6 +320,10 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
         <div class="row" style="grid-template-columns: minmax(0,1fr);">
           <div class="what"><strong>Colector FortiSIEM en sitio</strong><span>Recolecta, normaliza y cifra los eventos de la planta · se cobra aparte del plan</span></div>
           <div class="opts" id="colectores" role="radiogroup" aria-label="Colector"></div>
+          <div class="sedes-row" id="filaCantColector">
+            <span>Cantidad de colectores</span>
+            <div class="stepper"><button type="button" data-step="cantColector" data-d="-1" aria-label="Quitar colector">−</button><input id="cantColector" type="number" min="1" step="1" value="1" inputmode="numeric" aria-label="Cantidad de colectores"><button type="button" data-step="cantColector" data-d="1" aria-label="Agregar colector">+</button></div>
+          </div>
         </div>
       </section>
 

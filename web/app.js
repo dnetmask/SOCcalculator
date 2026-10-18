@@ -7,7 +7,7 @@
   const usd0 = new Intl.NumberFormat("es-CO", { style: "currency", currency: "USD", currencyDisplay: "code", maximumFractionDigits: 0 });
   const pct = new Intl.NumberFormat("es-CO", { style: "percent", maximumFractionDigits: 1 });
   const CLAVE = "cotizador-soc-borrador";
-  const CAMPOS = ["cliente", "contacto", "plazo", "soc", "vuln", "sedes", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "eps"];
+  const CAMPOS = ["cliente", "contacto", "plazo", "soc", "vuln", "sedes", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "eps", "cantColector"];
   const LICENCIAS = new Set(["disp", "agt", "ueba"]);
 
   let modelo = null;
@@ -42,6 +42,7 @@
       vulnerabilidades: $("vuln").checked,
       sedes: entero("sedes"),
       colector: col ? Number(col.value) : 0,
+      colectores: Math.max(1, entero("cantColector")),
       descuento: Number($("descuento").value) / 100,
       plazoMeses: Number($("plazo").value),
       clientesEquilibrio: Math.max(1, entero("clientesEq") || 1),
@@ -86,8 +87,17 @@
     $("sinServicio").hidden = soc || vuln;
   }
 
+  // La cantidad solo aplica a colectores con costo (NUC o Azure); siempre al menos 1.
+  function sincronizarColector() {
+    const col = document.querySelector('input[name="colector"]:checked');
+    const op = col && modelo.opcionesColector().find((o) => o.id === Number(col.value));
+    $("filaCantColector").hidden = !(op && op.precioMensual > 0);
+    if (entero("cantColector") < 1) $("cantColector").value = 1;
+  }
+
   function render() {
     sincronizarServicios();
+    sincronizarColector();
     sincronizarUeba();
     const sel = seleccion();
     const q = modelo.cotizar(sel);
@@ -144,9 +154,10 @@
     const col = q.lineas.find((l) => l.id === "col");
     $("termColector").hidden = !col;
     if (col) {
+      const cuantos = col.cantidad === 1 ? "El colector se cobra" : `Cada uno de los ${col.cantidad} colectores se cobra`;
       $("termColector").textContent = col.meses
-        ? `El colector se cobra ${usd.format(col.unitario)} al mes durante ${col.meses} meses, sumado a la mensualidad.`
-        : `El colector se cobra ${usd.format(col.unitario)} al mes mientras dure el servicio.`;
+        ? `${cuantos} ${usd.format(col.unitario)} al mes durante ${col.meses} meses, sumado a la mensualidad.`
+        : `${cuantos} ${usd.format(col.unitario)} al mes mientras dure el servicio.`;
     }
 
     renderInterna(q, sel);
@@ -276,6 +287,7 @@
     $("dispositivos").value = modelo.supuestos.plan_base.dispositivos_incluidos;
     $("agentes").value = 0;
     $("ueba").value = 0;
+    $("cantColector").value = 1;
     $("descuento").value = 0;
     document.querySelector('input[name="colector"]').checked = true;
     $("ejemplo").hidden = true;
