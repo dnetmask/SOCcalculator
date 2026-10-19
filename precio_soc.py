@@ -179,6 +179,15 @@ class ModeloPrecioSOC:
             if _entero_no_negativo(v["sedes_promedio_por_cliente"], "sedes_promedio_por_cliente") < 1:
                 raise ErrorModelo("gestion_vulnerabilidades.sedes_promedio_por_cliente debe ser al menos 1")
             _entero_no_negativo(v["capacidad_max_sedes"], "capacidad_max_sedes")
+            fuentes = s.get("fuentes_adicionales_por_tipo")
+            if fuentes:
+                if not Decimal(0) <= _decimal(fuentes["descuento_vs_competencia"], "descuento_vs_competencia") < 1:
+                    raise ErrorModelo("fuentes_adicionales_por_tipo.descuento_vs_competencia debe estar en [0, 1)")
+                if _entero_no_negativo(fuentes["redondeo_cop"], "redondeo_cop") < 1:
+                    raise ErrorModelo("fuentes_adicionales_por_tipo.redondeo_cop debe ser al menos 1")
+                for x in fuentes["tipos"]:
+                    if _entero_no_negativo(x["competencia_cop"], f"{x['id']}.competencia_cop") <= 0:
+                        raise ErrorModelo(f"Fuente {x['id']!r}: precio de competencia inválido")
             _entero_no_negativo(s["retencion_base"]["en_linea_dias"], "retencion_base.en_linea_dias")
             _entero_no_negativo(s["retencion_base"]["archivado_meses"], "retencion_base.archivado_meses")
             _entero_no_negativo(s["capacidad_max_clientes_sin_contratar"], "capacidad_max_clientes_sin_contratar")
@@ -275,6 +284,24 @@ class ModeloPrecioSOC:
         contingencia = 1 + _decimal(self.s["contingencia_fraccion"], "contingencia")
         return _dinero(self.personal_por_modulo(escenario)["vulnerabilidades"] * contingencia)
 
+    def fuentes_por_tipo(self) -> list[dict[str, Any]]:
+        """Fuentes adicionales por tipo: precio fijo en COP = competencia x (1 - descuento), redondeado hacia abajo."""
+        cfg = self.s.get("fuentes_adicionales_por_tipo")
+        if not cfg:
+            return []
+        descuento = _decimal(cfg["descuento_vs_competencia"], "descuento_vs_competencia")
+        paso = Decimal(cfg["redondeo_cop"])
+        trm = _decimal(self.s["tasa_cambio_cop_por_usd"], "tasa_cambio")
+        mes = self.motor.calcular_mes(dispositivos=1)
+        costo_cop = next(c.precio_unitario_neto for c in mes.componentes if c.categoria == "dispositivos") * trm
+        filas = []
+        for x in cfg["tipos"]:
+            competencia = Decimal(x["competencia_cop"])
+            precio = (competencia * (1 - descuento) / paso).to_integral_value(rounding="ROUND_FLOOR") * paso
+            filas.append({"id": x["id"], "nombre": x["nombre"], "detalle": x["detalle"], "competencia_cop": competencia,
+                          "precio_cop": precio, "costo_cop": costo_cop, "margen": 1 - costo_cop / precio})
+        return filas
+
     def opciones_colector(self) -> list[OpcionColector]:
         """Colector por cliente, cobrado aparte del plan: NUC (costo/divisor durante meses_cobro) o cargo mensual."""
         cfg = self.s["opciones_colector"]
@@ -360,7 +387,7 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         f"| Vulnerabilidades desde la sede {s['gestion_vulnerabilidades']['descuento_volumen']['desde_sede']} del contrato "
         f"({Decimal(s['gestion_vulnerabilidades']['descuento_volumen']['descuento_fraccion']) * 100:.0f} % de descuento) | — | "
         f"{_m(modelo.tramos_vulnerabilidades(s['gestion_vulnerabilidades']['descuento_volumen']['desde_sede'])[-1][1])} |",
-        f"| Dispositivo/Consola fuente adicional | — | {_m(p.precio_dispositivo_adicional)} |",
+        f"| Otra consola fuente adicional (EDR, gestión, OT) | — | {_m(p.precio_dispositivo_adicional)} |",
         f"| Agente avanzado adicional | — | {_m(p.precio_agente_adicional)} |",
         f"| UEBA por agente avanzado (opcional) | — | {_m(p.precio_ueba_adicional)} |",
         "",
@@ -406,6 +433,17 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
     for f in modelo.sensibilidad_vulnerabilidades(escenario=p.escenario):
         nota = " ⚠️ requiere ampliar equipo" if f.excede_capacidad else ""
         lin.append(f"| {f.clientes}{nota} | {_m(f.ingreso)} | {_m(f.costo)} | {_m(f.utilidad)} | {f.margen}% |")
+    fuentes = modelo.fuentes_por_tipo()
+    if fuentes:
+        cop = lambda v: f"COP {v:,.0f}".replace(",", ".")
+        lin += [
+            "",
+            "## Fuentes adicionales por tipo (precio fijo en COP frente a la competencia)",
+            "",
+            "| Tipo | Competencia | Netmask | Costo licencia | Margen |",
+            "|---|---:|---:|---:|---:|",
+            *[f"| {f['nombre']} | {cop(f['competencia_cop'])} | {cop(f['precio_cop'])} | {cop(f['costo_cop'])} | {f['margen'] * 100:.1f}% |" for f in fuentes],
+        ]
     lin += [
         "",
         "## Colector FortiSIEM (opcional, se cobra aparte del plan)",

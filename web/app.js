@@ -22,7 +22,7 @@
   const cop = { format: (pesos) => formato(0).format(MONEDA === "COP" ? pesos : pesos / TRM) };
   const pct = new Intl.NumberFormat("es-CO", { style: "percent", maximumFractionDigits: 1 });
   const CLAVE = "cotizador-soc-borrador";
-  const CAMPOS = ["cliente", "contacto", "plazo", "soc", "vuln", "sedes", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "margenCom", "eps"];
+  const CAMPOS = ["cliente", "contacto", "plazo", "soc", "vuln", "sedes", "otras", "agentes", "ueba", "descuento", "escenario", "clientesEq", "margenCom", "eps"];
   const LICENCIAS = new Set(["disp", "agt", "ueba"]);
 
   let modelo = null;
@@ -47,6 +47,10 @@
     return Number.isFinite(v) && v >= 0 ? v : 0;
   }
 
+  function cantidadesFuentes() {
+    return Object.fromEntries(modelo.fuentesPorTipo().map((f) => [f.id, entero(`ft_${f.id}`)]));
+  }
+
   // Cantidad por tipo de colector con costo (NUC, Azure); cada uno es independiente.
   function cantidadesColector() {
     return Object.fromEntries(modelo.opcionesColector()
@@ -56,7 +60,9 @@
 
   function seleccion() {
     return {
-      dispositivos: entero("dispositivos"),
+      // Las «otras consolas» van por la vía genérica: incluidas + adicionales.
+      dispositivos: modelo.supuestos.plan_base.dispositivos_incluidos + entero("otras"),
+      fuentesTipo: cantidadesFuentes(),
       agentes: entero("agentes"),
       ueba: entero("ueba"),
       soc: $("soc").checked,
@@ -152,7 +158,7 @@
       ? `<tr><td colspan="4" class="muted">Activa el SOC de incidentes o la gestión de vulnerabilidades para armar la propuesta.</td></tr>`
       : q.lineas.map((l) => `
       <tr>
-        <td>${LICENCIAS.has(l.id) ? '<span class="lic" title="Licencia FortiSIEM MSSP"></span>' : ""}${esc(l.concepto)}${l.meses ? `<small>Cargo durante ${l.meses} meses</small>` : ""}</td>
+        <td>${(LICENCIAS.has(l.id) || l.id.startsWith("fuente-")) ? '<span class="lic" title="Licencia FortiSIEM MSSP"></span>' : ""}${esc(l.concepto)}${l.meses ? `<small>Cargo durante ${l.meses} meses</small>` : ""}</td>
         <td class="r num">${l.cantidad}</td>
         <td class="r num">${mon.format(l.unitario)}</td>
         <td class="r num">${mon.format(l.subtotal)}</td>
@@ -322,6 +328,12 @@
       <tr><td>÷ ${n} clientes = equilibrio del SOC de incidentes por cliente</td><td class="r num">${mon0.format(p.equilibrioBase)}</td></tr>
       <tr><td>Con margen comercial de ${Math.round(p.margenComercial * 100)} % sobre el precio de venta: equilibrio ÷ (1 − ${Math.round(p.margenComercial * 100)} %)</td><td class="r num">${mon0.format(p.equilibrioBase / (1 - p.margenComercial))}</td></tr>
       <tr><td>Precio lista (redondeado hacia arriba a múltiplos de ${mon0.format(Number(s.redondeo_precio_lista))}) · margen real ${pct.format(1 - p.equilibrioBase / p.listaBase)}</td><td class="r num">${mon0.format(p.listaBase)}</td></tr>`;
+    $("tablaFuentes").innerHTML = modelo.fuentesPorTipo().map((f) => `<tr>
+        <td>${esc(f.nombre)}</td><td class="r num">${cop.format(f.competenciaCop)}</td><td class="r num">${cop.format(f.precioCop)}</td>
+        <td class="r num">${pct.format(1 - f.precioCop / f.competenciaCop)}</td><td class="r num">${cop.format(f.costoCop)}</td>
+        <td class="r num">${pct.format(f.margen)}</td></tr>`).join("") + `<tr>
+        <td>Otra consola fuente (EDR, gestión, OT)</td><td class="r num">—</td><td class="r num">${mon0.format(p.precioDispositivo)}</td>
+        <td class="r num">—</td><td class="r num">${mon0.format(p.costoDispositivo)}</td><td class="r num">${pct.format(1 - p.costoDispositivo / p.precioDispositivo)}</td></tr>`;
     $("economiaColectores").innerHTML = modelo.opcionesColector().filter((o) => o.precioMensual > 0).map((o) => {
       const linea = q.lineas.find((l) => l.concepto === `Colector: ${o.opcion}`);
       const cant = linea ? linea.cantidad : 0;
@@ -381,6 +393,7 @@
     try {
       const datos = Object.fromEntries(CAMPOS.map((id) => [id, $(id).type === "checkbox" ? $(id).checked : $(id).value]));
       datos.colectores = cantidadesColector();
+      datos.fuentesTipo = cantidadesFuentes();
       localStorage.setItem(CLAVE, JSON.stringify(datos));
     } catch (_) { /* sin almacenamiento: la página funciona igual */ }
   }
@@ -393,6 +406,9 @@
         if (datos[id] === undefined) continue;
         if ($(id).type === "checkbox") $(id).checked = datos[id];
         else $(id).value = datos[id];
+      }
+      for (const [id, n] of Object.entries(datos.fuentesTipo || {})) {
+        if ($(`ft_${id}`)) $(`ft_${id}`).value = n;
       }
       for (const [id, n] of Object.entries(datos.colectores || {})) {
         if ($(`colN${id}`)) $(`colN${id}`).value = n;
@@ -409,7 +425,8 @@
     $("soc").checked = true;
     $("vuln").checked = false;
     $("sedes").value = 1;
-    $("dispositivos").value = modelo.supuestos.plan_base.dispositivos_incluidos;
+    $("otras").value = 0;
+    for (const id of Object.keys(cantidadesFuentes())) $(`ft_${id}`).value = 0;
     $("agentes").value = 0;
     $("ueba").value = 0;
     for (const id of Object.keys(cantidadesColector())) $(`colN${id}`).value = 0;
@@ -437,6 +454,14 @@
       `<option value="${esc(n)}"${n === modelo.supuestos.escenario_personal ? " selected" : ""}>${esc(n)}</option>`).join("");
     $("clientesEq").value = modelo.supuestos.clientes_punto_equilibrio;
     $("margenCom").value = Math.round(Number(modelo.supuestos.margen_comercial || 0) * 100);
+
+    // Fuentes adicionales por tipo (precio fijo en COP); ejemplo inicial: 1 firewall entry y 1 servidor.
+    const ejemploFuentes = { fw_entry: 1, servidor: 1 };
+    $("fuentesTipo").innerHTML = modelo.fuentesPorTipo().map((f) => `
+      <div class="row tipo">
+        <div class="what"><strong>${esc(f.nombre)}</strong><span>${f.detalle ? `${esc(f.detalle)} · ` : ""}<span class="num">${mon0.format(f.precioUsd)}</span>/mes c/u</span></div>
+        <div class="stepper"><button type="button" data-step="ft_${f.id}" data-d="-1" aria-label="Quitar ${esc(f.nombre)}">−</button><input id="ft_${f.id}" type="number" min="0" step="1" value="${ejemploFuentes[f.id] || 0}" inputmode="numeric" aria-label="${esc(f.nombre)} adicionales"><button type="button" data-step="ft_${f.id}" data-d="1" aria-label="Agregar ${esc(f.nombre)}">+</button></div>
+      </div>`).join("");
 
     // Ejemplo inicial: un NUC industrial.
     $("colectores").innerHTML = modelo.opcionesColector().map((o) => `

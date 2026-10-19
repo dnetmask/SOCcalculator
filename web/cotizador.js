@@ -17,6 +17,10 @@
     return Math.sign(x) * Math.round(Math.abs(x) * 100 + 1e-7) / 100;
   }
 
+  function fino(x) {
+    return Math.round(x * 1e6) / 1e6;
+  }
+
   function redondearArriba(x, paso) {
     return dinero(Math.ceil(x / paso - 1e-9) * paso);
   }
@@ -159,6 +163,21 @@
       return redondearArriba(costoUnitarioPrimerNivel(categoria) / (1 - num(s.adicionales[margen])), 1);
     }
 
+    /* Fuentes adicionales por tipo, con precio fijo en COP frente a la competencia.
+     * precioCop = competencia × (1 − descuento), redondeado hacia abajo; el motor trabaja en USD (÷ TRM). */
+    function fuentesPorTipo() {
+      const cfg = s.fuentes_adicionales_por_tipo;
+      if (!cfg) return [];
+      const desc = num(cfg.descuento_vs_competencia);
+      const paso = cfg.redondeo_cop || 1;
+      const costoUsd = costoUnitarioPrimerNivel("dispositivos");
+      return cfg.tipos.map((x) => {
+        const precioCop = Math.floor((x.competencia_cop * (1 - desc)) / paso) * paso;
+        return { id: x.id, nombre: x.nombre, detalle: x.detalle, competenciaCop: x.competencia_cop, precioCop,
+                 precioUsd: precioCop / trm, costoUsd, costoCop: costoUsd * trm, margen: 1 - (costoUsd * trm) / precioCop };
+      });
+    }
+
     function opcionesColector() {
       const cfg = s.opciones_colector;
       return cfg.opciones.map((op, i) => {
@@ -266,8 +285,15 @@
                         descontable: true, meses: null });
         }
       }
+      const porTipo = seleccion.fuentesTipo || {};
+      for (const f of soc ? fuentesPorTipo() : []) {
+        const cantidad = Math.max(0, Math.floor(porTipo[f.id] || 0));
+        if (!cantidad) continue;
+        lineas.push({ id: `fuente-${f.id}`, concepto: `${f.nombre} adicional${f.detalle ? ` (${f.detalle})` : ""}`, cantidad,
+                      unitario: f.precioUsd, costo: f.costoUsd, descontable: true, meses: null });
+      }
       if (soc && extraDisp) {
-        lineas.push({ id: "disp", concepto: "Dispositivos/consolas fuente adicionales", cantidad: extraDisp,
+        lineas.push({ id: "disp", concepto: "Otras consolas fuente adicionales (EDR, gestión, OT)", cantidad: extraDisp,
                       unitario: p.precioDispositivo, costo: p.costoDispositivo, descontable: true, meses: null });
       }
       if (soc && extraAg) {
@@ -287,13 +313,14 @@
       }
 
       for (const l of lineas) {
-        l.subtotal = dinero(l.cantidad * l.unitario);
-        l.descuento = l.descontable ? dinero(l.subtotal * descuento) : 0;
-        l.neto = dinero(l.subtotal - l.descuento);
-        l.costoTotal = dinero(l.cantidad * l.costo);
+        // Precisión fina (no centavos de USD): hay precios fijos en COP y la presentación redondea.
+        l.subtotal = fino(l.cantidad * l.unitario);
+        l.descuento = l.descontable ? fino(l.subtotal * descuento) : 0;
+        l.neto = fino(l.subtotal - l.descuento);
+        l.costoTotal = fino(l.cantidad * l.costo);
         l.mesesEnPlazo = l.meses === null ? plazo : Math.min(l.meses, plazo);
       }
-      const suma = (f, filtro = () => true) => dinero(lineas.filter(filtro).reduce((a, l) => a + f(l), 0));
+      const suma = (f, filtro = () => true) => fino(lineas.filter(filtro).reduce((a, l) => a + f(l), 0));
       const mensualInicial = suma((l) => l.neto);
       const mensualRecurrente = suma((l) => l.neto, (l) => l.meses === null);
       const piso = suma((l) => l.costoTotal);
@@ -371,6 +398,7 @@
       costos,
       precio,
       opcionesColector,
+      fuentesPorTipo,
       cotizar,
       sensibilidadVulnerabilidades,
       sensibilidad,

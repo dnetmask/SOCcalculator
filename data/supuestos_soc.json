@@ -84,6 +84,20 @@
   "redondeo_precio_lista": "50",
   "margen_comercial": "0",
   "nota_margen_comercial": "Margen sobre el precio de venta del plan SOC: precio = equilibrio / (1 - margen), redondeado hacia arriba. 0 = vender al equilibrio. Se puede ajustar en la vista interna del cotizador.",
+  "fuentes_adicionales_por_tipo": {
+    "nota": "Fuentes adicionales a las incluidas en el plan, con precio fijo en COP definido frente a la competencia (precio de referencia de la competencia antes de IVA). Precio Netmask = competencia x (1 - descuento), redondeado hacia abajo a COP 10.000. El costo para Netmask es la licencia FortiSIEM por dispositivo (primer nivel), igual para todos los tipos.",
+    "descuento_vs_competencia": "0.15",
+    "redondeo_cop": 10000,
+    "origen": "precios de competencia: tabla de adicionales enviada por Netmask",
+    "tipos": [
+      {"id": "fw_entry", "nombre": "Firewall entry level", "detalle": "hasta 900 Mbps de throughput en Threat protection", "competencia_cop": 330000},
+      {"id": "fw_mid", "nombre": "Firewall mid range", "detalle": "hasta 10 Gbps de throughput en Threat protection", "competencia_cop": 520000},
+      {"id": "fw_high", "nombre": "Firewall high-end", "detalle": "hasta 33 Gbps de throughput en Threat protection", "competencia_cop": 660000},
+      {"id": "servidor", "nombre": "Servidor", "detalle": "Windows / Linux / AIX", "competencia_cop": 310000},
+      {"id": "sw_core", "nombre": "Switch core", "detalle": "", "competencia_cop": 210000},
+      {"id": "sw_acceso", "nombre": "Switch de distribución / acceso", "detalle": "", "competencia_cop": 120000}
+    ]
+  },
   "adicionales": {
     "margen_dispositivo_adicional": "0.50",
     "margen_agente_adicional": "0.50",

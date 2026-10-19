@@ -11,7 +11,7 @@ Retención base de eventos: 30 días en línea + 11 meses archivados.
 | SOC de incidentes, plan base (plataforma + 10 dispositivos/consolas fuente) | $2,599.45 | $2,600.00 |
 | Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | $200.64 | $560.00 |
 | Vulnerabilidades desde la sede 11 del contrato (50 % de descuento) | — | $280.00 |
-| Dispositivo/Consola fuente adicional | — | $52.00 |
+| Otra consola fuente adicional (EDR, gestión, OT) | — | $52.00 |
 | Agente avanzado adicional | — | $10.00 |
 | UEBA por agente avanzado (opcional) | — | $11.00 |
 
@@ -68,6 +68,17 @@ Costo sin el equipo de vulnerabilidades, que lo cubre su propio servicio.
 | 10 | $5,600.00 | $1,605.12 | $3,994.88 | 71.34% |
 | 11 ⚠️ requiere ampliar equipo | $6,160.00 | $1,605.12 | $4,554.88 | 73.94% |
 | 12 ⚠️ requiere ampliar equipo | $6,720.00 | $1,605.12 | $5,114.88 | 76.11% |
+
+## Fuentes adicionales por tipo (precio fijo en COP frente a la competencia)
+
+| Tipo | Competencia | Netmask | Costo licencia | Margen |
+|---|---:|---:|---:|---:|
+| Firewall entry level | COP 330.000 | COP 280.000 | COP 89.320 | 68.1% |
+| Firewall mid range | COP 520.000 | COP 440.000 | COP 89.320 | 79.7% |
+| Firewall high-end | COP 660.000 | COP 560.000 | COP 89.320 | 84.0% |
+| Servidor | COP 310.000 | COP 260.000 | COP 89.320 | 65.6% |
+| Switch core | COP 210.000 | COP 170.000 | COP 89.320 | 47.5% |
+| Switch de distribución / acceso | COP 120.000 | COP 100.000 | COP 89.320 | 10.7% |
 
 ## Colector FortiSIEM (opcional, se cobra aparte del plan)
 

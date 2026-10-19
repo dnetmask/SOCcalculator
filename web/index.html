@@ -122,6 +122,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .opt:focus-with
 .row .what span { font-size: .85rem; color: var(--muted); }
 .row.sub { padding-left: 16px; border-left: 2px solid var(--red); border-top-style: dashed; }
 .row.disabled { opacity: .55; }
+.row.tipo { padding-left: 16px; border-left: 2px solid var(--cyan-bright); border-top-style: dashed; padding-block: 9px; }
+#fuentesTipo .row:first-child { border-top: 1px dashed var(--line); padding-top: 9px; }
 
 .stepper { display: inline-flex; align-items: stretch; border: 1px solid var(--line-strong); border-radius: 4px; overflow: hidden; background: var(--sunken); }
 .stepper button { font: 600 1rem/1 var(--f-data); width: 36px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
@@ -323,9 +325,13 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
 
       <section class="block" id="seccionSoc">
         <div class="block-head"><h2>Complementos del SOC de incidentes</h2></div>
-        <div class="row">
-          <div class="what"><strong>Dispositivo/Consola fuente</strong><span><span id="incluidos2">10</span> incluidos · adicional <span class="num" id="precioDisp">—</span>/mes c/u</span></div>
-          <div class="stepper"><button type="button" data-step="dispositivos" data-d="-1" aria-label="Quitar dispositivo/consola fuente">−</button><input id="dispositivos" type="number" min="0" step="1" value="12" inputmode="numeric" aria-label="Dispositivos/consolas fuente"><button type="button" data-step="dispositivos" data-d="1" aria-label="Agregar dispositivo/consola fuente">+</button></div>
+        <div class="row" style="grid-template-columns: minmax(0,1fr);">
+          <div class="what"><strong>Fuentes adicionales por tipo</strong><span>El plan incluye <span id="incluidos2">10</span> dispositivos/consolas fuente de cualquier tipo; las adicionales se cotizan por tipo</span></div>
+        </div>
+        <div id="fuentesTipo"></div>
+        <div class="row tipo">
+          <div class="what"><strong>Otra consola fuente</strong><span>Consola EDR, de gestión u OT · <span class="num" id="precioDisp">—</span>/mes c/u</span></div>
+          <div class="stepper"><button type="button" data-step="otras" data-d="-1" aria-label="Quitar consola fuente">−</button><input id="otras" type="number" min="0" step="1" value="0" inputmode="numeric" aria-label="Otras consolas fuente adicionales"><button type="button" data-step="otras" data-d="1" aria-label="Agregar consola fuente">+</button></div>
         </div>
         <div class="row">
           <div class="what"><strong>Agentes avanzados FortiSIEM</strong><span>Windows y Linux: integridad de archivos, cambios de registro · <span class="num" id="precioAgente">—</span>/mes c/u</span></div>
@@ -423,6 +429,13 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
             <thead><tr><th>Costo mensual del SOC</th><th class="r">Mensual</th></tr></thead>
             <tbody id="tablaCostos"></tbody>
             <tfoot id="pieCostos"></tfoot>
+          </table>
+        </div>
+        <div class="eyebrow" style="margin-top:6px">Fuentes adicionales por tipo frente a la competencia (cálculo interno)</div>
+        <div class="tablewrap">
+          <table class="compacta">
+            <thead><tr><th>Tipo</th><th class="r">Competencia</th><th class="r">Netmask</th><th class="r">Ahorro cliente</th><th class="r">Costo licencia</th><th class="r">Margen</th></tr></thead>
+            <tbody id="tablaFuentes"></tbody>
           </table>
         </div>
         <div class="eyebrow" style="margin-top:6px">Colectores (cálculo interno)</div>

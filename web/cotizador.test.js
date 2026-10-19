@@ -103,7 +103,7 @@ test("vulnerabilidades: 50 % de descuento desde la sede 11", () => {
   assert.deepEqual(q.lineas.map((l) => [l.id, l.cantidad, l.unitario]), [["vuln", 10, 560], ["vuln2", 3, 280]]);
   assert.equal(q.mensualInicial, 5600 + 840);
   // Piso: equipo completo (1605.12) + 3 sedes sobre la capacidad de 10 a 160.512 c/u
-  assert.equal(q.pisoEquilibrio, 2086.66);
+  assert.equal(q.pisoEquilibrio, 2086.656);
   assert.equal(modelo.cotizar({ soc: false, vulnerabilidades: true, sedes: 10 }).lineas.length, 1);
 });
 
@@ -141,4 +141,17 @@ test("margen comercial sobre el precio de venta del plan SOC", () => {
   assert.equal(modelo.precio(4, undefined, 0.3).listaBase, 3750);
   assert.equal(modelo.cotizar({ dispositivos: 10, margenComercial: 0.2 }).mensualInicial, 3250);
   assert.throws(() => modelo.precio(4, undefined, 1));
+});
+
+test("fuentes adicionales por tipo: 15 % bajo la competencia, precio fijo en COP", () => {
+  const f = Object.fromEntries(modelo.fuentesPorTipo().map((x) => [x.id, x]));
+  assert.deepEqual(["fw_entry", "fw_mid", "fw_high", "servidor", "sw_core", "sw_acceso"].map((k) => f[k].precioCop),
+    [280000, 440000, 560000, 260000, 170000, 100000]);
+  assert.ok(Object.values(f).every((x) => x.precioCop < x.competenciaCop && x.margen > 0));
+  const q = modelo.cotizar({ dispositivos: 10, fuentesTipo: { fw_mid: 2, sw_acceso: 3 } });
+  const l = q.lineas.find((x) => x.id === "fuente-fw_mid");
+  assert.equal(l.cantidad, 2);
+  assert.equal(Math.round(l.subtotal * 3500), 880000);
+  assert.equal(Math.round((q.mensualInicial - 2600) * 3500), 880000 + 300000);
+  assert.equal(modelo.cotizar({ soc: false, vulnerabilidades: true, sedes: 1, fuentesTipo: { fw_mid: 2 } }).lineas.length, 1);
 });

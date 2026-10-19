@@ -83,6 +83,12 @@ class TestPrecioSOC(unittest.TestCase):
         self.assertEqual(p.precio_agente_adicional, Decimal("10.00"))
         self.assertEqual(p.precio_ueba_adicional, Decimal("11.00"))  # 5.22 / 0.5 redondeado arriba
 
+    def test_fuentes_por_tipo_bajo_la_competencia(self):
+        f = {x["id"]: x for x in self.modelo.fuentes_por_tipo()}
+        self.assertEqual([f[k]["precio_cop"] for k in ("fw_entry", "fw_mid", "fw_high", "servidor", "sw_core", "sw_acceso")],
+                         [280000, 440000, 560000, 260000, 170000, 100000])
+        self.assertTrue(all(x["precio_cop"] < x["competencia_cop"] and x["margen"] > 0 for x in f.values()))
+
     def test_opciones_colector(self):
         ops = {o.opcion: o for o in self.modelo.opciones_colector()}
         nuc = next(o for nombre, o in ops.items() if nombre.startswith("NUC"))
