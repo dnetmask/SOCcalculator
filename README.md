@@ -6,8 +6,8 @@ La base es la calculadora de licenciamiento FortiSIEM MSSP del líder del SOC (`
 
 Se venden dos servicios, juntos o por separado:
 
-- **SOC de gestión de incidentes (mensual por cliente)**: plataforma FortiSIEM e incluye **10 dispositivos/consolas fuente** (`plan_base`); precio lista USD 3.200 (COP 12.800.000 con TRM 4.000). Su punto de equilibrio excluye el equipo de vulnerabilidades.
-- **Gestión de vulnerabilidades OT (mensual por sede)**: USD 560 por sede (sedes 1 a 10 del contrato; desde la sede 11, 50 % de descuento: USD 280), sin licencias FortiSIEM ni colector. No incluye la licencia de la sonda OT, que aporta el cliente. Cubre el equipo de vulnerabilidades (USD 2.340,80/mes con contingencia): con 2 sedes por cliente, 4 clientes = 8 sedes, el equilibrio es USD 292,60 por sede.
+- **SOC de gestión de incidentes (mensual por cliente)**: plataforma FortiSIEM e incluye **10 dispositivos/consolas fuente** (`plan_base`); precio lista USD 2.350 (COP 9.400.000 con TRM 4.000). Su punto de equilibrio excluye el equipo de vulnerabilidades.
+- **Gestión de vulnerabilidades OT (mensual por sede)**: USD 560 por sede (sedes 1 a 10 del contrato; desde la sede 11, 50 % de descuento: USD 280), sin licencias FortiSIEM ni colector. No incluye la licencia de la sonda OT, que aporta el cliente. Cubre el equipo de vulnerabilidades (USD 1.404,48/mes con contingencia): con 2 sedes por cliente, 4 clientes = 8 sedes, el equilibrio es USD 175,56 por sede.
 - **Retención base incluida**: 1 mes de eventos en línea + 11 meses archivados (12 meses en total), cubierta por el almacenamiento Azure por cliente.
 - **Dispositivo/Consola fuente, agente o UEBA adicional**: costo de licencia FortiSIEM del primer nivel (el más caro) / (1 − margen). UEBA se contrata por agente avanzado y no puede superar la cantidad de agentes.
 - **Colectores (opcionales, se cobran aparte del plan; NUC y Azure se combinan, cada uno con su cantidad)**:
@@ -36,7 +36,9 @@ python precio_soc.py --clientes 5
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
-**Personal (escenario único «ajustado»):** 1 analista N1 (COP 5,5 M), 1 analista N2 (COP 6,3 M = 9 M − 30 %), 1 analista de vulnerabilidades OT (COP 5,6 M = 8 M − 30 %), ingeniero de plataforma al 50 % y líder SOC al 30 %, más prestaciones del 52 % y bono de disponibilidad: COP 41.172.000/mes (3,8 FTE).
+**Personal (escenario único «ajustado», salarios base −40 %):** 1 analista N1 (COP 3,3 M), 1 analista N2 (COP 3,78 M), 1 analista de vulnerabilidades OT (COP 3,36 M), ingeniero de plataforma (COP 5,4 M) al 50 % y líder SOC (COP 8,4 M) al 30 %, más prestaciones del 52 % y bono de disponibilidad de COP 1,5 M: COP 25.303.200/mes (3,8 FTE).
+
+**Facturación:** servicio de computación en la nube, facturado sin IVA (`facturacion` en los supuestos). Validar con contabilidad los requisitos de la exclusión, sobre todo para el colector NUC, que es un equipo físico.
 
 **Moneda:** el modelo calcula en USD porque las licencias Fortinet, Azure y la cuota anual se facturan en USD; el cotizador web presenta todo en COP (`moneda_presentacion`) con la TRM de `tasa_cambio_cop_por_usd`. El reporte Python sigue en USD.
 
@@ -44,7 +46,7 @@ Todos los supuestos están en `data/supuestos_soc.json`. Los que tienen `"origen
 
 ## Cotizador web (`web/`)
 
-Aplicación estática en HTML + JavaScript, sin compilación, con la imagen combinada Netmask + FortiSIEM. Arma la oferta en tiempo real: SOC de incidentes (con retención incluida, dispositivos/consolas fuente, agentes avanzados, UEBA y colector) y gestión de vulnerabilidades OT por sede, juntos o por separado, con descuento y plazo. Muestra la mensualidad, la mensualidad sin colector y el valor del contrato. Incluye una vista interna con el desglose del personal rol por rol (salario base, prestaciones y costo total en COP) y el resumen del escenario, el piso de equilibrio, la contribución de la oferta, la utilidad del SOC según el número de clientes y una estimación del almacenamiento por EPS con la retención base.
+Aplicación estática en HTML + JavaScript, sin compilación, con la imagen combinada Netmask + FortiSIEM. Arma la oferta en tiempo real: SOC de incidentes (con retención incluida, dispositivos/consolas fuente, agentes avanzados, UEBA y colector) y gestión de vulnerabilidades OT por sede, juntos o por separado, con descuento y plazo. Muestra la mensualidad, la mensualidad sin colector y el valor del contrato. Incluye una vista interna con el cálculo de la cuota anual del SIEM, las licencias de consumo (usadas vs facturables por mínimos), el costo mensual completo hasta el equilibrio por cliente, la economía de los colectores, el desglose del personal rol por rol (salario base, prestaciones y costo total en COP) y el resumen del escenario, el piso de equilibrio, la contribución de la oferta, la utilidad del SOC según el número de clientes y una estimación del almacenamiento por EPS con la retención base.
 
 - `web/cotizador.js`: motor de cálculo. Replica `core.py` y `precio_soc.py` y lee los mismos `data/*.json`, así que al cambiar un supuesto cambian a la vez el cotizador y el reporte Python.
 - `web/app.js` y `web/index.html`: interfaz.

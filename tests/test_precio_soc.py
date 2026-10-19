@@ -24,10 +24,10 @@ class TestPrecioSOC(unittest.TestCase):
 
     def test_personal_por_modulo_en_usd(self):
         p = self.modelo.personal_por_modulo("ajustado")
-        # (1 x 5.5M + 6.3M) COP x 1.52 / 4000
-        self.assertEqual(p["incidentes"], Decimal("4484"))
-        # 5.6M x 1.52 / 4000
-        self.assertEqual(p["vulnerabilidades"], Decimal("2128"))
+        # (3.3M + 3.78M) COP x 1.52 / 4000 (salarios base -40 %)
+        self.assertEqual(p["incidentes"], Decimal("2690.4"))
+        # 3.36M x 1.52 / 4000
+        self.assertEqual(p["vulnerabilidades"], Decimal("1276.8"))
 
     def test_licencias_usan_motor_con_dispositivos_agregados(self):
         c = self.modelo.costos(4)
@@ -38,7 +38,7 @@ class TestPrecioSOC(unittest.TestCase):
     def test_precio_equilibrio_cubre_costo_con_n_clientes(self):
         p = self.modelo.precio()
         self.assertEqual(p.clientes_equilibrio, 4)
-        self.assertEqual(p.lista_base, Decimal("3200.00"))
+        self.assertEqual(p.lista_base, Decimal("2350.00"))
         # SOC de incidentes x 4 clientes + equipo de vulnerabilidades = costo total
         self.assertLessEqual(abs(p.equilibrio_base * 4 + p.costo_vulnerabilidades - p.costos.total), Decimal("0.03"))
         self.assertGreaterEqual(p.lista_base, p.equilibrio_base)
@@ -46,14 +46,14 @@ class TestPrecioSOC(unittest.TestCase):
 
     def test_vulnerabilidades_por_sede(self):
         p = self.modelo.precio()
-        self.assertEqual(p.costo_vulnerabilidades, Decimal("2340.80"))  # 2128 x 1.10
+        self.assertEqual(p.costo_vulnerabilidades, Decimal("1404.48"))  # 1276.80 x 1.10
         self.assertEqual(p.sedes_equilibrio, 8)  # 4 clientes x 2 sedes
-        self.assertEqual(p.equilibrio_por_sede, Decimal("292.60"))
+        self.assertEqual(p.equilibrio_por_sede, Decimal("175.56"))
         self.assertEqual(p.precio_por_sede, Decimal("560.00"))
-        self.assertEqual(p.sedes_minimas_con_precio_lista, 5)
+        self.assertEqual(p.sedes_minimas_con_precio_lista, 3)
         filas = self.modelo.sensibilidad_vulnerabilidades(12)
-        self.assertLess(filas[3].utilidad, 0)
-        self.assertGreater(filas[4].utilidad, 0)
+        self.assertLess(filas[1].utilidad, 0)
+        self.assertGreater(filas[2].utilidad, 0)
         self.assertTrue(filas[10].excede_capacidad)
 
     def test_descuento_por_volumen_de_sedes(self):

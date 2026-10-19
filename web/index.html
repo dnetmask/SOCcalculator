@@ -220,6 +220,7 @@ table.compacta { font-size: .82rem; }
 table.compacta td, table.compacta th { padding: 6px 8px; }
 table.compacta tr.actual td { background: var(--cyan-soft); font-weight: 600; }
 table.compacta tfoot td { font-weight: 600; border-top: 1px solid var(--line-strong); }
+table.compacta tfoot tr:last-child td { color: var(--cyan); }
 .modulo { display: inline-block; font: 600 .68rem/1 var(--f-data); letter-spacing: .06em; text-transform: uppercase; padding: 4px 6px; border-radius: 3px; background: var(--sunken); color: var(--muted); }
 .modulo.incidentes { background: var(--cyan-soft); color: var(--cyan); }
 .modulo.vulnerabilidades { background: var(--red-soft); color: var(--red); }
@@ -367,7 +368,7 @@ table.compacta tfoot td { font-weight: 600; border-top: 1px solid var(--line-str
         <div class="totals" id="totales"></div>
         <p class="includes" id="incluye"></p>
         <ul class="terms">
-          <li id="termMoneda">Valores antes de impuestos, facturación mensual.</li>
+          <li id="termMoneda">Servicio de computación en la nube, facturado sin IVA.</li>
           <li id="termDisp">Dispositivo/Consola fuente = fuente de log integrada al FortiSIEM (firewall, switch, servidor, consola EDR o de gestión).</li>
           <li id="termUeba">UEBA se contrata por agente avanzado: no puede superar la cantidad de agentes.</li>
           <li id="termSonda">Gestión de vulnerabilidades: no incluye la licencia de la sonda OT, que aporta el cliente.</li>
@@ -405,6 +406,27 @@ table.compacta tfoot td { font-weight: 600; border-top: 1px solid var(--line-str
           <dl id="almacenamiento"></dl>
         </div>
       </div>
+      <section class="personal" aria-labelledby="tPlataforma">
+        <div class="eyebrow" id="tPlataforma">Plataforma: fee del SIEM, licencias y costo total (cálculo interno)</div>
+        <div class="reparto" id="feeSiem"></div>
+        <div class="tablewrap">
+          <table class="compacta">
+            <thead><tr><th>Licencia FortiSIEM de consumo</th><th class="r">Usadas</th><th class="r">Facturables</th><th class="r">Precio unitario</th><th class="r">USD/mes</th><th class="r">Mensual</th></tr></thead>
+            <tbody id="tablaLicencias"></tbody>
+            <tfoot id="pieLicencias"></tfoot>
+          </table>
+        </div>
+        <p class="formula">Fortinet cobra una sola tarifa por unidad según el total agregado de todos los clientes del MSSP, con mínimos facturables aunque no se usen. El precio unitario baja al superar 150 unidades.</p>
+        <div class="tablewrap">
+          <table class="compacta">
+            <thead><tr><th>Costo mensual del SOC</th><th class="r">Mensual</th></tr></thead>
+            <tbody id="tablaCostos"></tbody>
+            <tfoot id="pieCostos"></tfoot>
+          </table>
+        </div>
+        <div class="eyebrow" style="margin-top:6px">Colectores (cálculo interno)</div>
+        <div class="reparto" id="economiaColectores"></div>
+      </section>
       <section class="personal" aria-labelledby="tPersonal">
         <div class="eyebrow" id="tPersonal">Personal: cómo se calcula</div>
         <p class="formula" id="formulaPersonal"></p>

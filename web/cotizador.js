@@ -45,12 +45,13 @@
       const variable = categoria === "ha_dr" ? "ha_dr_dispositivos" : categoria;
       const facturable = Math.max(solicitada, reglas.entradas[variable].cantidad_minima_facturable);
       if (categoria === "ha_dr" && facturable === 0) {
-        return { categoria, sku: null, facturable: 0, unitario: 0, subtotal: 0 };
+        return { categoria, sku: null, solicitada, facturable: 0, minimo: 0, unitario: 0, subtotal: 0 };
       }
       for (const r of reglas.seleccion_tarifas[categoria].rangos_ordenados_primera_coincidencia) {
         if (facturable >= r.desde_inclusive && (r.hasta_inclusive === null || facturable <= r.hasta_inclusive)) {
           const unitario = neto(porSku[r.sku]);
-          return { categoria, sku: r.sku, facturable, unitario, subtotal: dinero(facturable * unitario) };
+          return { categoria, sku: r.sku, solicitada, facturable, minimo: reglas.entradas[variable].cantidad_minima_facturable,
+                   unitario, subtotal: dinero(facturable * unitario) };
         }
       }
       throw new Error(`${categoria}: no hay tarifa para ${facturable} unidades`);
@@ -140,6 +141,8 @@
         personal: Object.fromEntries(MODULOS.map((m) => [m, dinero(personal[m])])),
         disponibilidad: dinero(disponibilidad),
         fijos: dinero(fijos),
+        cuotaProgramaAnual: dinero(cuotaPrograma),
+        cuotaProgramaSku: reglas.facturacion.cuota_programa.sku,
         cuotaProgramaMensual: dinero(cuotaPrograma / 12),
         licencias: lic,
         variables: dinero(variables),
