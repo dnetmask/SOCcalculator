@@ -3,8 +3,23 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const usd = new Intl.NumberFormat("es-CO", { style: "currency", currency: "USD", currencyDisplay: "code", minimumFractionDigits: 2 });
-  const usd0 = new Intl.NumberFormat("es-CO", { style: "currency", currency: "USD", currencyDisplay: "code", maximumFractionDigits: 0 });
+  // El motor calcula en USD (licencias Fortinet y Azure); la presentación usa la moneda de los
+  // supuestos (COP por defecto), convirtiendo con la TRM. Se configuran al cargar el modelo.
+  let MONEDA = "COP";
+  let TRM = 1;
+  const formatos = {};
+  function formato(decimales) {
+    const clave = `${MONEDA}${decimales}`;
+    formatos[clave] = formatos[clave] || new Intl.NumberFormat("es-CO", {
+      style: "currency", currency: MONEDA, currencyDisplay: "code",
+      minimumFractionDigits: decimales, maximumFractionDigits: decimales });
+    return formatos[clave];
+  }
+  const aMoneda = (usd) => (MONEDA === "COP" ? usd * TRM : usd);
+  // mon: importes con detalle (centavos en USD, pesos enteros en COP); mon0: importes redondos.
+  const mon = { format: (usd) => formato(MONEDA === "COP" ? 0 : 2).format(aMoneda(usd)) };
+  const mon0 = { format: (usd) => formato(0).format(aMoneda(usd)) };
+  const cop = { format: (pesos) => formato(0).format(MONEDA === "COP" ? pesos : pesos / TRM) };
   const pct = new Intl.NumberFormat("es-CO", { style: "percent", maximumFractionDigits: 1 });
   const CLAVE = "cotizador-soc-borrador";
   const CAMPOS = ["cliente", "contacto", "plazo", "soc", "vuln", "sedes", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "eps"];
@@ -112,13 +127,13 @@
     ultima = q;
     const p = q.precio;
 
-    $("precioBase").textContent = usd0.format(p.listaBase) + "/mes";
-    $("precioSede").textContent = usd0.format(p.precioPorSede);
+    $("precioBase").textContent = mon0.format(p.listaBase) + "/mes";
+    $("precioSede").textContent = mon0.format(p.precioPorSede);
     const dv = p.descuentoVolumen;
-    $("notaVolumen").textContent = `Desde la sede ${dv.desdeSede}: ${usd0.format(dv.precio)}/sede (${Math.round(dv.fraccion * 100)} % de descuento).`;
-    $("precioDisp").textContent = usd0.format(p.precioDispositivo);
-    $("precioAgente").textContent = usd0.format(p.precioAgente);
-    $("precioUeba").textContent = usd0.format(p.precioUeba);
+    $("notaVolumen").textContent = `Desde la sede ${dv.desdeSede}: ${mon0.format(dv.precio)}/sede (${Math.round(dv.fraccion * 100)} % de descuento).`;
+    $("precioDisp").textContent = mon0.format(p.precioDispositivo);
+    $("precioAgente").textContent = mon0.format(p.precioAgente);
+    $("precioUeba").textContent = mon0.format(p.precioUeba);
     const ret = retencionTexto(p);
     $("retLinea").textContent = ret.linea;
     $("retArch").textContent = ret.archivo;
@@ -138,20 +153,20 @@
       <tr>
         <td>${LICENCIAS.has(l.id) ? '<span class="lic" title="Licencia FortiSIEM MSSP"></span>' : ""}${esc(l.concepto)}${l.meses ? `<small>Cargo durante ${l.meses} meses</small>` : ""}</td>
         <td class="r num">${l.cantidad}</td>
-        <td class="r num">${usd.format(l.unitario)}</td>
-        <td class="r num">${usd.format(l.subtotal)}</td>
+        <td class="r num">${mon.format(l.unitario)}</td>
+        <td class="r num">${mon.format(l.subtotal)}</td>
       </tr>`).join("");
 
     $("pie").innerHTML = q.descuentoMensual
-      ? `<tr><td colspan="3">Subtotal</td><td class="r num">${usd.format(q.subtotalMensual)}</td></tr>
-         <tr class="disc"><td colspan="3">Descuento ${pct.format(q.descuento)} sobre servicios</td><td class="r num">−${usd.format(q.descuentoMensual)}</td></tr>`
+      ? `<tr><td colspan="3">Subtotal</td><td class="r num">${mon.format(q.subtotalMensual)}</td></tr>
+         <tr class="disc"><td colspan="3">Descuento ${pct.format(q.descuento)} sobre servicios</td><td class="r num">−${mon.format(q.descuentoMensual)}</td></tr>`
       : "";
 
     const temporal = q.mesesConCargoTemporal && q.mensualInicial !== q.mensualRecurrente;
     $("totales").innerHTML = `
-      <div class="total main"><span class="eyebrow">${temporal ? `Mensualidad meses 1–${q.mesesConCargoTemporal}` : "Mensualidad"}</span><b>${usd.format(q.mensualInicial)}</b><small>USD + impuestos</small></div>
-      ${temporal ? `<div class="total"><span class="eyebrow">Desde el mes ${q.mesesConCargoTemporal + 1}</span><b>${usd.format(q.mensualRecurrente)}</b><small>sin el cargo temporal del NUC</small></div>` : ""}
-      <div class="total"><span class="eyebrow">Valor del contrato</span><b>${usd.format(q.valorContrato)}</b><small>${q.plazoMeses} meses</small></div>`;
+      <div class="total main"><span class="eyebrow">${temporal ? `Mensualidad meses 1–${q.mesesConCargoTemporal}` : "Mensualidad"}</span><b>${mon.format(q.mensualInicial)}</b><small>${MONEDA} + impuestos</small></div>
+      ${temporal ? `<div class="total"><span class="eyebrow">Desde el mes ${q.mesesConCargoTemporal + 1}</span><b>${mon.format(q.mensualRecurrente)}</b><small>sin el cargo temporal del NUC</small></div>` : ""}
+      <div class="total"><span class="eyebrow">Valor del contrato</span><b>${mon.format(q.valorContrato)}</b><small>${q.plazoMeses} meses</small></div>`;
 
     $("incluye").innerHTML = textoIncluye(q).map((x) => `<span>${x}</span>`).join("");
     $("incluye").hidden = q.vacia;
@@ -160,9 +175,10 @@
     $("termSonda").hidden = !q.sedes;
 
     const cols = q.lineas.filter((l) => l.id.startsWith("col"));
+    $("termMoneda").textContent = `${textoMoneda()} Facturación mensual.`;
     $("termColector").hidden = !cols.length;
     $("termColector").textContent = cols.map((c) => {
-      const que = `${c.cantidad} × ${c.concepto.replace("Colector: ", "")} a ${usd.format(c.unitario)}`;
+      const que = `${c.cantidad} × ${c.concepto.replace("Colector: ", "")} a ${mon.format(c.unitario)}`;
       return c.meses ? `${que} al mes durante ${c.meses} meses` : `${que} al mes mientras dure el servicio`;
     }).join("; ") + (cols.length ? ", sumados a la mensualidad." : "");
 
@@ -183,10 +199,10 @@
     const maxAbs = Math.max(1, ...filas.map((f) => Math.abs(f.utilidad)));
     return filas.map((f) => {
       const w = (Math.abs(f.utilidad) / maxAbs) * 50;
-      return `<div class="bar" title="Ingreso ${usd0.format(f.ingreso)} · costo ${usd0.format(f.costo)}">
+      return `<div class="bar" title="Ingreso ${mon0.format(f.ingreso)} · costo ${mon0.format(f.costo)}">
         <span class="num">${f.clientes} ${unidad}${f.excedeCapacidad ? " *" : ""}</span>
         <span class="track"><span class="fill ${f.utilidad >= 0 ? "pos" : "neg"}" style="width:${w}%"></span></span>
-        <span class="num r">${usd0.format(f.utilidad)}</span></div>`;
+        <span class="num r">${mon0.format(f.utilidad)}</span></div>`;
     }).join("");
   }
 
@@ -198,10 +214,10 @@
     const planSoc = base ? base.neto : p.listaBase;
     const precioSedeNeto = vuln ? vuln.neto / vuln.cantidad : p.precioPorSede;
     $("kpis").innerHTML = `
-      <div class="kpi"><span class="eyebrow">Equilibrio SOC incidentes</span><b>${usd.format(p.equilibrioBase)}</b><small>por cliente con ${p.clientes} clientes</small></div>
-      <div class="kpi"><span class="eyebrow">Equilibrio vulnerabilidades</span><b>${usd.format(p.equilibrioPorSede)}</b><small>por sede con ${p.sedesEquilibrio} sedes · equipo ${usd0.format(p.costoVulnerabilidades)}/mes</small></div>
-      <div class="kpi"><span class="eyebrow">Piso de esta oferta</span><b>${usd.format(q.pisoEquilibrio)}</b><small>equilibrio + costo de adicionales y colector</small></div>
-      <div class="kpi ${ok ? "ok" : "bad"}"><span class="eyebrow">Contribución mensual</span><b>${usd.format(q.contribucion)}</b><span class="pill ${ok ? "ok" : "bad"}">${ok ? "Sobre equilibrio" : "Bajo equilibrio"} · ${pct.format(q.margenSobrePiso)}</span></div>`;
+      <div class="kpi"><span class="eyebrow">Equilibrio SOC incidentes</span><b>${mon.format(p.equilibrioBase)}</b><small>por cliente con ${p.clientes} clientes</small></div>
+      <div class="kpi"><span class="eyebrow">Equilibrio vulnerabilidades</span><b>${mon.format(p.equilibrioPorSede)}</b><small>por sede con ${p.sedesEquilibrio} sedes · equipo ${mon0.format(p.costoVulnerabilidades)}/mes</small></div>
+      <div class="kpi"><span class="eyebrow">Piso de esta oferta</span><b>${mon.format(q.pisoEquilibrio)}</b><small>equilibrio + costo de adicionales y colector</small></div>
+      <div class="kpi ${ok ? "ok" : "bad"}"><span class="eyebrow">Contribución mensual</span><b>${mon.format(q.contribucion)}</b><span class="pill ${ok ? "ok" : "bad"}">${ok ? "Sobre equilibrio" : "Bajo equilibrio"} · ${pct.format(q.margenSobrePiso)}</span></div>`;
 
     $("bars").innerHTML = barras(modelo.sensibilidad(planSoc, 8, sel.escenario), "cl.");
     $("barsVuln").innerHTML = barras(modelo.sensibilidadVulnerabilidades(precioSedeNeto, 12, sel.escenario), "sed.");
@@ -211,60 +227,70 @@
       <dt>Volumen diario crudo</dt><dd class="num">${new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 }).format(a.gbDia)} GB</dd>
       <dt>En línea (${p.retencion.enLineaDias} días)</dt><dd class="num">${gb.format(a.gbEnLinea)} GB</dd>
       <dt>Archivado (${p.retencion.archivadoMeses} meses)</dt><dd class="num">${gb.format(a.gbArchivado)} GB</dd>
-      <dt>Costo estimado Azure</dt><dd class="num">${usd.format(a.costo)}/mes</dd>
-      <dt>Presupuesto por cliente</dt><dd class="num">${usd.format(a.presupuesto)}/mes</dd>
+      <dt>Costo estimado Azure</dt><dd class="num">${mon.format(a.costo)}/mes</dd>
+      <dt>Presupuesto por cliente</dt><dd class="num">${mon.format(a.presupuesto)}/mes</dd>
       <dt>EPS que cubre el presupuesto</dt><dd class="num">~${gb.format(a.epsCubiertos)}</dd>`;
 
     renderPersonal(p, sel);
 
     $("notaInterna").textContent =
-      `SOC de incidentes a ${usd0.format(planSoc)}/mes por cliente, sin adicionales ni colector; su costo excluye el equipo de vulnerabilidades. ` +
-      `Vulnerabilidades a ${usd0.format(precioSedeNeto)} por sede: cubre su equipo desde ${Math.ceil(p.costoVulnerabilidades / precioSedeNeto - 1e-9)} sedes. ` +
+      `SOC de incidentes a ${mon0.format(planSoc)}/mes por cliente, sin adicionales ni colector; su costo excluye el equipo de vulnerabilidades. ` +
+      `Vulnerabilidades a ${mon0.format(precioSedeNeto)} por sede: cubre su equipo desde ${Math.ceil(p.costoVulnerabilidades / precioSedeNeto - 1e-9)} sedes. ` +
       `* Supera la capacidad del equipo actual (${modelo.supuestos.capacidad_max_clientes_sin_contratar} clientes / ${modelo.supuestos.gestion_vulnerabilidades.capacidad_max_sedes} sedes). ` +
       `Supuestos editables en data/supuestos_soc.json.`;
   }
 
-  // Desglose del personal del escenario elegido y comparación de escenarios.
+  // Desglose del personal: salario base cargado al SOC y prestaciones aparte, en la moneda de presentación.
   function renderPersonal(p, sel) {
     const d = modelo.detallePersonal(sel.escenario);
-    const cop = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
     const dec = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 2 });
     const pctD = (x) => `${Math.round(x * 100)} %`;
+    const pctP = pctD(d.factor - 1);
     const contingencia = Number(modelo.supuestos.contingencia_fraccion);
     $("formulaPersonal").textContent =
-      `Costo de cada rol = salario mensual (COP) × cantidad × dedicación × factor prestacional ${dec.format(d.factor)} ÷ TRM ${cop.format(d.trm)} COP/USD`;
+      `Costo de cada rol = salario base × cantidad × dedicación + prestaciones (${pctP} del salario: factor prestacional ${dec.format(d.factor)})`;
+    $("hPrestaciones").textContent = `Prestaciones (${pctP})`;
     $("tablaPersonal").innerHTML = d.roles.map((r) => `<tr>
         <td>${esc(r.rol)}</td><td><span class="modulo ${r.modulo}">${r.modulo}</span></td>
         <td class="r num">${r.cantidad}</td><td class="r num">${cop.format(r.salarioCop)}</td>
         <td class="r num">${pctD(r.dedicacion)}</td><td class="r num">${dec.format(r.fte)}</td>
-        <td class="r num">${cop.format(r.costoCop)}</td><td class="r num">${usd0.format(r.costoUsd)}</td></tr>`).join("") + `
+        <td class="r num">${cop.format(r.baseCop)}</td><td class="r num">${cop.format(r.prestacionesCop)}</td>
+        <td class="r num">${cop.format(r.costoCop)}</td></tr>`).join("") + `
       <tr><td>Bono de disponibilidad fuera de horario</td><td><span class="modulo">compartido</span></td><td></td><td></td><td></td><td></td>
-        <td class="r num">${cop.format(d.disponibilidadCop)}</td><td class="r num">${usd0.format(d.disponibilidadUsd)}</td></tr>`;
-    $("pieTablaPersonal").innerHTML = `<tr><td colspan="5">Total personal</td><td class="r num">${dec.format(d.fte)}</td>
-        <td class="r num">${cop.format(d.totalUsd * d.trm)}</td><td class="r num">${usd0.format(d.totalUsd)}</td></tr>
-      <tr><td colspan="7">Con contingencia de ${pctD(contingencia)}</td><td class="r num">${usd0.format(d.conContingenciaUsd)}</td></tr>`;
+        <td class="r num">${cop.format(d.disponibilidadCop)}</td><td class="r num">—</td><td class="r num">${cop.format(d.disponibilidadCop)}</td></tr>`;
+    $("pieTablaPersonal").innerHTML = `<tr><td colspan="5">Total personal al mes</td><td class="r num">${dec.format(d.fte)}</td>
+        <td class="r num">${cop.format(d.baseCop + d.disponibilidadCop)}</td><td class="r num">${cop.format(d.prestacionesCop)}</td>
+        <td class="r num">${cop.format(d.totalCop)}</td></tr>
+      <tr><td colspan="8">Con contingencia de ${pctD(contingencia)}</td><td class="r num">${cop.format(d.totalCop * (1 + contingencia))}</td></tr>`;
     const socPersonal = d.porModulo.incidentes + d.porModulo.compartido + d.disponibilidadUsd;
     $("repartoPersonal").innerHTML = `
-      <div><b>${usd0.format(socPersonal)}</b>Incidentes + compartido + disponibilidad: lo paga el plan SOC, repartido entre ${p.clientes} clientes (${usd0.format(socPersonal * (1 + contingencia) / p.clientes)} por cliente con contingencia)</div>
-      <div><b>${usd0.format(d.porModulo.vulnerabilidades)}</b>Equipo de vulnerabilidades: lo paga el servicio por sede (${usd0.format(p.costoVulnerabilidades)} con contingencia ÷ ${p.sedesEquilibrio} sedes = ${usd.format(p.equilibrioPorSede)} por sede)</div>
+      <div><b>${mon0.format(socPersonal)}</b>Incidentes + compartido + disponibilidad: lo paga el plan SOC, repartido entre ${p.clientes} clientes (${mon0.format(socPersonal * (1 + contingencia) / p.clientes)} por cliente con contingencia)</div>
+      <div><b>${mon0.format(d.porModulo.vulnerabilidades)}</b>Equipo de vulnerabilidades: lo paga el servicio por sede (${mon0.format(p.costoVulnerabilidades)} con contingencia ÷ ${p.sedesEquilibrio} sedes = ${mon0.format(p.equilibrioPorSede)} por sede)</div>
       <div><b>${dec.format(d.fte)} FTE</b>Personas equivalentes a tiempo completo: la dedicación parcial (p. ej. líder al 30 %) cuenta como fracción</div>`;
     $("nEscenarios").textContent = p.clientes;
     $("tablaEscenarios").innerHTML = modelo.compararEscenarios(p.clientes).map((e) => `<tr class="${e.nombre === d.nombre ? "actual" : ""}">
-        <td>${esc(e.nombre)}</td><td class="r num">${dec.format(e.fte)}</td><td class="r num">${usd0.format(e.personalUsd)}</td>
-        <td class="r num">${usd0.format(e.costoTotal)}</td><td class="r num">${usd.format(e.equilibrioBase)}</td>
-        <td class="r num">${usd0.format(e.listaBase)}</td><td class="r num">${usd.format(e.equilibrioPorSede)}</td></tr>`).join("");
+        <td>${esc(e.nombre)}</td><td class="r num">${dec.format(e.fte)}</td><td class="r num">${mon0.format(e.personalUsd)}</td>
+        <td class="r num">${mon0.format(e.costoTotal)}</td><td class="r num">${mon0.format(e.equilibrioBase)}</td>
+        <td class="r num">${mon0.format(e.listaBase)}</td><td class="r num">${mon0.format(e.equilibrioPorSede)}</td></tr>`).join("");
     $("clavesPersonal").innerHTML = [
       `<b>${esc(d.nombre)}:</b> ${esc(d.descripcion)}`,
-      `El <b>factor prestacional ${dec.format(d.factor)}</b> suma al salario las prestaciones sociales, seguridad social y parafiscales en Colombia (≈ ${pctD(d.factor - 1)} adicional).`,
+      `Las <b>prestaciones (${pctP})</b> suman al salario las prestaciones sociales, seguridad social y parafiscales en Colombia. El bono de disponibilidad se paga sin prestaciones.`,
       `La <b>dedicación</b> es la fracción del tiempo de la persona que se carga al SOC; el resto se asume en otros proyectos de Netmask.`,
-      `Ningún escenario es 24×7: ambos cubren horario laboral extendido con un bono de disponibilidad para incidentes críticos. Cubrir un solo puesto 24×7 exige unas 5 personas (turnos, descansos y vacaciones).`,
-      `Salarios, factor, TRM y dedicaciones son <b>supuestos</b> editables en <code>data/supuestos_soc.json</code>; reemplázalos por la nómina real.`,
+      `El escenario no es 24×7: cubre horario laboral extendido con un bono de disponibilidad para incidentes críticos. Cubrir un solo puesto 24×7 exige unas 5 personas (turnos, descansos y vacaciones).`,
+      `Licencias Fortinet, Azure y la cuota anual se facturan en USD y se convierten a COP con la TRM de referencia (${new Intl.NumberFormat("es-CO").format(TRM)}): una subida del dólar sube el costo.`,
+      `Salarios, prestaciones, TRM y dedicaciones son <b>supuestos</b> editables en <code>data/supuestos_soc.json</code>; reemplázalos por la nómina real.`,
     ].map((x) => `<li>${x}</li>`).join("");
+  }
+
+  function textoMoneda() {
+    return MONEDA === "COP"
+      ? `Valores en COP antes de impuestos. TRM de referencia ${new Intl.NumberFormat("es-CO").format(TRM)} COP/USD.`
+      : "Valores en USD antes de impuestos.";
   }
 
   function textoOferta() {
     const q = ultima;
-    const lineas = q.lineas.map((l) => `- ${l.concepto}: ${l.cantidad} × ${usd.format(l.unitario)} = ${usd.format(l.subtotal)}/mes${l.meses ? ` (durante ${l.meses} meses)` : ""}`);
+    const lineas = q.lineas.map((l) => `- ${l.concepto}: ${l.cantidad} × ${mon.format(l.unitario)} = ${mon.format(l.subtotal)}/mes${l.meses ? ` (durante ${l.meses} meses)` : ""}`);
     return [
       `Propuesta SOC Netmask ${$("hNum").textContent}`,
       `Cliente: ${$("hClient").textContent}${$("hContact").textContent ? ` · ${$("hContact").textContent}` : ""}`,
@@ -273,11 +299,11 @@
       q.sedes ? "No incluye la licencia de la sonda OT, que aporta el cliente." : null,
       "",
       ...lineas,
-      q.descuentoMensual ? `- Descuento ${pct.format(q.descuento)} sobre servicios: −${usd.format(q.descuentoMensual)}/mes` : null,
+      q.descuentoMensual ? `- Descuento ${pct.format(q.descuento)} sobre servicios: −${mon.format(q.descuentoMensual)}/mes` : null,
       "",
-      `Mensualidad: ${usd.format(q.mensualInicial)}` + (q.mensualInicial !== q.mensualRecurrente ? ` (desde el mes ${q.mesesConCargoTemporal + 1}: ${usd.format(q.mensualRecurrente)})` : ""),
-      `Valor del contrato: ${usd.format(q.valorContrato)}`,
-      "Valores en USD antes de impuestos.",
+      `Mensualidad: ${mon.format(q.mensualInicial)}` + (q.mensualInicial !== q.mensualRecurrente ? ` (desde el mes ${q.mesesConCargoTemporal + 1}: ${mon.format(q.mensualRecurrente)})` : ""),
+      `Valor del contrato: ${mon.format(q.valorContrato)}`,
+      textoMoneda(),
     ].filter((x) => x !== null).join("\n");
   }
 
@@ -347,6 +373,8 @@
       const [precios, reglas, supuestos] = await Promise.all(
         ["precios.json", "reglas.json", "supuestos_soc.json"].map(cargarJSON));
       modelo = Cotizador.crearModelo(precios, reglas, supuestos);
+      MONEDA = supuestos.moneda_presentacion || "USD";
+      TRM = Number(supuestos.tasa_cambio_cop_por_usd);
     } catch (e) {
       $("error").textContent = e.message;
       $("error").hidden = false;
@@ -361,8 +389,8 @@
     $("colectores").innerHTML = modelo.opcionesColector().map((o) => `
       <div class="opt" id="colCard${o.id}">
         <strong>${esc(o.opcion)}</strong>
-        <span class="num">${o.precioMensual ? usd0.format(o.precioMensual) + "/mes c/u" : "Sin costo"}</span>
-        <small>${o.mesesCobro ? `Equipo de ${usd0.format(o.costoTotal)} · durante ${o.mesesCobro} meses` : o.precioMensual ? "Recurrente" : "Aplica si no se cotizan colectores"}</small>
+        <span class="num">${o.precioMensual ? mon0.format(o.precioMensual) + "/mes c/u" : "Sin costo"}</span>
+        <small>${o.mesesCobro ? `Equipo de ${mon0.format(o.costoTotal)} · durante ${o.mesesCobro} meses` : o.precioMensual ? "Recurrente" : "Aplica si no se cotizan colectores"}</small>
         ${o.precioMensual ? `<div class="stepper"><button type="button" data-step="colN${o.id}" data-d="-1" aria-label="Quitar ${esc(o.opcion)}">−</button><input id="colN${o.id}" type="number" min="0" step="1" value="${o.mesesCobro ? 1 : 0}" inputmode="numeric" aria-label="Cantidad de ${esc(o.opcion)}"><button type="button" data-step="colN${o.id}" data-d="1" aria-label="Agregar ${esc(o.opcion)}">+</button></div>` : ""}
       </div>`).join("");
 

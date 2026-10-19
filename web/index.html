@@ -203,7 +203,7 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
 .split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; }
 @media (max-width: 820px) { .split { grid-template-columns: minmax(0, 1fr); } }
 .bars { display: grid; gap: 6px; }
-.bar { display: grid; grid-template-columns: 9ch minmax(0, 1fr) 11ch; gap: 10px; align-items: center; font-size: .82rem; color: var(--ink); }
+.bar { display: grid; grid-template-columns: 9ch minmax(0, 1fr) 16ch; gap: 10px; align-items: center; font-size: .82rem; color: var(--ink); }
 .bar .track { position: relative; height: 14px; background: var(--sunken); border-radius: 2px; overflow: hidden; }
 .bar .fill { position: absolute; top: 0; bottom: 0; }
 .bar .fill.pos { left: 50%; background: var(--ok); }
@@ -367,7 +367,7 @@ table.compacta tfoot td { font-weight: 600; border-top: 1px solid var(--line-str
         <div class="totals" id="totales"></div>
         <p class="includes" id="incluye"></p>
         <ul class="terms">
-          <li>Valores en USD antes de impuestos, facturación mensual.</li>
+          <li id="termMoneda">Valores antes de impuestos, facturación mensual.</li>
           <li id="termDisp">Dispositivo/Consola fuente = fuente de log integrada al FortiSIEM (firewall, switch, servidor, consola EDR o de gestión).</li>
           <li id="termUeba">UEBA se contrata por agente avanzado: no puede superar la cantidad de agentes.</li>
           <li id="termSonda">Gestión de vulnerabilidades: no incluye la licencia de la sonda OT, que aporta el cliente.</li>
@@ -410,16 +410,16 @@ table.compacta tfoot td { font-weight: 600; border-top: 1px solid var(--line-str
         <p class="formula" id="formulaPersonal"></p>
         <div class="tablewrap">
           <table class="compacta">
-            <thead><tr><th>Rol</th><th>Módulo</th><th class="r">Cant.</th><th class="r">Salario COP</th><th class="r">Dedicación</th><th class="r">FTE</th><th class="r">Costo cargado COP</th><th class="r">USD/mes</th></tr></thead>
+            <thead><tr><th>Rol</th><th>Módulo</th><th class="r">Cant.</th><th class="r">Salario base</th><th class="r">Dedicación</th><th class="r">FTE</th><th class="r">Salario cargado al SOC</th><th class="r" id="hPrestaciones">Prestaciones</th><th class="r">Costo total/mes</th></tr></thead>
             <tbody id="tablaPersonal"></tbody>
             <tfoot id="pieTablaPersonal"></tfoot>
           </table>
         </div>
         <div class="reparto" id="repartoPersonal"></div>
-        <div class="eyebrow" style="margin-top:6px">Comparación de escenarios con <span id="nEscenarios">4</span> clientes</div>
+        <div class="eyebrow" style="margin-top:6px">Resumen del escenario con <span id="nEscenarios">4</span> clientes</div>
         <div class="tablewrap">
           <table class="compacta">
-            <thead><tr><th>Escenario</th><th class="r">Equipo (FTE)</th><th class="r">Personal USD/mes</th><th class="r">Costo SOC total</th><th class="r">Equilibrio SOC/cliente</th><th class="r">Precio lista SOC</th><th class="r">Equilibrio vuln./sede</th></tr></thead>
+            <thead><tr><th>Escenario</th><th class="r">Equipo (FTE)</th><th class="r">Personal/mes</th><th class="r">Costo SOC total</th><th class="r">Equilibrio SOC/cliente</th><th class="r">Precio lista SOC</th><th class="r">Equilibrio vuln./sede</th></tr></thead>
             <tbody id="tablaEscenarios"></tbody>
           </table>
         </div>

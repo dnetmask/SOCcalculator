@@ -91,17 +91,22 @@
       const factor = num(s.factor_prestacional);
       const e = escenario(nombre);
       const roles = e.roles.map((r) => {
-        const cop = num(r.salario_mensual_cop) * r.cantidad * num(r.dedicacion) * factor;
+        // Salario cargado al SOC (según cantidad y dedicación) y prestaciones aparte.
+        const baseCop = num(r.salario_mensual_cop) * r.cantidad * num(r.dedicacion);
+        const cop = baseCop * factor;
         return { rol: r.rol, modulo: r.modulo, cantidad: r.cantidad, salarioCop: num(r.salario_mensual_cop),
-                 dedicacion: num(r.dedicacion), fte: r.cantidad * num(r.dedicacion), costoCop: cop, costoUsd: dinero(cop / trm) };
+                 dedicacion: num(r.dedicacion), fte: r.cantidad * num(r.dedicacion), baseCop, prestacionesCop: cop - baseCop,
+                 costoCop: cop, costoUsd: dinero(cop / trm) };
       });
       const disponibilidadCop = num(s.disponibilidad_fuera_de_horario_cop);
       const totalCop = roles.reduce((a, r) => a + r.costoCop, 0) + disponibilidadCop;
+      const baseCop = roles.reduce((a, r) => a + r.baseCop, 0);
       return {
         nombre: nombre || s.escenario_personal, descripcion: e.descripcion, roles, factor, trm,
         disponibilidadCop, disponibilidadUsd: dinero(disponibilidadCop / trm),
         fte: roles.reduce((a, r) => a + r.fte, 0),
         porModulo: Object.fromEntries(MODULOS.map((m) => [m, dinero(roles.filter((r) => r.modulo === m).reduce((a, r) => a + r.costoCop, 0) / trm)])),
+        baseCop, prestacionesCop: roles.reduce((a, r) => a + r.prestacionesCop, 0), totalCop,
         totalUsd: dinero(totalCop / trm),
         conContingenciaUsd: dinero((totalCop / trm) * (1 + contingencia)),
       };
