@@ -85,6 +85,39 @@
       return totales;
     }
 
+    /* Desglose del personal de un escenario, rol por rol:
+     * costo cargado = salario COP × cantidad × dedicación × factor prestacional; USD = COP / TRM. */
+    function detallePersonal(nombre) {
+      const factor = num(s.factor_prestacional);
+      const e = escenario(nombre);
+      const roles = e.roles.map((r) => {
+        const cop = num(r.salario_mensual_cop) * r.cantidad * num(r.dedicacion) * factor;
+        return { rol: r.rol, modulo: r.modulo, cantidad: r.cantidad, salarioCop: num(r.salario_mensual_cop),
+                 dedicacion: num(r.dedicacion), fte: r.cantidad * num(r.dedicacion), costoCop: cop, costoUsd: dinero(cop / trm) };
+      });
+      const disponibilidadCop = num(s.disponibilidad_fuera_de_horario_cop);
+      const totalCop = roles.reduce((a, r) => a + r.costoCop, 0) + disponibilidadCop;
+      return {
+        nombre: nombre || s.escenario_personal, descripcion: e.descripcion, roles, factor, trm,
+        disponibilidadCop, disponibilidadUsd: dinero(disponibilidadCop / trm),
+        fte: roles.reduce((a, r) => a + r.fte, 0),
+        porModulo: Object.fromEntries(MODULOS.map((m) => [m, dinero(roles.filter((r) => r.modulo === m).reduce((a, r) => a + r.costoCop, 0) / trm)])),
+        totalUsd: dinero(totalCop / trm),
+        conContingenciaUsd: dinero((totalCop / trm) * (1 + contingencia)),
+      };
+    }
+
+    // Resumen de todos los escenarios de personal con el mismo número de clientes de equilibrio.
+    function compararEscenarios(clientes) {
+      return Object.keys(s.escenarios_personal).map((nombre) => {
+        const d = detallePersonal(nombre);
+        const p = precio(clientes, nombre);
+        return { nombre, descripcion: d.descripcion, fte: d.fte, personalUsd: d.totalUsd, costoTotal: p.costos.total,
+                 equilibrioBase: p.equilibrioBase, listaBase: p.listaBase, costoVulnerabilidades: p.costoVulnerabilidades,
+                 equilibrioPorSede: p.equilibrioPorSede, sedesMinimas: p.sedesMinimas };
+      });
+    }
+
     function costos(clientes, nombreEscenario) {
       const base = s.plan_base;
       const lic = licencias({
@@ -318,6 +351,8 @@
     return {
       supuestos: s,
       estimarAlmacenamiento,
+      detallePersonal,
+      compararEscenarios,
       escenarios: Object.keys(s.escenarios_personal),
       licencias,
       costos,

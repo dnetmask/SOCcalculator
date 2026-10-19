@@ -121,3 +121,18 @@ test("colectores NUC y Azure independientes", () => {
   assert.equal(q.valorContrato, (4050 + 400) * 24 + 750 * 12);
   assert.equal(modelo.cotizar({ dispositivos: 10, colectores: { [nuc]: 0, [azure]: 0 } }).lineas.length, 1);
 });
+
+test("desglose de personal por escenario", () => {
+  const d = modelo.detallePersonal("completo");
+  assert.equal(d.roles[0].costoUsd, 4180); // 2 x 5.5M x 1 x 1.52 / 4000
+  assert.equal(d.porModulo.incidentes, 7600);
+  assert.equal(d.porModulo.vulnerabilidades, 3040);
+  assert.equal(d.disponibilidadUsd, 375);
+  assert.equal(d.totalUsd, 14321);
+  assert.equal(d.fte, 4.8); // 2 + 1 + 1 + 0.5 + 0.3
+  const e = modelo.detallePersonal("esbelto");
+  assert.equal(e.totalUsd, 9495);
+  assert.equal(e.fte, 3.0);
+  const c = modelo.compararEscenarios(4);
+  assert.deepEqual(c.map((x) => [x.nombre, x.listaBase, x.equilibrioPorSede]), [["completo", 4050, 418], ["esbelto", 3150, 209]]);
+});

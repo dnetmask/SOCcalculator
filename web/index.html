@@ -214,6 +214,19 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
 .storage { display: grid; gap: 10px; align-content: start; }
 .storage dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; margin: 0; font-size: .85rem; }
 .storage dt { color: var(--muted); } .storage dd { margin: 0; text-align: right; color: var(--ink); }
+.personal { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
+.formula { margin: 0; padding: 10px 12px; border-radius: 4px; background: var(--sunken); font: 500 .85rem/1.5 var(--f-data); color: var(--ink); }
+table.compacta { font-size: .82rem; }
+table.compacta td, table.compacta th { padding: 6px 8px; }
+table.compacta tr.actual td { background: var(--cyan-soft); font-weight: 600; }
+table.compacta tfoot td { font-weight: 600; border-top: 1px solid var(--line-strong); }
+.modulo { display: inline-block; font: 600 .68rem/1 var(--f-data); letter-spacing: .06em; text-transform: uppercase; padding: 4px 6px; border-radius: 3px; background: var(--sunken); color: var(--muted); }
+.modulo.incidentes { background: var(--cyan-soft); color: var(--cyan); }
+.modulo.vulnerabilidades { background: var(--red-soft); color: var(--red); }
+.reparto { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.reparto div { border-left: 3px solid var(--line-strong); padding: 4px 10px; font-size: .82rem; color: var(--muted); }
+.reparto b { display: block; font: 600 1rem var(--f-data); color: var(--ink); }
+.claves { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: .84rem; color: var(--body); }
 .error { padding: 14px; border-radius: 6px; background: var(--bad-soft); color: var(--bad); }
 @media (max-width: 560px) {
   .plan { grid-template-columns: minmax(0, 1fr); }
@@ -392,6 +405,26 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
           <dl id="almacenamiento"></dl>
         </div>
       </div>
+      <section class="personal" aria-labelledby="tPersonal">
+        <div class="eyebrow" id="tPersonal">Personal: cómo se calcula</div>
+        <p class="formula" id="formulaPersonal"></p>
+        <div class="tablewrap">
+          <table class="compacta">
+            <thead><tr><th>Rol</th><th>Módulo</th><th class="r">Cant.</th><th class="r">Salario COP</th><th class="r">Dedicación</th><th class="r">FTE</th><th class="r">Costo cargado COP</th><th class="r">USD/mes</th></tr></thead>
+            <tbody id="tablaPersonal"></tbody>
+            <tfoot id="pieTablaPersonal"></tfoot>
+          </table>
+        </div>
+        <div class="reparto" id="repartoPersonal"></div>
+        <div class="eyebrow" style="margin-top:6px">Comparación de escenarios con <span id="nEscenarios">4</span> clientes</div>
+        <div class="tablewrap">
+          <table class="compacta">
+            <thead><tr><th>Escenario</th><th class="r">Equipo (FTE)</th><th class="r">Personal USD/mes</th><th class="r">Costo SOC total</th><th class="r">Equilibrio SOC/cliente</th><th class="r">Precio lista SOC</th><th class="r">Equilibrio vuln./sede</th></tr></thead>
+            <tbody id="tablaEscenarios"></tbody>
+          </table>
+        </div>
+        <ul class="claves" id="clavesPersonal"></ul>
+      </section>
       <p class="muted" id="notaInterna" style="margin:0;font-size:.85rem"></p>
     </div>
   </details>

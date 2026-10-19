@@ -41,7 +41,7 @@ Todos los supuestos están en `data/supuestos_soc.json`. Los que tienen `"origen
 
 ## Cotizador web (`web/`)
 
-Aplicación estática en HTML + JavaScript, sin compilación, con la imagen combinada Netmask + FortiSIEM. Arma la oferta en tiempo real: SOC de incidentes (con retención incluida, dispositivos/consolas fuente, agentes avanzados, UEBA y colector) y gestión de vulnerabilidades OT por sede, juntos o por separado, con descuento y plazo. Muestra la mensualidad, la mensualidad sin colector y el valor del contrato. Incluye una vista interna con el piso de equilibrio, la contribución de la oferta, la utilidad del SOC según el número de clientes y una estimación del almacenamiento por EPS con la retención base.
+Aplicación estática en HTML + JavaScript, sin compilación, con la imagen combinada Netmask + FortiSIEM. Arma la oferta en tiempo real: SOC de incidentes (con retención incluida, dispositivos/consolas fuente, agentes avanzados, UEBA y colector) y gestión de vulnerabilidades OT por sede, juntos o por separado, con descuento y plazo. Muestra la mensualidad, la mensualidad sin colector y el valor del contrato. Incluye una vista interna con el desglose del personal rol por rol (salario × cantidad × dedicación × factor prestacional ÷ TRM) y la comparación de escenarios, el piso de equilibrio, la contribución de la oferta, la utilidad del SOC según el número de clientes y una estimación del almacenamiento por EPS con la retención base.
 
 - `web/cotizador.js`: motor de cálculo. Replica `core.py` y `precio_soc.py` y lee los mismos `data/*.json`, así que al cambiar un supuesto cambian a la vez el cotizador y el reporte Python.
 - `web/app.js` y `web/index.html`: interfaz.

@@ -215,11 +215,51 @@
       <dt>Presupuesto por cliente</dt><dd class="num">${usd.format(a.presupuesto)}/mes</dd>
       <dt>EPS que cubre el presupuesto</dt><dd class="num">~${gb.format(a.epsCubiertos)}</dd>`;
 
+    renderPersonal(p, sel);
+
     $("notaInterna").textContent =
       `SOC de incidentes a ${usd0.format(planSoc)}/mes por cliente, sin adicionales ni colector; su costo excluye el equipo de vulnerabilidades. ` +
       `Vulnerabilidades a ${usd0.format(precioSedeNeto)} por sede: cubre su equipo desde ${Math.ceil(p.costoVulnerabilidades / precioSedeNeto - 1e-9)} sedes. ` +
       `* Supera la capacidad del equipo actual (${modelo.supuestos.capacidad_max_clientes_sin_contratar} clientes / ${modelo.supuestos.gestion_vulnerabilidades.capacidad_max_sedes} sedes). ` +
       `Supuestos editables en data/supuestos_soc.json.`;
+  }
+
+  // Desglose del personal del escenario elegido y comparación de escenarios.
+  function renderPersonal(p, sel) {
+    const d = modelo.detallePersonal(sel.escenario);
+    const cop = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
+    const dec = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 2 });
+    const pctD = (x) => `${Math.round(x * 100)} %`;
+    const contingencia = Number(modelo.supuestos.contingencia_fraccion);
+    $("formulaPersonal").textContent =
+      `Costo de cada rol = salario mensual (COP) × cantidad × dedicación × factor prestacional ${dec.format(d.factor)} ÷ TRM ${cop.format(d.trm)} COP/USD`;
+    $("tablaPersonal").innerHTML = d.roles.map((r) => `<tr>
+        <td>${esc(r.rol)}</td><td><span class="modulo ${r.modulo}">${r.modulo}</span></td>
+        <td class="r num">${r.cantidad}</td><td class="r num">${cop.format(r.salarioCop)}</td>
+        <td class="r num">${pctD(r.dedicacion)}</td><td class="r num">${dec.format(r.fte)}</td>
+        <td class="r num">${cop.format(r.costoCop)}</td><td class="r num">${usd0.format(r.costoUsd)}</td></tr>`).join("") + `
+      <tr><td>Bono de disponibilidad fuera de horario</td><td><span class="modulo">compartido</span></td><td></td><td></td><td></td><td></td>
+        <td class="r num">${cop.format(d.disponibilidadCop)}</td><td class="r num">${usd0.format(d.disponibilidadUsd)}</td></tr>`;
+    $("pieTablaPersonal").innerHTML = `<tr><td colspan="5">Total personal</td><td class="r num">${dec.format(d.fte)}</td>
+        <td class="r num">${cop.format(d.totalUsd * d.trm)}</td><td class="r num">${usd0.format(d.totalUsd)}</td></tr>
+      <tr><td colspan="7">Con contingencia de ${pctD(contingencia)}</td><td class="r num">${usd0.format(d.conContingenciaUsd)}</td></tr>`;
+    const socPersonal = d.porModulo.incidentes + d.porModulo.compartido + d.disponibilidadUsd;
+    $("repartoPersonal").innerHTML = `
+      <div><b>${usd0.format(socPersonal)}</b>Incidentes + compartido + disponibilidad: lo paga el plan SOC, repartido entre ${p.clientes} clientes (${usd0.format(socPersonal * (1 + contingencia) / p.clientes)} por cliente con contingencia)</div>
+      <div><b>${usd0.format(d.porModulo.vulnerabilidades)}</b>Equipo de vulnerabilidades: lo paga el servicio por sede (${usd0.format(p.costoVulnerabilidades)} con contingencia ÷ ${p.sedesEquilibrio} sedes = ${usd.format(p.equilibrioPorSede)} por sede)</div>
+      <div><b>${dec.format(d.fte)} FTE</b>Personas equivalentes a tiempo completo: la dedicación parcial (p. ej. líder al 30 %) cuenta como fracción</div>`;
+    $("nEscenarios").textContent = p.clientes;
+    $("tablaEscenarios").innerHTML = modelo.compararEscenarios(p.clientes).map((e) => `<tr class="${e.nombre === d.nombre ? "actual" : ""}">
+        <td>${esc(e.nombre)}</td><td class="r num">${dec.format(e.fte)}</td><td class="r num">${usd0.format(e.personalUsd)}</td>
+        <td class="r num">${usd0.format(e.costoTotal)}</td><td class="r num">${usd.format(e.equilibrioBase)}</td>
+        <td class="r num">${usd0.format(e.listaBase)}</td><td class="r num">${usd.format(e.equilibrioPorSede)}</td></tr>`).join("");
+    $("clavesPersonal").innerHTML = [
+      `<b>${esc(d.nombre)}:</b> ${esc(d.descripcion)}`,
+      `El <b>factor prestacional ${dec.format(d.factor)}</b> suma al salario las prestaciones sociales, seguridad social y parafiscales en Colombia (≈ ${pctD(d.factor - 1)} adicional).`,
+      `La <b>dedicación</b> es la fracción del tiempo de la persona que se carga al SOC; el resto se asume en otros proyectos de Netmask.`,
+      `Ningún escenario es 24×7: ambos cubren horario laboral extendido con un bono de disponibilidad para incidentes críticos. Cubrir un solo puesto 24×7 exige unas 5 personas (turnos, descansos y vacaciones).`,
+      `Salarios, factor, TRM y dedicaciones son <b>supuestos</b> editables en <code>data/supuestos_soc.json</code>; reemplázalos por la nómina real.`,
+    ].map((x) => `<li>${x}</li>`).join("");
   }
 
   function textoOferta() {
