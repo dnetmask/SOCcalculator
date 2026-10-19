@@ -24,10 +24,10 @@ class TestPrecioSOC(unittest.TestCase):
 
     def test_personal_por_modulo_en_usd(self):
         p = self.modelo.personal_por_modulo("ajustado")
-        # (3.3M + 3.78M) COP x 1.52 / 4000 (salarios base -40 %)
-        self.assertEqual(p["incidentes"], Decimal("2690.4"))
-        # 3.36M x 1.52 / 4000
-        self.assertEqual(p["vulnerabilidades"], Decimal("1276.8"))
+        # (3.3M + 3.78M) COP x 1.52 / 3500 (salarios base -40 %, TRM 3.500)
+        self.assertEqual(round(p["incidentes"], 2), Decimal("3074.74"))
+        # 3.36M x 1.52 / 3500
+        self.assertEqual(round(p["vulnerabilidades"], 2), Decimal("1459.20"))
 
     def test_licencias_usan_motor_con_dispositivos_agregados(self):
         c = self.modelo.costos(4)
@@ -38,7 +38,7 @@ class TestPrecioSOC(unittest.TestCase):
     def test_precio_equilibrio_cubre_costo_con_n_clientes(self):
         p = self.modelo.precio()
         self.assertEqual(p.clientes_equilibrio, 4)
-        self.assertEqual(p.lista_base, Decimal("2350.00"))
+        self.assertEqual(p.lista_base, Decimal("2600.00"))
         # SOC de incidentes x 4 clientes + equipo de vulnerabilidades = costo total
         self.assertLessEqual(abs(p.equilibrio_base * 4 + p.costo_vulnerabilidades - p.costos.total), Decimal("0.03"))
         self.assertGreaterEqual(p.lista_base, p.equilibrio_base)
@@ -46,9 +46,9 @@ class TestPrecioSOC(unittest.TestCase):
 
     def test_vulnerabilidades_por_sede(self):
         p = self.modelo.precio()
-        self.assertEqual(p.costo_vulnerabilidades, Decimal("1404.48"))  # 1276.80 x 1.10
+        self.assertEqual(p.costo_vulnerabilidades, Decimal("1605.12"))  # 1459.20 x 1.10
         self.assertEqual(p.sedes_equilibrio, 8)  # 4 clientes x 2 sedes
-        self.assertEqual(p.equilibrio_por_sede, Decimal("175.56"))
+        self.assertEqual(p.equilibrio_por_sede, Decimal("200.64"))
         self.assertEqual(p.precio_por_sede, Decimal("560.00"))
         self.assertEqual(p.sedes_minimas_con_precio_lista, 3)
         filas = self.modelo.sensibilidad_vulnerabilidades(12)
@@ -66,6 +66,12 @@ class TestPrecioSOC(unittest.TestCase):
         filas = self.modelo.sensibilidad(p.lista_base, 5)
         self.assertLess(filas[2].utilidad, 0)
         self.assertGreaterEqual(filas[3].utilidad, 0)
+
+    def test_margen_comercial_sobre_precio_de_venta(self):
+        self.assertEqual(self.modelo.precio(margen=Decimal("0.20")).lista_base, Decimal("3250.00"))  # 2599.45 / 0.8 -> 3249.31
+        self.assertEqual(self.modelo.precio(margen=Decimal("0.30")).lista_base, Decimal("3750.00"))
+        with self.assertRaises(ErrorModelo):
+            self.modelo.precio(margen=Decimal("1"))
 
     def test_escenario_unico_ajustado(self):
         self.assertEqual(list(self.modelo.s["escenarios_personal"]), ["ajustado"])
@@ -103,6 +109,7 @@ class TestPrecioSOC(unittest.TestCase):
             lambda s: s["opciones_colector"]["opciones"][1].update(meses_cobro=0),
             lambda s: s["escenarios_personal"]["ajustado"]["roles"][0].update(modulo="otro"),
             lambda s: s.pop("factor_prestacional"),
+            lambda s: s.update(margen_comercial="1"),
             lambda s: s["gestion_vulnerabilidades"].update(precio_por_sede_usd="0"),
             lambda s: s["gestion_vulnerabilidades"].update(sedes_promedio_por_cliente=0),
             lambda s: s["gestion_vulnerabilidades"]["descuento_volumen"].update(descuento_fraccion="1"),

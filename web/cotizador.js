@@ -173,7 +173,10 @@
       });
     }
 
-    function precio(clientes, nombreEscenario) {
+    // margen: margen comercial sobre el precio de venta del plan SOC (por defecto, el de los supuestos).
+    function precio(clientes, nombreEscenario, margen) {
+      const m = margen === undefined || margen === null ? num(s.margen_comercial || 0) : num(margen);
+      if (!(m >= 0 && m < 1)) throw new Error("El margen comercial debe estar entre 0 % y 99 %");
       const n = clientes || s.clientes_punto_equilibrio;
       if (!(n >= 1)) throw new Error("Se requiere al menos 1 cliente para el punto de equilibrio");
       const c = costos(n, nombreEscenario);
@@ -187,7 +190,8 @@
         clientes: n,
         costos: c,
         equilibrioBase: base,
-        listaBase: redondearArriba(base, paso),
+        margenComercial: m,
+        listaBase: redondearArriba(base / (1 - m), paso),
         costoVulnerabilidades: costoVuln,
         sedesEquilibrio: sedesEq,
         equilibrioPorSede: dinero(costoVuln / sedesEq),
@@ -228,11 +232,12 @@
      * seleccion: { soc: bool (SOC de incidentes; por defecto true), dispositivos, agentes,
      *              ueba (≤ agentes), colectores: { [id de opción]: cantidad } (cada tipo
      *              independiente: p. ej. NUC y Azure en la misma oferta), vulnerabilidades: bool, sedes,
-     *              descuento: fracción sobre servicios, plazoMeses, clientesEquilibrio, escenario }
+     *              descuento: fracción sobre servicios, plazoMeses, clientesEquilibrio, escenario,
+     *              margenComercial: fracción sobre el precio de venta del plan SOC }
      * Sin SOC de incidentes no hay licencias FortiSIEM ni colector.
      */
     function cotizar(seleccion) {
-      const p = precio(seleccion.clientesEquilibrio, seleccion.escenario);
+      const p = precio(seleccion.clientesEquilibrio, seleccion.escenario, seleccion.margenComercial);
       const soc = seleccion.soc !== false;
       const sedes = seleccion.vulnerabilidades ? Math.max(0, Math.floor(seleccion.sedes || 0)) : 0;
       const extraDisp = Math.max(0, (seleccion.dispositivos || 0) - p.dispositivosIncluidos);

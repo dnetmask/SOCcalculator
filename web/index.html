@@ -368,7 +368,7 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
         <div class="totals" id="totales"></div>
         <p class="includes" id="incluye"></p>
         <ul class="terms">
-          <li id="termMoneda">Servicio de computación en la nube, facturado sin IVA.</li>
+          <li id="termMoneda">Excluido de IVA por ser servicio de computación en la nube.</li>
           <li id="termDisp">Dispositivo/Consola fuente = fuente de log integrada al FortiSIEM (firewall, switch, servidor, consola EDR o de gestión).</li>
           <li id="termUeba">UEBA se contrata por agente avanzado: no puede superar la cantidad de agentes.</li>
           <li id="termSonda">Gestión de vulnerabilidades: no incluye la licencia de la sonda OT, que aporta el cliente.</li>
@@ -391,6 +391,7 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
       <div class="fields">
         <label class="f">Escenario de personal<select id="escenario"></select></label>
         <label class="f">Clientes para punto de equilibrio<input id="clientesEq" type="number" min="1" max="20" value="3"></label>
+        <label class="f">Margen comercial sobre el precio de venta del plan SOC (%)<input id="margenCom" type="number" min="0" max="90" step="1" value="0" inputmode="numeric"></label>
       </div>
       <div class="kpis" id="kpis"></div>
       <div class="split">

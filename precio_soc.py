@@ -141,6 +141,8 @@ class ModeloPrecioSOC:
             for clave in ("factor_prestacional", "disponibilidad_fuera_de_horario_cop", "contingencia_fraccion"):
                 if _decimal(s[clave], clave) < 0:
                     raise ErrorModelo(f"{clave} no puede ser negativo")
+            if not Decimal(0) <= _decimal(s.get("margen_comercial", "0"), "margen_comercial") < 1:
+                raise ErrorModelo("margen_comercial debe estar en [0, 1)")
             if _decimal(s["redondeo_precio_lista"], "redondeo_precio_lista") <= 0:
                 raise ErrorModelo("redondeo_precio_lista debe ser positivo")
             for clave in ("margen_dispositivo_adicional", "margen_agente_adicional", "margen_ueba_adicional"):
@@ -232,7 +234,8 @@ class ModeloPrecioSOC:
         unitario = next(c.precio_unitario_neto for c in mes.componentes if c.categoria == categoria)
         return _redondear_arriba(unitario / (1 - _decimal(self.s["adicionales"][margen], margen)), Decimal(1))
 
-    def precio(self, clientes: int | None = None, escenario: str | None = None) -> PrecioSOC:
+    def precio(self, clientes: int | None = None, escenario: str | None = None, margen: Decimal | None = None) -> PrecioSOC:
+        """Precio con equilibrio en `clientes`; el plan SOC lleva el margen comercial sobre el precio de venta."""
         n = self.s["clientes_punto_equilibrio"] if clientes is None else clientes
         if _entero_no_negativo(n, "clientes") < 1:
             raise ErrorModelo("Se requiere al menos 1 cliente para el punto de equilibrio")
@@ -243,8 +246,11 @@ class ModeloPrecioSOC:
         base = _dinero((costos.total - costo_vuln) / n)
         sedes = n * v["sedes_promedio_por_cliente"]
         paso = _decimal(self.s["redondeo_precio_lista"], "redondeo")
+        m = _decimal(self.s.get("margen_comercial", "0"), "margen_comercial") if margen is None else Decimal(margen)
+        if not Decimal(0) <= m < 1:
+            raise ErrorModelo("El margen comercial debe estar en [0, 1)")
         return PrecioSOC(
-            n, nombre, costos, base, _redondear_arriba(base, paso),
+            n, nombre, costos, base, _redondear_arriba(base / (1 - m), paso),
             self.s["plan_base"]["dispositivos_incluidos"],
             self._precio_adicional("dispositivos", "margen_dispositivo_adicional"),
             self._precio_adicional("agentes_avanzados", "margen_agente_adicional"),

@@ -22,7 +22,7 @@
   const cop = { format: (pesos) => formato(0).format(MONEDA === "COP" ? pesos : pesos / TRM) };
   const pct = new Intl.NumberFormat("es-CO", { style: "percent", maximumFractionDigits: 1 });
   const CLAVE = "cotizador-soc-borrador";
-  const CAMPOS = ["cliente", "contacto", "plazo", "soc", "vuln", "sedes", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "eps"];
+  const CAMPOS = ["cliente", "contacto", "plazo", "soc", "vuln", "sedes", "dispositivos", "agentes", "ueba", "descuento", "escenario", "clientesEq", "margenCom", "eps"];
   const LICENCIAS = new Set(["disp", "agt", "ueba"]);
 
   let modelo = null;
@@ -66,6 +66,7 @@
       descuento: Number($("descuento").value) / 100,
       plazoMeses: Number($("plazo").value),
       clientesEquilibrio: Math.max(1, entero("clientesEq") || 1),
+      margenComercial: Math.min(entero("margenCom"), 90) / 100,
       escenario: $("escenario").value,
     };
   }
@@ -164,7 +165,7 @@
 
     const temporal = q.mesesConCargoTemporal && q.mensualInicial !== q.mensualRecurrente;
     $("totales").innerHTML = `
-      <div class="total main"><span class="eyebrow">${temporal ? `Mensualidad meses 1–${q.mesesConCargoTemporal}` : "Mensualidad"}</span><b>${mon.format(q.mensualInicial)}</b><small>${MONEDA} · sin IVA</small></div>
+      <div class="total main"><span class="eyebrow">${temporal ? `Mensualidad meses 1–${q.mesesConCargoTemporal}` : "Mensualidad"}</span><b>${mon.format(q.mensualInicial)}</b><small>${MONEDA} · excluido de IVA (servicio en la nube)</small></div>
       ${temporal ? `<div class="total"><span class="eyebrow">Desde el mes ${q.mesesConCargoTemporal + 1}</span><b>${mon.format(q.mensualRecurrente)}</b><small>sin el cargo temporal del NUC</small></div>` : ""}
       <div class="total"><span class="eyebrow">Valor del contrato</span><b>${mon.format(q.valorContrato)}</b><small>${q.plazoMeses} meses</small></div>`;
 
@@ -319,7 +320,8 @@
       <tr><td>Costo total del SOC al mes</td><td class="r num">${mon0.format(c.total)}</td></tr>
       <tr><td>− Equipo de vulnerabilidades con contingencia (lo paga el servicio por sede)</td><td class="r num">−${mon0.format(p.costoVulnerabilidades)}</td></tr>
       <tr><td>÷ ${n} clientes = equilibrio del SOC de incidentes por cliente</td><td class="r num">${mon0.format(p.equilibrioBase)}</td></tr>
-      <tr><td>Precio lista (redondeado hacia arriba a múltiplos de ${mon0.format(Number(s.redondeo_precio_lista))})</td><td class="r num">${mon0.format(p.listaBase)}</td></tr>`;
+      <tr><td>Con margen comercial de ${Math.round(p.margenComercial * 100)} % sobre el precio de venta: equilibrio ÷ (1 − ${Math.round(p.margenComercial * 100)} %)</td><td class="r num">${mon0.format(p.equilibrioBase / (1 - p.margenComercial))}</td></tr>
+      <tr><td>Precio lista (redondeado hacia arriba a múltiplos de ${mon0.format(Number(s.redondeo_precio_lista))}) · margen real ${pct.format(1 - p.equilibrioBase / p.listaBase)}</td><td class="r num">${mon0.format(p.listaBase)}</td></tr>`;
     $("economiaColectores").innerHTML = modelo.opcionesColector().filter((o) => o.precioMensual > 0).map((o) => {
       const linea = q.lineas.find((l) => l.concepto === `Colector: ${o.opcion}`);
       const cant = linea ? linea.cantidad : 0;
@@ -332,9 +334,10 @@
   }
 
   function textoMoneda() {
+    const iva = (modelo.supuestos.facturacion || {}).texto_oferta || "Excluido de IVA por ser servicio de computación en la nube.";
     return MONEDA === "COP"
-      ? "Valores en COP. Servicio de computación en la nube, facturado sin IVA."
-      : "Valores en USD. Servicio de computación en la nube, facturado sin IVA.";
+      ? `Valores en COP. ${iva}`
+      : `Valores en USD. ${iva}`;
   }
 
   function textoOferta() {
@@ -433,6 +436,7 @@
     $("escenario").innerHTML = modelo.escenarios.map((n) =>
       `<option value="${esc(n)}"${n === modelo.supuestos.escenario_personal ? " selected" : ""}>${esc(n)}</option>`).join("");
     $("clientesEq").value = modelo.supuestos.clientes_punto_equilibrio;
+    $("margenCom").value = Math.round(Number(modelo.supuestos.margen_comercial || 0) * 100);
 
     // Ejemplo inicial: un NUC industrial.
     $("colectores").innerHTML = modelo.opcionesColector().map((o) => `
