@@ -241,6 +241,8 @@
     renderPersonal(p, sel);
     renderPlataforma(p, q);
 
+    renderEps();
+
     $("notaInterna").textContent =
       `SOC de incidentes a ${mon0.format(planSoc)}/mes por cliente, sin adicionales ni colector; su costo excluye el equipo de vulnerabilidades. ` +
       `Vulnerabilidades a ${mon0.format(precioSedeNeto)} por sede: cubre su equipo desde ${Math.ceil(p.costoVulnerabilidades / precioSedeNeto - 1e-9)} sedes. ` +
@@ -288,6 +290,33 @@
       `Licencias Fortinet, Azure y la cuota anual se facturan en USD y se convierten a COP con la TRM de referencia (${new Intl.NumberFormat("es-CO").format(TRM)}): una subida del dólar sube el costo.`,
       `Salarios, prestaciones, TRM y dedicaciones son <b>supuestos</b> editables en <code>data/supuestos_soc.json</code>; reemplázalos por la nómina real.`,
     ].map((x) => `<li>${x}</li>`).join("");
+  }
+
+  function cantidadesEps() {
+    return Object.fromEntries(modelo.supuestos.estimador_almacenamiento.calculadora_eps.tipos.map((x) => [x.id, entero(`epsN_${x.id}`)]));
+  }
+
+  // Calculadora de EPS: inventario del cliente → EPS promedio/pico y su costo de almacenamiento.
+  function renderEps() {
+    const r = modelo.estimarEps(cantidadesEps());
+    const n = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
+    const alm = modelo.estimarAlmacenamiento(r.promedio);
+    r.filas.forEach((f) => { $(`epsTot_${f.id}`).textContent = n.format(f.eps); });
+    $("epsResultado").innerHTML = `
+      <dt>Fuentes contadas</dt><dd class="num">${n.format(r.fuentes)}</dd>
+      <dt>EPS promedio estimado</dt><dd class="num"><b>${n.format(r.promedio)}</b></dd>
+      <dt>EPS pico (×${r.factorPico}, para dimensionar el colector)</dt><dd class="num">${n.format(r.pico)}</dd>
+      <dt>Almacenamiento con la retención base</dt><dd class="num">${mon.format(alm.costo)}/mes</dd>
+      <dt>Frente al presupuesto por cliente</dt><dd class="num">${alm.presupuesto ? pct.format(alm.costo / alm.presupuesto) : "—"}</dd>`;
+  }
+
+  // Lleva a la calculadora las fuentes adicionales y agentes de la oferta (las incluidas se suman a mano).
+  function epsDesdeOferta() {
+    const ft = cantidadesFuentes();
+    const valores = { fw_entry: ft.fw_entry, fw_mid: ft.fw_mid, fw_high: ft.fw_high, srv_win: ft.servidor, srv_lin: 0,
+                      sw_core: ft.sw_core, sw_acceso: ft.sw_acceso, consola: entero("otras"), agente: entero("agentes"), ot: 0 };
+    for (const [id, v] of Object.entries(valores)) if ($(`epsN_${id}`)) $(`epsN_${id}`).value = v || 0;
+    render();
   }
 
   /* Cálculo interno de la plataforma: cuota anual del SIEM, licencias de consumo con mínimos,
@@ -393,6 +422,7 @@
     try {
       const datos = Object.fromEntries(CAMPOS.map((id) => [id, $(id).type === "checkbox" ? $(id).checked : $(id).value]));
       datos.colectores = cantidadesColector();
+      datos.eps = cantidadesEps();
       datos.fuentesTipo = cantidadesFuentes();
       localStorage.setItem(CLAVE, JSON.stringify(datos));
     } catch (_) { /* sin almacenamiento: la página funciona igual */ }
@@ -406,6 +436,9 @@
         if (datos[id] === undefined) continue;
         if ($(id).type === "checkbox") $(id).checked = datos[id];
         else $(id).value = datos[id];
+      }
+      for (const [id, n] of Object.entries(datos.eps || {})) {
+        if ($(`epsN_${id}`)) $(`epsN_${id}`).value = n;
       }
       for (const [id, n] of Object.entries(datos.fuentesTipo || {})) {
         if ($(`ft_${id}`)) $(`ft_${id}`).value = n;
@@ -454,6 +487,15 @@
       `<option value="${esc(n)}"${n === modelo.supuestos.escenario_personal ? " selected" : ""}>${esc(n)}</option>`).join("");
     $("clientesEq").value = modelo.supuestos.clientes_punto_equilibrio;
     $("margenCom").value = Math.round(Number(modelo.supuestos.margen_comercial || 0) * 100);
+
+    // Calculadora de EPS con un inventario de ejemplo de una planta.
+    const ejemploEps = { fw_entry: 3, fw_mid: 1, srv_win: 4, srv_lin: 2, sw_core: 2, sw_acceso: 6, consola: 1, ot: 2 };
+    $("epsTipos").innerHTML = modelo.supuestos.estimador_almacenamiento.calculadora_eps.tipos.map((x) => `
+      <label class="eps-fila"><span>${esc(x.nombre)} <small>· ${x.eps} EPS c/u</small></span>
+        <input id="epsN_${x.id}" type="number" min="0" step="1" value="${ejemploEps[x.id] || 0}" inputmode="numeric" aria-label="Cantidad de ${esc(x.nombre)}">
+        <small id="epsTot_${x.id}">0</small></label>`).join("");
+    $("epsDesdeOferta").addEventListener("click", epsDesdeOferta);
+    $("epsAplicar").addEventListener("click", () => { $("eps").value = modelo.estimarEps(cantidadesEps()).promedio; render(); });
 
     // Fuentes adicionales por tipo (precio fijo en COP); ejemplo inicial: 1 firewall entry y 1 servidor.
     const ejemploFuentes = { fw_entry: 1, servidor: 1 };

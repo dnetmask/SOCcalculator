@@ -155,3 +155,11 @@ test("fuentes adicionales por tipo: 15 % bajo la competencia, precio fijo en COP
   assert.equal(Math.round((q.mensualInicial - 2600) * 3500), 880000 + 300000);
   assert.equal(modelo.cotizar({ soc: false, vulnerabilidades: true, sedes: 1, fuentesTipo: { fw_mid: 2 } }).lineas.length, 1);
 });
+
+test("calculadora de EPS por inventario", () => {
+  const r = modelo.estimarEps({ fw_mid: 2, srv_win: 10, sw_acceso: 8, agente: 20 });
+  assert.equal(r.promedio, 2 * 250 + 10 * 10 + 8 * 5 + 20 * 5); // 740
+  assert.equal(r.pico, 740 * 3);
+  assert.equal(r.fuentes, 40);
+  assert.equal(modelo.estimarEps({}).promedio, 0);
+});

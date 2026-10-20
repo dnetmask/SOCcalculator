@@ -215,7 +215,14 @@ details.internal summary { cursor: pointer; font-weight: 700; color: var(--ink);
 .bar > span:first-child { white-space: nowrap; }
 .storage { display: grid; gap: 10px; align-content: start; }
 .storage dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; margin: 0; font-size: .85rem; }
-.storage dt { color: var(--muted); } .storage dd { margin: 0; text-align: right; color: var(--ink); }
+.storage dt { color: var(--muted); }
+.eps-calc { display: grid; gap: 10px; border-top: 1px dashed var(--line-strong); padding-top: 14px; margin-top: 6px; }
+.eps-ayuda { margin: 0; font-size: .8rem; color: var(--muted); }
+.eps-grid { display: grid; gap: 6px; }
+.eps-fila { display: grid; grid-template-columns: minmax(0, 1fr) 7ch 6.5ch; gap: 8px; align-items: center; font-size: .84rem; color: var(--ink); }
+.eps-fila small { color: var(--muted); font-family: var(--f-data); text-align: right; }
+.eps-fila input { padding: 4px 6px; text-align: right; font-family: var(--f-data); }
+#epsResultado dd b { font-size: 1rem; } .storage dd { margin: 0; text-align: right; color: var(--ink); }
 .personal { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
 .formula { margin: 0; padding: 10px 12px; border-radius: 4px; background: var(--sunken); font: 500 .85rem/1.5 var(--f-data); color: var(--ink); }
 table.compacta { font-size: .82rem; }
@@ -411,6 +418,16 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
           <div class="eyebrow">Almacenamiento con la retención base</div>
           <label class="f">EPS promedio del cliente<input id="eps" type="number" min="0" step="50" value="200" inputmode="numeric"></label>
           <dl id="almacenamiento"></dl>
+          <div class="eps-calc">
+            <div class="eyebrow">Calculadora de EPS por inventario</div>
+            <p class="eps-ayuda">Cuenta todas las fuentes del cliente, incluidas y adicionales. EPS promedio típico por tipo (supuesto; ajustar con la medición del colector).</p>
+            <div class="eps-grid" id="epsTipos"></div>
+            <dl id="epsResultado"></dl>
+            <div class="actions">
+              <button type="button" class="ghost" id="epsDesdeOferta">Tomar de la oferta</button>
+              <button type="button" class="primary" id="epsAplicar">Usar en el estimador</button>
+            </div>
+          </div>
         </div>
       </div>
       <section class="personal" aria-labelledby="tPlataforma">

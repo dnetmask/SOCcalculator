@@ -108,6 +108,23 @@
   "estimador_almacenamiento": {
     "nota": "Referencia para validar el costo de almacenamiento por cliente a partir de EPS con la retención base; no entra al punto de equilibrio. Precios Azure supuestos: disco Premium SSD en línea y Blob Cool para archivado.",
     "eps_referencia": 200,
+    "calculadora_eps": {
+      "nota": "EPS promedio típicos por tipo de fuente para estimar el EPS de un cliente a partir de su inventario. Son referencias de dimensionamiento de SIEM (supuesto); ajustar con la medición real del colector en la POC.",
+      "origen": "supuesto",
+      "factor_pico": 3,
+      "tipos": [
+        {"id": "fw_entry", "nombre": "Firewall entry level", "eps": 50},
+        {"id": "fw_mid", "nombre": "Firewall mid range", "eps": 250},
+        {"id": "fw_high", "nombre": "Firewall high-end", "eps": 1000},
+        {"id": "srv_win", "nombre": "Servidor Windows", "eps": 10},
+        {"id": "srv_lin", "nombre": "Servidor Linux / AIX", "eps": 5},
+        {"id": "sw_core", "nombre": "Switch core", "eps": 20},
+        {"id": "sw_acceso", "nombre": "Switch de distribución / acceso", "eps": 5},
+        {"id": "consola", "nombre": "Consola EDR / de gestión", "eps": 50},
+        {"id": "agente", "nombre": "Agente avanzado (endpoint)", "eps": 5},
+        {"id": "ot", "nombre": "Sonda o equipo OT", "eps": 20}
+      ]
+    },
     "bytes_por_evento": 500,
     "fraccion_tras_compresion": "0.15",
     "costo_gb_mes_en_linea_usd": "0.15",

@@ -372,6 +372,18 @@
       return filas;
     }
 
+    // EPS de un cliente a partir de su inventario: Σ cantidad × EPS típico del tipo; pico = promedio × factor.
+    function estimarEps(cantidades) {
+      const cfg = s.estimador_almacenamiento.calculadora_eps;
+      const filas = cfg.tipos.map((x) => {
+        const cantidad = Math.max(0, Math.floor((cantidades || {})[x.id] || 0));
+        return { id: x.id, nombre: x.nombre, epsUnitario: x.eps, cantidad, eps: cantidad * x.eps };
+      });
+      const promedio = filas.reduce((a, f) => a + f.eps, 0);
+      return { filas, promedio, pico: promedio * cfg.factor_pico, factorPico: cfg.factor_pico,
+               fuentes: filas.reduce((a, f) => a + f.cantidad, 0) };
+    }
+
     // Almacenamiento de un cliente con la retención base, en régimen estable (desde el mes 12).
     function estimarAlmacenamiento(eps) {
       const e = s.estimador_almacenamiento;
@@ -391,6 +403,7 @@
     return {
       supuestos: s,
       estimarAlmacenamiento,
+      estimarEps,
       detallePersonal,
       compararEscenarios,
       escenarios: Object.keys(s.escenarios_personal),
