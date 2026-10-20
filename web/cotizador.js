@@ -137,7 +137,9 @@
       const personal = personalPorModulo(nombreEscenario);
       const disponibilidad = num(s.disponibilidad_fuera_de_horario_cop) / trm;
       const fijos = s.costos_fijos_mensuales.reduce((a, i) => a + num(i.importe), 0);
-      const variables = clientes * s.costos_variables_por_cliente_mensuales.reduce((a, i) => a + num(i.importe), 0);
+      // Variable por cliente: conceptos fijos + almacenamiento de logs estimado a la EPS de referencia.
+      const almacenamientoCliente = estimarAlmacenamiento(s.estimador_almacenamiento.eps_referencia).costo;
+      const variables = clientes * (s.costos_variables_por_cliente_mensuales.reduce((a, i) => a + num(i.importe), 0) + almacenamientoCliente);
       const subtotal = MODULOS.reduce((a, m) => a + personal[m], 0) + disponibilidad + fijos + cuotaPrograma / 12 + lic.total + variables;
       return {
         clientes,
@@ -150,6 +152,8 @@
         cuotaProgramaMensual: dinero(cuotaPrograma / 12),
         licencias: lic,
         variables: dinero(variables),
+        almacenamientoCliente,
+        epsReferencia: s.estimador_almacenamiento.eps_referencia,
         contingencia: dinero(subtotal * contingencia),
         total: dinero(subtotal * (1 + contingencia)),
       };
@@ -393,11 +397,7 @@
       const enLinea = comprimido * r.en_linea_dias;
       const archivado = comprimido * r.archivado_meses * 30;
       const costo = enLinea * num(e.costo_gb_mes_en_linea_usd) + archivado * num(e.costo_gb_mes_archivado_usd);
-      const presupuesto = s.costos_variables_por_cliente_mensuales.reduce((a, i) => a + num(i.importe), 0);
-      return {
-        gbDia, gbEnLinea: enLinea, gbArchivado: archivado, costo: dinero(costo), presupuesto,
-        epsCubiertos: costo ? Math.round((presupuesto / costo) * eps) : 0,
-      };
+      return { gbDia, gbEnLinea: enLinea, gbArchivado: archivado, costo: dinero(costo) };
     }
 
     return {

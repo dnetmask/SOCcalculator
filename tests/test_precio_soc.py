@@ -38,7 +38,7 @@ class TestPrecioSOC(unittest.TestCase):
     def test_precio_equilibrio_cubre_costo_con_n_clientes(self):
         p = self.modelo.precio()
         self.assertEqual(p.clientes_equilibrio, 4)
-        self.assertEqual(p.lista_base, Decimal("2600.00"))
+        self.assertEqual(p.lista_base, Decimal("2450.00"))
         # SOC de incidentes x 4 clientes + equipo de vulnerabilidades = costo total
         self.assertLessEqual(abs(p.equilibrio_base * 4 + p.costo_vulnerabilidades - p.costos.total), Decimal("0.03"))
         self.assertGreaterEqual(p.lista_base, p.equilibrio_base)
@@ -68,8 +68,8 @@ class TestPrecioSOC(unittest.TestCase):
         self.assertGreaterEqual(filas[3].utilidad, 0)
 
     def test_margen_comercial_sobre_precio_de_venta(self):
-        self.assertEqual(self.modelo.precio(margen=Decimal("0.20")).lista_base, Decimal("3250.00"))  # 2599.45 / 0.8 -> 3249.31
-        self.assertEqual(self.modelo.precio(margen=Decimal("0.30")).lista_base, Decimal("3750.00"))
+        self.assertEqual(self.modelo.precio(margen=Decimal("0.20")).lista_base, Decimal("3050.00"))  # 2426.92 / 0.8 -> 3033.65
+        self.assertEqual(self.modelo.precio(margen=Decimal("0.30")).lista_base, Decimal("3500.00"))
         with self.assertRaises(ErrorModelo):
             self.modelo.precio(margen=Decimal("1"))
 
@@ -100,6 +100,12 @@ class TestPrecioSOC(unittest.TestCase):
         s = supuestos()
         s["opciones_colector"]["opciones"][2]["costo_mensual"] = "999"
         self.assertEqual(ModeloPrecioSOC(self.motor, s).precio().costos.total, self.modelo.precio().costos.total)
+
+    def test_almacenamiento_por_eps_entra_al_equilibrio(self):
+        # 600 EPS de referencia por cliente reemplazan el antiguo valor fijo de USD 200
+        self.assertEqual(self.modelo.almacenamiento_por_cliente(), Decimal("43.16"))
+        self.assertEqual(self.modelo.s["costos_variables_por_cliente_mensuales"], [])
+        self.assertEqual(self.modelo.costos(4).variables, Decimal("172.64"))
 
     def test_estimador_almacenamiento(self):
         r = self.modelo.estimar_almacenamiento(200)

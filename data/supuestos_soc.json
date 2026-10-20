@@ -49,20 +49,15 @@
       "origen": "supuesto"
     }
   ],
-  "costos_variables_por_cliente_mensuales": [
-    {
-      "concepto": "Azure almacenamiento de eventos por cliente",
-      "importe": "200",
-      "origen": "dato Netmask"
-    }
-  ],
+  "costos_variables_por_cliente_mensuales": [],
+  "nota_costos_variables": "El almacenamiento de logs de cada cliente (discos de las 2 VM FortiSIEM en Azure) se estima por EPS con estimador_almacenamiento.eps_referencia y entra al punto de equilibrio. Los USD 200 del colector en Azure son solo la VM del colector, aparte de la plataforma, y se cobran como opción de colector.",
   "opciones_colector": {
     "nota": "Opcional por cliente; no entra al punto de equilibrio porque se cobra aparte. NUC: cargo mensual = costo_total / divisor_mensual durante meses_cobro. Otras: costo_mensual / (1 - margen).",
     "margen": "0",
     "opciones": [
       {"opcion": "VM o servidor del cliente", "costo_mensual": "0", "origen": "dato Netmask"},
       {"opcion": "NUC industrial on-prem", "costo_total": "1500", "divisor_mensual": 6, "meses_cobro": 12, "origen": "dato Netmask: cargo mensual = costo/6, adicionado a la mensualidad durante 12 meses"},
-      {"opcion": "Colector en Azure", "costo_mensual": "200", "origen": "dato Netmask"}
+      {"opcion": "Colector en Azure", "costo_mensual": "200", "origen": "dato Netmask: VM de colector dedicada, aparte de las 2 VM FortiSIEM y su almacenamiento"}
     ]
   },
   "factor_prestacional": "1.52",
@@ -106,8 +101,9 @@
   },
   "capacidad_max_clientes_sin_contratar": 6,
   "estimador_almacenamiento": {
-    "nota": "Referencia para validar el costo de almacenamiento por cliente a partir de EPS con la retención base; no entra al punto de equilibrio. Precios Azure supuestos: disco Premium SSD en línea y Blob Cool para archivado.",
-    "eps_referencia": 200,
+    "nota": "Almacenamiento de logs de un cliente en los discos de las 2 VM FortiSIEM en Azure, con la retención base. El costo a eps_referencia (EPS promedio por cliente) entra al punto de equilibrio como costo variable por cliente. Precios Azure supuestos: disco Premium SSD en línea y Blob Cool para archivado.",
+    "eps_referencia": 600,
+    "origen_eps_referencia": "supuesto: aprox. una planta como el ejemplo de la calculadora de EPS (610 EPS)",
     "calculadora_eps": {
       "nota": "EPS promedio típicos por tipo de fuente para estimar el EPS de un cliente a partir de su inventario. Son referencias de dimensionamiento de SIEM (supuesto); ajustar con la medición real del colector en la POC.",
       "origen": "supuesto",

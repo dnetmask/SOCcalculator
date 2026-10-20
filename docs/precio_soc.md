@@ -8,7 +8,7 @@ Retención base de eventos: 30 días en línea + 11 meses archivados.
 
 | Componente | Equilibrio | Precio lista |
 |---|---:|---:|
-| SOC de incidentes, plan base (plataforma + 10 dispositivos/consolas fuente) | $2,599.45 | $2,600.00 |
+| SOC de incidentes, plan base (plataforma + 10 dispositivos/consolas fuente) | $2,426.92 | $2,450.00 |
 | Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | $200.64 | $560.00 |
 | Vulnerabilidades desde la sede 11 del contrato (50 % de descuento) | — | $280.00 |
 | Otra consola fuente adicional (EDR, gestión, OT) | — | $52.00 |
@@ -31,26 +31,26 @@ Los dos servicios se venden juntos o por separado. El equilibrio por sede supone
 | Licencia FortiSIEM dispositivos (50 facturables × $25.52) | $1,276.00 |
 | Licencia FortiSIEM agentes_avanzados (50 facturables × $4.97) | $248.50 |
 | Licencia FortiSIEM ueba (25 facturables × $5.22) | $130.50 |
-| Azure almacenamiento de eventos por cliente × 4 | $800.00 |
-| Contingencia (10%) | $1,091.17 |
-| **Total** | **$12,002.90** |
+| Azure almacenamiento de logs (600 EPS por cliente) × 4 | $172.64 |
+| Contingencia (10%) | $1,028.44 |
+| **Total** | **$11,312.80** |
 
-## SOC de incidentes: sensibilidad al número de clientes (plan base $2,600.00)
+## SOC de incidentes: sensibilidad al número de clientes (plan base $2,450.00)
 
 Costo sin el equipo de vulnerabilidades, que lo cubre su propio servicio.
 
 | Clientes | Ingreso | Costo | Utilidad | Margen |
 |---:|---:|---:|---:|---:|
-| 1 | $2,600.00 | $9,737.78 | $-7,137.78 | -274.53% |
-| 2 | $5,200.00 | $9,957.78 | $-4,757.78 | -91.50% |
-| 3 | $7,800.00 | $10,177.78 | $-2,377.78 | -30.48% |
-| 4 | $10,400.00 | $10,397.78 | $2.22 | 0.02% |
-| 5 | $13,000.00 | $10,617.78 | $2,382.22 | 18.32% |
-| 6 | $15,600.00 | $11,118.50 | $4,481.50 | 28.73% |
-| 7 ⚠️ requiere ampliar equipo | $18,200.00 | $11,619.22 | $6,580.78 | 36.16% |
-| 8 ⚠️ requiere ampliar equipo | $20,800.00 | $12,119.94 | $8,680.06 | 41.73% |
-| 9 ⚠️ requiere ampliar equipo | $23,400.00 | $12,620.66 | $10,779.34 | 46.07% |
-| 10 ⚠️ requiere ampliar equipo | $26,000.00 | $13,121.38 | $12,878.62 | 49.53% |
+| 1 | $2,450.00 | $9,565.25 | $-7,115.25 | -290.42% |
+| 2 | $4,900.00 | $9,612.73 | $-4,712.73 | -96.18% |
+| 3 | $7,350.00 | $9,660.20 | $-2,310.20 | -31.43% |
+| 4 | $9,800.00 | $9,707.68 | $92.32 | 0.94% |
+| 5 | $12,250.00 | $9,755.16 | $2,494.84 | 20.37% |
+| 6 | $14,700.00 | $10,083.35 | $4,616.65 | 31.41% |
+| 7 ⚠️ requiere ampliar equipo | $17,150.00 | $10,411.55 | $6,738.45 | 39.29% |
+| 8 ⚠️ requiere ampliar equipo | $19,600.00 | $10,739.74 | $8,860.26 | 45.21% |
+| 9 ⚠️ requiere ampliar equipo | $22,050.00 | $11,067.94 | $10,982.06 | 49.81% |
+| 10 ⚠️ requiere ampliar equipo | $24,500.00 | $11,396.14 | $13,103.86 | 53.49% |
 
 ## Gestión de vulnerabilidades: sensibilidad al número de sedes ($560.00 por sede)
 
@@ -90,5 +90,5 @@ Costo sin el equipo de vulnerabilidades, que lo cubre su propio servicio.
 
 ## Referencia: almacenamiento con la retención base
 
-Un cliente con 200 EPS promedio genera ~8.6 GB/día crudos. Con compresión al 15% mantiene ~39 GB en línea ($0.15/GB-mes) y ~428 GB archivados ($0.02/GB-mes): $14.39/mes. El presupuesto de almacenamiento por cliente cubre ~2781 EPS.
+Un cliente con 600 EPS promedio genera ~25.9 GB/día crudos. Con compresión al 15% mantiene ~117 GB en línea ($0.15/GB-mes) y ~1283 GB archivados ($0.02/GB-mes): $43.16/mes. Ese costo por cliente entra al punto de equilibrio. El colector en Azure es una VM aparte y se cobra como opción de colector.
 

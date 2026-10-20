@@ -228,7 +228,8 @@ class ModeloPrecioSOC:
         fijos = sum((_decimal(i["importe"], "fijo") for i in self.s["costos_fijos_mensuales"]), Decimal(0))
         cuota = self.motor._cuota_anual(1) / 12
         licencias = self.motor.calcular_mes(dispositivos=dispositivos, agentes_avanzados=agentes)
-        variables = clientes * sum((_decimal(i["importe"], "variable") for i in self.s["costos_variables_por_cliente_mensuales"]), Decimal(0))
+        variables = clientes * (sum((_decimal(i["importe"], "variable") for i in self.s["costos_variables_por_cliente_mensuales"]), Decimal(0))
+                                + self.almacenamiento_por_cliente())
         subtotal = sum(personal.values(), Decimal(0)) + disponibilidad + fijos + cuota + licencias.consumo_total + variables
         contingencia = subtotal * _decimal(self.s["contingencia_fraccion"], "contingencia")
         return CostosMensuales(
@@ -343,6 +344,10 @@ class ModeloPrecioSOC:
             filas.append(FilaSensibilidad(sedes, ingreso, costo, utilidad, _dinero(utilidad / ingreso * 100), sedes > v["capacidad_max_sedes"]))
         return filas
 
+    def almacenamiento_por_cliente(self) -> Decimal:
+        """Costo mensual de almacenamiento de logs de un cliente a la EPS de referencia (entra al equilibrio)."""
+        return self.estimar_almacenamiento(self.s["estimador_almacenamiento"]["eps_referencia"])["costo_mensual"]
+
     def estimar_almacenamiento(self, eps: int) -> dict[str, Decimal]:
         """Costo mensual de almacenamiento de un cliente con la retención base (régimen estable, mes 12+)."""
         e = self.s["estimador_almacenamiento"]
@@ -352,13 +357,11 @@ class ModeloPrecioSOC:
         en_linea = comprimido * r["en_linea_dias"]
         archivado = comprimido * r["archivado_meses"] * 30
         costo = en_linea * _decimal(e["costo_gb_mes_en_linea_usd"], "costo_en_linea") + archivado * _decimal(e["costo_gb_mes_archivado_usd"], "costo_archivado")
-        presupuesto = sum((_decimal(i["importe"], "variable") for i in self.s["costos_variables_por_cliente_mensuales"]), Decimal(0))
         return {
             "gb_dia_crudo": gb_dia.quantize(Decimal("0.1")),
             "gb_en_linea": en_linea.quantize(Decimal(1)),
             "gb_archivado": archivado.quantize(Decimal(1)),
             "costo_mensual": _dinero(costo),
-            "eps_cubiertos_por_presupuesto": (presupuesto / costo * eps).to_integral_value(rounding=ROUND_HALF_UP) if costo else Decimal(0),
         }
 
 
@@ -410,6 +413,7 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         *[f"| Licencia FortiSIEM {d.categoria} ({d.cantidad_facturable} facturables × {_m(d.precio_unitario_neto)}) | {_m(d.subtotal)} |"
           for d in c.licencias.componentes if d.subtotal],
         *[f"| {i['concepto']} × {c.clientes} | {_m(_decimal(i['importe'], 'variable') * c.clientes)} |" for i in s["costos_variables_por_cliente_mensuales"]],
+        f"| Azure almacenamiento de logs ({s['estimador_almacenamiento']['eps_referencia']} EPS por cliente) × {c.clientes} | {_m(modelo.almacenamiento_por_cliente() * c.clientes)} |",
         f"| Contingencia ({Decimal(s['contingencia_fraccion']) * 100:.0f}%) | {_m(c.contingencia)} |",
         f"| **Total** | **{_m(c.total)}** |",
         "",
@@ -465,7 +469,7 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         f"{Decimal(e['fraccion_tras_compresion']) * 100:.0f}% mantiene ~{alm['gb_en_linea']} GB en línea "
         f"({_m(Decimal(e['costo_gb_mes_en_linea_usd']))}/GB-mes) y ~{alm['gb_archivado']} GB archivados "
         f"({_m(Decimal(e['costo_gb_mes_archivado_usd']))}/GB-mes): {_m(alm['costo_mensual'])}/mes. "
-        f"El presupuesto de almacenamiento por cliente cubre ~{alm['eps_cubiertos_por_presupuesto']} EPS.",
+        "Ese costo por cliente entra al punto de equilibrio. El colector en Azure es una VM aparte y se cobra como opción de colector.",
         "",
     ]
     return "\n".join(lin)

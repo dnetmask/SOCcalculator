@@ -235,8 +235,8 @@
       <dt>En línea (${p.retencion.enLineaDias} días)</dt><dd class="num">${gb.format(a.gbEnLinea)} GB</dd>
       <dt>Archivado (${p.retencion.archivadoMeses} meses)</dt><dd class="num">${gb.format(a.gbArchivado)} GB</dd>
       <dt>Costo estimado Azure</dt><dd class="num">${mon.format(a.costo)}/mes</dd>
-      <dt>Presupuesto por cliente</dt><dd class="num">${mon.format(a.presupuesto)}/mes</dd>
-      <dt>EPS que cubre el presupuesto</dt><dd class="num">~${gb.format(a.epsCubiertos)}</dd>`;
+      <dt>En el equilibrio (${gb.format(p.costos.epsReferencia)} EPS por cliente)</dt><dd class="num">${mon.format(p.costos.almacenamientoCliente)}/mes</dd>
+      <dt>Diferencia de este cliente</dt><dd class="num">${a.costo >= p.costos.almacenamientoCliente ? "+" : "−"}${mon.format(Math.abs(a.costo - p.costos.almacenamientoCliente))}/mes</dd>`;
 
     renderPersonal(p, sel);
     renderPlataforma(p, q);
@@ -307,7 +307,7 @@
       <dt>EPS promedio estimado</dt><dd class="num"><b>${n.format(r.promedio)}</b></dd>
       <dt>EPS pico (×${r.factorPico}, para dimensionar el colector)</dt><dd class="num">${n.format(r.pico)}</dd>
       <dt>Almacenamiento con la retención base</dt><dd class="num">${mon.format(alm.costo)}/mes</dd>
-      <dt>Frente al presupuesto por cliente</dt><dd class="num">${alm.presupuesto ? pct.format(alm.costo / alm.presupuesto) : "—"}</dd>`;
+      <dt>Frente al costo usado en el equilibrio</dt><dd class="num">${pct.format(alm.costo / modelo.costos(1).almacenamientoCliente)}</dd>`;
   }
 
   // Lleva a la calculadora las fuentes adicionales y agentes de la oferta (las incluidas se suman a mano).
@@ -348,6 +348,7 @@
       ["Cuota anual FortiSIEM MSSP ÷ 12", cuotaMes],
       ["Licencias FortiSIEM de consumo", c.licencias.total],
       ...s.costos_variables_por_cliente_mensuales.map((i) => [`${i.concepto} × ${n}`, Number(i.importe) * n]),
+      [`Azure almacenamiento de logs en las VM FortiSIEM (${c.epsReferencia} EPS por cliente, retención base) × ${n}`, c.almacenamientoCliente * n],
       [`Contingencia (${Math.round(contingencia * 100)} %)`, c.contingencia],
     ];
     $("tablaCostos").innerHTML = filas.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="r num">${mon0.format(v)}</td></tr>`).join("");
@@ -370,7 +371,7 @@
         const cobrado = o.precioMensual * o.mesesCobro;
         return `<div><b>${esc(o.opcion)}</b>Equipo de ${mon0.format(o.costoTotal)} · se cobran ${mon0.format(o.precioMensual)} × ${o.mesesCobro} meses = ${mon0.format(cobrado)} · margen ${mon0.format(cobrado - o.costoTotal)} por equipo${cant ? ` · en esta oferta: ${cant} = margen ${mon0.format((cobrado - o.costoTotal) * cant)}` : ""}</div>`;
       }
-      return `<div><b>${esc(o.opcion)}</b>Costo ${mon0.format(o.costoMensual)} al mes · se cobra ${mon0.format(o.precioMensual)} (traslado sin margen)${cant ? ` · en esta oferta: ${cant}` : ""}</div>`;
+      return `<div><b>${esc(o.opcion)}</b>VM de colector dedicada, aparte de las 2 VM FortiSIEM y su almacenamiento · costo ${mon0.format(o.costoMensual)} al mes · se cobra ${mon0.format(o.precioMensual)} (traslado sin margen)${cant ? ` · en esta oferta: ${cant}` : ""}</div>`;
     }).join("");
   }
 
