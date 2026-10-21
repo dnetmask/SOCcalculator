@@ -38,7 +38,7 @@ class TestPrecioSOC(unittest.TestCase):
     def test_precio_equilibrio_cubre_costo_con_n_clientes(self):
         p = self.modelo.precio()
         self.assertEqual(p.clientes_equilibrio, 4)
-        self.assertEqual(p.lista_base, Decimal("2450.00"))
+        self.assertEqual(p.lista_base, Decimal("2400.00"))
         # SOC de incidentes x 4 clientes + equipo de vulnerabilidades = costo total
         self.assertLessEqual(abs(p.equilibrio_base * 4 + p.costo_vulnerabilidades - p.costos.total), Decimal("0.03"))
         self.assertGreaterEqual(p.lista_base, p.equilibrio_base)
@@ -68,13 +68,18 @@ class TestPrecioSOC(unittest.TestCase):
         self.assertGreaterEqual(filas[3].utilidad, 0)
 
     def test_margen_comercial_sobre_precio_de_venta(self):
-        self.assertEqual(self.modelo.precio(margen=Decimal("0.20")).lista_base, Decimal("3050.00"))  # 2426.92 / 0.8 -> 3033.65
-        self.assertEqual(self.modelo.precio(margen=Decimal("0.30")).lista_base, Decimal("3500.00"))
+        self.assertEqual(self.modelo.precio(margen=Decimal("0.20")).lista_base, Decimal("2950.00"))  # 2352.88 / 0.8 -> 2941.10
+        self.assertEqual(self.modelo.precio(margen=Decimal("0.30")).lista_base, Decimal("3400.00"))
         with self.assertRaises(ErrorModelo):
             self.modelo.precio(margen=Decimal("1"))
 
     def test_escenario_unico_ajustado(self):
         self.assertEqual(list(self.modelo.s["escenarios_personal"]), ["ajustado"])
+        roles = {r["rol"]: r for r in self.modelo.s["escenarios_personal"]["ajustado"]["roles"]}
+        self.assertEqual((roles["Líder técnico SIEM"]["salario_mensual_cop"], roles["Líder técnico SIEM"]["dedicacion"]), ("6500000", "0.3"))
+        self.assertEqual((roles["Líder de operaciones SOC"]["salario_mensual_cop"], roles["Líder de operaciones SOC"]["dedicacion"]), ("6500000", "0.5"))
+        # (6.5M x 0.3 + 6.5M x 0.5) x 1.52 / 3500
+        self.assertEqual(round(self.modelo.personal_por_modulo()["compartido"], 2), Decimal("2258.29"))
         self.assertEqual(self.modelo.precio().escenario, "ajustado")
 
     def test_adicionales_con_margen(self):

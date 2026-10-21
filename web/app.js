@@ -276,7 +276,7 @@
     $("repartoPersonal").innerHTML = `
       <div><b>${mon0.format(socPersonal)}</b>Incidentes + compartido + disponibilidad: lo paga el plan SOC, repartido entre ${p.clientes} clientes (${mon0.format(socPersonal * (1 + contingencia) / p.clientes)} por cliente con contingencia)</div>
       <div><b>${mon0.format(d.porModulo.vulnerabilidades)}</b>Equipo de vulnerabilidades: lo paga el servicio por sede (${mon0.format(p.costoVulnerabilidades)} con contingencia ÷ ${p.sedesEquilibrio} sedes = ${mon0.format(p.equilibrioPorSede)} por sede)</div>
-      <div><b>${dec.format(d.fte)} FTE</b>Personas equivalentes a tiempo completo: la dedicación parcial (p. ej. líder al 30 %) cuenta como fracción</div>`;
+      <div><b>${dec.format(d.fte)} FTE</b>Personas equivalentes a tiempo completo: la dedicación parcial (p. ej. líder técnico SIEM al 30 %) cuenta como fracción</div>`;
     $("nEscenarios").textContent = p.clientes;
     $("tablaEscenarios").innerHTML = modelo.compararEscenarios(p.clientes).map((e) => `<tr class="${e.nombre === d.nombre ? "actual" : ""}">
         <td>${esc(e.nombre)}</td><td class="r num">${dec.format(e.fte)}</td><td class="r num">${mon0.format(e.personalUsd)}</td>

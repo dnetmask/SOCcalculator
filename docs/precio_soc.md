@@ -1,6 +1,6 @@
 # Precio SOC Netmask — punto de equilibrio con 4 clientes
 
-Escenario de personal: **ajustado** — SOC OT ajustado: 1 analista N1, 1 N2 y 1 analista de vulnerabilidades, ingeniero de plataforma al 30 % y líder al 50 %; salarios base ajustados (-40 % sobre la referencia; N2 y vulnerabilidades además -30 %); horario extendido 8x5 + disponibilidad.
+Escenario de personal: **ajustado** — SOC OT ajustado: 1 analista N1, 1 N2 y 1 analista de vulnerabilidades, líder técnico SIEM al 30 % y líder de operaciones SOC al 50 % (ambos COP 6,5 M); analistas con salarios base ajustados (-40 % sobre la referencia; N2 y vulnerabilidades además -30 %); horario extendido 8x5 + disponibilidad.
 Plan base por cliente: 10 dispositivos/consolas fuente, 0 agentes avanzados. TRM supuesta: 3500 COP/USD.
 Retención base de eventos: 30 días en línea + 11 meses archivados.
 
@@ -8,7 +8,7 @@ Retención base de eventos: 30 días en línea + 11 meses archivados.
 
 | Componente | Equilibrio | Precio lista |
 |---|---:|---:|
-| SOC de incidentes, plan base (plataforma + 10 dispositivos/consolas fuente) | $2,426.92 | $2,450.00 |
+| SOC de incidentes, plan base (plataforma + 10 dispositivos/consolas fuente) | $2,352.88 | $2,400.00 |
 | Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | $200.64 | $560.00 |
 | Vulnerabilidades desde la sede 11 del contrato (50 % de descuento) | — | $280.00 |
 | Otra consola fuente adicional (EDR, gestión, OT) | — | $52.00 |
@@ -23,7 +23,7 @@ Los dos servicios se venden juntos o por separado. El equilibrio por sede supone
 |---|---:|
 | Personal — incidentes | $3,074.74 |
 | Personal — vulnerabilidades | $1,459.20 |
-| Personal — compartido | $2,527.54 |
+| Personal — compartido | $2,258.29 |
 | Disponibilidad fuera de horario | $428.57 |
 | Azure consumo base: 2 VM FortiSIEM MSSP (Supervisor + Worker) | $400.00 |
 | Herramientas SOC (ticketing, threat intel, acceso remoto) | $150.00 |
@@ -32,25 +32,25 @@ Los dos servicios se venden juntos o por separado. El equilibrio por sede supone
 | Licencia FortiSIEM agentes_avanzados (50 facturables × $4.97) | $248.50 |
 | Licencia FortiSIEM ueba (25 facturables × $5.22) | $130.50 |
 | Azure almacenamiento de logs (600 EPS por cliente) × 4 | $172.64 |
-| Contingencia (10%) | $1,028.44 |
-| **Total** | **$11,312.80** |
+| Contingencia (10%) | $1,001.51 |
+| **Total** | **$11,016.62** |
 
-## SOC de incidentes: sensibilidad al número de clientes (plan base $2,450.00)
+## SOC de incidentes: sensibilidad al número de clientes (plan base $2,400.00)
 
 Costo sin el equipo de vulnerabilidades, que lo cubre su propio servicio.
 
 | Clientes | Ingreso | Costo | Utilidad | Margen |
 |---:|---:|---:|---:|---:|
-| 1 | $2,450.00 | $9,565.25 | $-7,115.25 | -290.42% |
-| 2 | $4,900.00 | $9,612.73 | $-4,712.73 | -96.18% |
-| 3 | $7,350.00 | $9,660.20 | $-2,310.20 | -31.43% |
-| 4 | $9,800.00 | $9,707.68 | $92.32 | 0.94% |
-| 5 | $12,250.00 | $9,755.16 | $2,494.84 | 20.37% |
-| 6 | $14,700.00 | $10,083.35 | $4,616.65 | 31.41% |
-| 7 ⚠️ requiere ampliar equipo | $17,150.00 | $10,411.55 | $6,738.45 | 39.29% |
-| 8 ⚠️ requiere ampliar equipo | $19,600.00 | $10,739.74 | $8,860.26 | 45.21% |
-| 9 ⚠️ requiere ampliar equipo | $22,050.00 | $11,067.94 | $10,982.06 | 49.81% |
-| 10 ⚠️ requiere ampliar equipo | $24,500.00 | $11,396.14 | $13,103.86 | 53.49% |
+| 1 | $2,400.00 | $9,269.07 | $-6,869.07 | -286.21% |
+| 2 | $4,800.00 | $9,316.55 | $-4,516.55 | -94.09% |
+| 3 | $7,200.00 | $9,364.02 | $-2,164.02 | -30.06% |
+| 4 | $9,600.00 | $9,411.50 | $188.50 | 1.96% |
+| 5 | $12,000.00 | $9,458.97 | $2,541.03 | 21.18% |
+| 6 | $14,400.00 | $9,787.17 | $4,612.83 | 32.03% |
+| 7 ⚠️ requiere ampliar equipo | $16,800.00 | $10,115.37 | $6,684.63 | 39.79% |
+| 8 ⚠️ requiere ampliar equipo | $19,200.00 | $10,443.56 | $8,756.44 | 45.61% |
+| 9 ⚠️ requiere ampliar equipo | $21,600.00 | $10,771.76 | $10,828.24 | 50.13% |
+| 10 ⚠️ requiere ampliar equipo | $24,000.00 | $11,099.95 | $12,900.05 | 53.75% |
 
 ## Gestión de vulnerabilidades: sensibilidad al número de sedes ($560.00 por sede)
 
