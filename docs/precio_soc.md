@@ -8,7 +8,7 @@ Retención base de eventos: 30 días en línea + 11 meses archivados.
 
 | Componente | Equilibrio | Precio lista |
 |---|---:|---:|
-| SOC de incidentes, plan base (plataforma + 10 dispositivos/consolas fuente) | $2,352.88 | $2,400.00 |
+| SOC de incidentes, plan base (plataforma + 10 dispositivos/consolas fuente) | $2,352.88 | $2,950.00 |
 | Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | $200.64 | $560.00 |
 | Vulnerabilidades desde la sede 11 del contrato (50 % de descuento) | — | $280.00 |
 | Otra consola fuente adicional (EDR, gestión, OT) | — | $52.00 |
@@ -35,22 +35,22 @@ Los dos servicios se venden juntos o por separado. El equilibrio por sede supone
 | Contingencia (10%) | $1,001.51 |
 | **Total** | **$11,016.62** |
 
-## SOC de incidentes: sensibilidad al número de clientes (plan base $2,400.00)
+## SOC de incidentes: sensibilidad al número de clientes (plan base $2,950.00)
 
 Costo sin el equipo de vulnerabilidades, que lo cubre su propio servicio.
 
 | Clientes | Ingreso | Costo | Utilidad | Margen |
 |---:|---:|---:|---:|---:|
-| 1 | $2,400.00 | $9,269.07 | $-6,869.07 | -286.21% |
-| 2 | $4,800.00 | $9,316.55 | $-4,516.55 | -94.09% |
-| 3 | $7,200.00 | $9,364.02 | $-2,164.02 | -30.06% |
-| 4 | $9,600.00 | $9,411.50 | $188.50 | 1.96% |
-| 5 | $12,000.00 | $9,458.97 | $2,541.03 | 21.18% |
-| 6 | $14,400.00 | $9,787.17 | $4,612.83 | 32.03% |
-| 7 ⚠️ requiere ampliar equipo | $16,800.00 | $10,115.37 | $6,684.63 | 39.79% |
-| 8 ⚠️ requiere ampliar equipo | $19,200.00 | $10,443.56 | $8,756.44 | 45.61% |
-| 9 ⚠️ requiere ampliar equipo | $21,600.00 | $10,771.76 | $10,828.24 | 50.13% |
-| 10 ⚠️ requiere ampliar equipo | $24,000.00 | $11,099.95 | $12,900.05 | 53.75% |
+| 1 | $2,950.00 | $9,269.07 | $-6,319.07 | -214.21% |
+| 2 | $5,900.00 | $9,316.55 | $-3,416.55 | -57.91% |
+| 3 | $8,850.00 | $9,364.02 | $-514.02 | -5.81% |
+| 4 | $11,800.00 | $9,411.50 | $2,388.50 | 20.24% |
+| 5 | $14,750.00 | $9,458.97 | $5,291.03 | 35.87% |
+| 6 | $17,700.00 | $9,787.17 | $7,912.83 | 44.71% |
+| 7 ⚠️ requiere ampliar equipo | $20,650.00 | $10,115.37 | $10,534.63 | 51.02% |
+| 8 ⚠️ requiere ampliar equipo | $23,600.00 | $10,443.56 | $13,156.44 | 55.75% |
+| 9 ⚠️ requiere ampliar equipo | $26,550.00 | $10,771.76 | $15,778.24 | 59.43% |
+| 10 ⚠️ requiere ampliar equipo | $29,500.00 | $11,099.95 | $18,400.05 | 62.37% |
 
 ## Gestión de vulnerabilidades: sensibilidad al número de sedes ($560.00 por sede)
 

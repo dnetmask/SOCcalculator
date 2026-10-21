@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "echo 'sin dependencias'",
-  "buildCommand": "rm -rf public && mkdir -p public && cp web/index.html web/app.js web/cotizador.js public/ && cp -r web/assets public/assets && cp -r data public/data",
+  "buildCommand": "rm -rf public && mkdir -p public && cp web/index.html web/app.js web/cotizador.js web/exportar.js public/ && cp -r web/assets public/assets && cp -r data public/data",
   "outputDirectory": "public",
   "cleanUrls": true,
   "headers": [

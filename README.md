@@ -6,7 +6,7 @@ La base es la calculadora de licenciamiento FortiSIEM MSSP del líder del SOC (`
 
 Se venden dos servicios, juntos o por separado:
 
-- **SOC de gestión de incidentes (mensual por cliente)**: plataforma FortiSIEM e incluye **10 dispositivos/consolas fuente** (`plan_base`); precio lista USD 2.400 (COP 8.400.000 con TRM 3.500) sin margen comercial; el margen sobre el precio de venta (`margen_comercial`, ajustable en la vista interna) da precio = equilibrio ÷ (1 − margen). Su punto de equilibrio excluye el equipo de vulnerabilidades.
+- **SOC de gestión de incidentes (mensual por cliente)**: plataforma FortiSIEM e incluye **10 dispositivos/consolas fuente** (`plan_base`); precio lista USD 2.950 (COP 10.325.000 con TRM 3.500) con el margen comercial por defecto del 20 % (USD 2.400 sin margen); el margen sobre el precio de venta (`margen_comercial`, 20 % por defecto en SOC OT e IT, ajustable en la vista interna) da precio = equilibrio ÷ (1 − margen). Su punto de equilibrio excluye el equipo de vulnerabilidades.
 - **Gestión de vulnerabilidades OT (mensual por sede)**: USD 560 por sede (sedes 1 a 10 del contrato; desde la sede 11, 50 % de descuento: USD 280), sin licencias FortiSIEM ni colector. No incluye la licencia de la sonda OT, que aporta el cliente. Cubre el equipo de vulnerabilidades (USD 1.605,12/mes con contingencia): con 2 sedes por cliente, 4 clientes = 8 sedes, el equilibrio es USD 200,64 por sede.
 - **Retención base incluida**: 1 mes de eventos en línea + 11 meses archivados (12 meses en total). Su costo es el almacenamiento de logs en los discos de las 2 VM FortiSIEM en Azure, estimado por EPS (`estimador_almacenamiento`, 600 EPS por cliente en el equilibrio ≈ USD 43/mes).
 - **Fuentes adicionales por tipo** (sobre las 10 incluidas): precio fijo en COP, 15 % por debajo de la competencia y redondeado hacia abajo a COP 10.000 (`fuentes_adicionales_por_tipo`): firewall entry level 280.000, mid range 440.000, high-end 560.000, servidor 260.000, switch core 170.000, switch de distribución/acceso 100.000. El costo para Netmask es la licencia FortiSIEM por dispositivo (USD 25,52), igual para todos los tipos.
@@ -53,7 +53,8 @@ Aplicación estática en HTML + JavaScript, sin compilación, con la imagen comb
 
 - `web/cotizador.js`: motor de cálculo. Replica `core.py` y `precio_soc.py` y lee los mismos `data/*.json`, así que al cambiar un supuesto cambian a la vez el cotizador y el reporte Python.
 - `web/app.js` y `web/index.html`: interfaz.
-- Pruebas: `node --test web/cotizador.test.js` (comparan con los valores del modelo Python).
+- `web/exportar.js`: «Generar MD» y «Generar Excel» descargan la propuesta del cliente en Markdown o .xlsx (sin dependencias). Solo incluyen lo que ve el cliente: nunca costos ni datos de la vista interna.
+- Pruebas: `node --test web/cotizador.test.js web/exportar.test.js` (comparan con los valores del modelo Python).
 
 Para usarlo localmente, sirve la raíz del repositorio y abre `web/`:
 

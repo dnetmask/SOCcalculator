@@ -38,7 +38,8 @@ class TestPrecioSOC(unittest.TestCase):
     def test_precio_equilibrio_cubre_costo_con_n_clientes(self):
         p = self.modelo.precio()
         self.assertEqual(p.clientes_equilibrio, 4)
-        self.assertEqual(p.lista_base, Decimal("2400.00"))
+        self.assertEqual(p.lista_base, Decimal("2950.00"))  # margen comercial por defecto 20 %
+        self.assertEqual(self.modelo.precio(margen=Decimal("0")).lista_base, Decimal("2400.00"))
         # SOC de incidentes x 4 clientes + equipo de vulnerabilidades = costo total
         self.assertLessEqual(abs(p.equilibrio_base * 4 + p.costo_vulnerabilidades - p.costos.total), Decimal("0.03"))
         self.assertGreaterEqual(p.lista_base, p.equilibrio_base)

@@ -415,7 +415,7 @@
     const q = ultima;
     const lineas = q.lineas.map((l) => `- ${l.concepto}: ${l.cantidad} × ${mon.format(l.unitario)} = ${mon.format(l.subtotal)}/mes${l.meses ? ` (durante ${l.meses} meses)` : ""}`);
     return [
-      `Propuesta SOC Netmask ${$("hNum").textContent}`,
+      `Propuesta ${modelo.textosModo(q.modo).titulo} ${$("hNum").textContent}`,
       `Cliente: ${$("hClient").textContent}${$("hContact").textContent ? ` · ${$("hContact").textContent}` : ""}`,
       `Plazo: ${q.plazoMeses} meses`,
       ...textoIncluye(q).map((x) => x.replace(/<\/?b>/g, "")),
@@ -428,6 +428,56 @@
       `Valor del contrato: ${mon.format(q.valorContrato)}`,
       textoMoneda(),
     ].filter((x) => x !== null).join("\n");
+  }
+
+  // Datos de la propuesta para exportar: solo lo que ve el cliente, en la moneda de presentación.
+  function datosOferta() {
+    const q = ultima;
+    const v = (usd) => (MONEDA === "COP" ? Math.round(aMoneda(usd)) : Math.round(usd * 100) / 100);
+    const temporal = q.mesesConCargoTemporal && q.mensualInicial !== q.mensualRecurrente;
+    return {
+      titulo: `Propuesta ${modelo.textosModo(q.modo).titulo}`,
+      numero: $("hNum").textContent,
+      fecha: $("hDate").textContent,
+      cliente: $("hClient").textContent,
+      contacto: $("hContact").textContent,
+      plazoMeses: q.plazoMeses,
+      moneda: MONEDA,
+      lineas: q.lineas.map((l) => ({ concepto: l.concepto, cantidad: l.cantidad, unitario: v(l.unitario), subtotal: v(l.subtotal), meses: l.meses || null })),
+      descuento: q.descuentoMensual ? { texto: `Descuento ${pct.format(q.descuento)} sobre servicios`, valor: v(q.descuentoMensual) } : null,
+      totales: [
+        { etiqueta: temporal ? `Mensualidad meses 1–${q.mesesConCargoTemporal}` : "Mensualidad", valor: v(q.mensualInicial) },
+        ...(temporal ? [{ etiqueta: `Desde el mes ${q.mesesConCargoTemporal + 1}`, valor: v(q.mensualRecurrente) }] : []),
+        { etiqueta: `Valor del contrato (${q.plazoMeses} meses)`, valor: v(q.valorContrato) },
+      ],
+      incluye: textoIncluye(q).map((x) => x.replace(/<\/?b>/g, "")),
+      notas: [...document.querySelectorAll(".terms li")].filter((li) => !li.hidden).map((li) => li.textContent.trim()),
+    };
+  }
+
+  function descargar(contenido, tipo, nombre) {
+    const url = URL.createObjectURL(new Blob([contenido], { type: tipo }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function exportar(formato) {
+    if (!ultima || ultima.vacia) return;
+    const oferta = datosOferta();
+    const toast = $("toast");
+    if (formato === "md") {
+      descargar(ExportarOferta.markdown(oferta), "text/markdown;charset=utf-8", ExportarOferta.nombreArchivo(oferta, "md"));
+      toast.textContent = "Markdown generado";
+    } else {
+      descargar(ExportarOferta.xlsx(oferta), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ExportarOferta.nombreArchivo(oferta, "xlsx"));
+      toast.textContent = "Excel generado";
+    }
+    setTimeout(() => { toast.textContent = ""; }, 3000);
   }
 
   async function copiar() {
@@ -562,6 +612,8 @@
       render();
     }));
     $("copiar").addEventListener("click", copiar);
+    $("generarMd").addEventListener("click", () => exportar("md"));
+    $("generarExcel").addEventListener("click", () => exportar("xlsx"));
     $("reiniciar").addEventListener("click", reiniciar);
     render();
   }
