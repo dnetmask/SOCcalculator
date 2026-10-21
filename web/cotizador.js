@@ -182,9 +182,18 @@
       });
     }
 
-    function opcionesColector() {
+    // Textos del modo de servicio (SOC OT o SOC IT); los costos y precios no cambian.
+    function textosModo(modo) {
+      const m = s.modos_servicio;
+      if (!m) return {};
+      return m[modo] || m[m.por_defecto] || {};
+    }
+
+    function opcionesColector(modo) {
       const cfg = s.opciones_colector;
-      return cfg.opciones.map((op, i) => {
+      const nombres = textosModo(modo).colectores || {};
+      return cfg.opciones.map((op0, i) => {
+        const op = { ...op0, opcion: nombres[op0.opcion] || op0.opcion };
         if (op.costo_total !== undefined) {
           const total = num(op.costo_total);
           return { id: i, opcion: op.opcion, precioMensual: redondearArriba(total / op.divisor_mensual, 0.01),
@@ -261,6 +270,7 @@
      */
     function cotizar(seleccion) {
       const p = precio(seleccion.clientesEquilibrio, seleccion.escenario, seleccion.margenComercial);
+      const txt = textosModo(seleccion.modo);
       const soc = seleccion.soc !== false;
       const sedes = seleccion.vulnerabilidades ? Math.max(0, Math.floor(seleccion.sedes || 0)) : 0;
       const extraDisp = Math.max(0, (seleccion.dispositivos || 0) - p.dispositivosIncluidos);
@@ -281,10 +291,11 @@
         const dv = p.descuentoVolumen;
         const lista = Math.min(sedes, dv.desdeSede - 1);
         const extra = sedes - lista;
-        lineas.push({ id: "vuln", concepto: extra ? `Gestión de vulnerabilidades OT, sedes 1 a ${lista}` : "Gestión de vulnerabilidades OT por sede",
+        const vulnNombre = txt.vulnerabilidades || "Gestión de vulnerabilidades OT";
+        lineas.push({ id: "vuln", concepto: extra ? `${vulnNombre}, sedes 1 a ${lista}` : `${vulnNombre} por sede`,
                       cantidad: lista, unitario: p.precioPorSede, costo: pisoVulnerabilidades(lista, p) / lista, descontable: true, meses: null });
         if (extra) {
-          lineas.push({ id: "vuln2", concepto: `Gestión de vulnerabilidades OT desde la sede ${dv.desdeSede} (${Math.round(dv.fraccion * 100)} % de descuento)`,
+          lineas.push({ id: "vuln2", concepto: `${vulnNombre} desde la sede ${dv.desdeSede} (${Math.round(dv.fraccion * 100)} % de descuento)`,
                         cantidad: extra, unitario: dv.precio, costo: (pisoVulnerabilidades(sedes, p) - pisoVulnerabilidades(lista, p)) / extra,
                         descontable: true, meses: null });
         }
@@ -297,7 +308,7 @@
                       unitario: f.precioUsd, costo: f.costoUsd, descontable: true, meses: null });
       }
       if (soc && extraDisp) {
-        lineas.push({ id: "disp", concepto: "Otras consolas fuente adicionales (EDR, gestión, OT)", cantidad: extraDisp,
+        lineas.push({ id: "disp", concepto: txt.otra_consola_linea || "Otras consolas fuente adicionales (EDR, gestión, OT)", cantidad: extraDisp,
                       unitario: p.precioDispositivo, costo: p.costoDispositivo, descontable: true, meses: null });
       }
       if (soc && extraAg) {
@@ -309,7 +320,7 @@
                       unitario: p.precioUeba, costo: p.costoUeba, descontable: true, meses: null });
       }
       const cantidades = seleccion.colectores || {};
-      for (const col of soc ? opcionesColector() : []) {
+      for (const col of soc ? opcionesColector(seleccion.modo) : []) {
         const cantidad = Math.max(0, Math.floor(cantidades[col.id] || 0));
         if (!cantidad || col.precioMensual <= 0) continue;
         lineas.push({ id: `col${col.id}`, concepto: `Colector: ${col.opcion}`, cantidad, unitario: col.precioMensual,
@@ -334,6 +345,7 @@
         precio: p,
         soc,
         sedes,
+        modo: seleccion.modo || (s.modos_servicio || {}).por_defecto,
         vacia: lineas.length === 0,
         uebaAplicado: soc ? ueba : 0,
         lineas,
@@ -411,6 +423,7 @@
       costos,
       precio,
       opcionesColector,
+      textosModo,
       fuentesPorTipo,
       cotizar,
       sensibilidadVulnerabilidades,

@@ -165,3 +165,20 @@ test("calculadora de EPS por inventario", () => {
   assert.equal(r.fuentes, 40);
   assert.equal(modelo.estimarEps({}).promedio, 0);
 });
+
+test("modo SOC IT: mismos precios y costos, textos de IT", () => {
+  const nucOt = modelo.opcionesColector("ot").find((o) => o.opcion.startsWith("NUC"));
+  const nucIt = modelo.opcionesColector("it").find((o) => o.opcion.startsWith("NUC"));
+  assert.equal(nucOt.opcion, "NUC industrial on-prem");
+  assert.equal(nucIt.opcion, "NUC on-prem");
+  assert.equal(nucIt.precioMensual, nucOt.precioMensual);
+  const sel = { dispositivos: 12, vulnerabilidades: true, sedes: 2, colectores: { [nucIt.id]: 1 } };
+  const ot = modelo.cotizar({ ...sel, modo: "ot" });
+  const it = modelo.cotizar({ ...sel, modo: "it" });
+  assert.equal(it.mensualInicial, ot.mensualInicial);
+  assert.equal(it.pisoEquilibrio, ot.pisoEquilibrio);
+  assert.equal(it.lineas.find((l) => l.id === "vuln").concepto, "Gestión de vulnerabilidades por sede");
+  assert.equal(ot.lineas.find((l) => l.id === "vuln").concepto, "Gestión de vulnerabilidades OT por sede");
+  assert.ok(it.lineas.some((l) => l.concepto === "Colector: NUC on-prem"));
+  assert.ok(!it.lineas.find((l) => l.id === "disp").concepto.includes("OT"));
+});

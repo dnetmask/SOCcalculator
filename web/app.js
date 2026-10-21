@@ -58,8 +58,35 @@
       .map((o) => [o.id, entero(`colN${o.id}`)]));
   }
 
+  function modoActual() {
+    const r = document.querySelector('input[name="modo"]:checked');
+    return r ? r.value : "ot";
+  }
+
+  // Textos del SOC OT o IT en la cabecera, el plan, vulnerabilidades, colectores y calculadora de EPS.
+  function aplicarModo() {
+    const modo = modoActual();
+    const t = modelo.textosModo(modo);
+    if (!t.titulo) return;
+    $("txtTitulo").textContent = t.titulo;
+    $("txtDescripcion").textContent = t.descripcion;
+    $("txtModoCobrand").textContent = t.nombre;
+    document.title = `Cotizador ${t.titulo}`;
+    $("txtMonitoreo").textContent = t.monitoreo;
+    $("txtVulnNombre").textContent = t.vulnerabilidades;
+    $("vuln").closest("label").setAttribute("aria-label", `Incluir ${t.vulnerabilidades.toLowerCase()}`);
+    $("txtVulnItems").innerHTML = t.vulnerabilidades_items.map((x) => `<li>${esc(x)}</li>`).join("");
+    $("txtLicCliente").textContent = t.licencia_cliente;
+    $("txtOtraConsola").textContent = t.otra_consola;
+    $("txtColDetalle").textContent = t.colector_detalle;
+    $("termSonda").textContent = `${t.vulnerabilidades}: ${t.licencia_cliente_corta}.`;
+    for (const o of modelo.opcionesColector(modo)) if ($(`colNombre${o.id}`)) $(`colNombre${o.id}`).textContent = o.opcion;
+    if ($("epsNombre_ot")) $("epsNombre_ot").textContent = t.eps_ot;
+  }
+
   function seleccion() {
     return {
+      modo: modoActual(),
       // Las «otras consolas» van por la vía genérica: incluidas + adicionales.
       dispositivos: modelo.supuestos.plan_base.dispositivos_incluidos + entero("otras"),
       fuentesTipo: cantidadesFuentes(),
@@ -126,6 +153,7 @@
   }
 
   function render() {
+    aplicarModo();
     sincronizarServicios();
     sincronizarColector();
     sincronizarUeba();
@@ -198,7 +226,8 @@
     const ret = retencionTexto(p);
     const partes = [];
     if (q.soc) partes.push(`<b>SOC de incidentes:</b> ${p.dispositivosIncluidos} dispositivos/consolas fuente, retención de eventos de ${ret.linea} en línea + ${ret.archivo} archivados, plataforma FortiSIEM MSSP en Azure con IOC de FortiGuard.`);
-    if (q.sedes) partes.push(`<b>Vulnerabilidades OT:</b> ${q.sedes} ${q.sedes === 1 ? "sede" : "sedes"} con inventario de activos, priorización por CVE, virtual patching y ciclo de parches ISA/IEC 62443-2-3.`);
+    const t = modelo.textosModo(q.modo);
+    if (q.sedes) partes.push(`<b>${t.vulnerabilidades}:</b> ${q.sedes} ${q.sedes === 1 ? "sede" : "sedes"} con ${t.vulnerabilidades_incluye}.`);
     return partes;
   }
 
@@ -362,9 +391,9 @@
         <td>${esc(f.nombre)}</td><td class="r num">${cop.format(f.competenciaCop)}</td><td class="r num">${cop.format(f.precioCop)}</td>
         <td class="r num">${pct.format(1 - f.precioCop / f.competenciaCop)}</td><td class="r num">${cop.format(f.costoCop)}</td>
         <td class="r num">${pct.format(f.margen)}</td></tr>`).join("") + `<tr>
-        <td>Otra consola fuente (EDR, gestión, OT)</td><td class="r num">—</td><td class="r num">${mon0.format(p.precioDispositivo)}</td>
+        <td>${esc(modelo.textosModo(q.modo).otra_consola)}</td><td class="r num">—</td><td class="r num">${mon0.format(p.precioDispositivo)}</td>
         <td class="r num">—</td><td class="r num">${mon0.format(p.costoDispositivo)}</td><td class="r num">${pct.format(1 - p.costoDispositivo / p.precioDispositivo)}</td></tr>`;
-    $("economiaColectores").innerHTML = modelo.opcionesColector().filter((o) => o.precioMensual > 0).map((o) => {
+    $("economiaColectores").innerHTML = modelo.opcionesColector(q.modo).filter((o) => o.precioMensual > 0).map((o) => {
       const linea = q.lineas.find((l) => l.concepto === `Colector: ${o.opcion}`);
       const cant = linea ? linea.cantidad : 0;
       if (o.mesesCobro) {
@@ -390,7 +419,7 @@
       `Cliente: ${$("hClient").textContent}${$("hContact").textContent ? ` · ${$("hContact").textContent}` : ""}`,
       `Plazo: ${q.plazoMeses} meses`,
       ...textoIncluye(q).map((x) => x.replace(/<\/?b>/g, "")),
-      q.sedes ? "No incluye la licencia de la sonda OT, que aporta el cliente." : null,
+      q.sedes ? `${modelo.textosModo(q.modo).licencia_cliente_corta.replace(/^n/, "N")}.` : null,
       "",
       ...lineas,
       q.descuentoMensual ? `- Descuento ${pct.format(q.descuento)} sobre servicios: −${mon.format(q.descuentoMensual)}/mes` : null,
@@ -423,6 +452,7 @@
     try {
       const datos = Object.fromEntries(CAMPOS.map((id) => [id, $(id).type === "checkbox" ? $(id).checked : $(id).value]));
       datos.colectores = cantidadesColector();
+      datos.modo = modoActual();
       datos.eps = cantidadesEps();
       datos.fuentesTipo = cantidadesFuentes();
       localStorage.setItem(CLAVE, JSON.stringify(datos));
@@ -438,6 +468,8 @@
         if ($(id).type === "checkbox") $(id).checked = datos[id];
         else $(id).value = datos[id];
       }
+      const radioModo = document.querySelector(`input[name="modo"][value="${datos.modo}"]`);
+      if (radioModo) radioModo.checked = true;
       for (const [id, n] of Object.entries(datos.eps || {})) {
         if ($(`epsN_${id}`)) $(`epsN_${id}`).value = n;
       }
@@ -456,6 +488,7 @@
     $("cliente").value = "";
     $("contacto").value = "";
     $("plazo").value = "12";
+    document.querySelector(`input[name="modo"][value="${modelo.supuestos.modos_servicio.por_defecto}"]`).checked = true;
     $("soc").checked = true;
     $("vuln").checked = false;
     $("sedes").value = 1;
@@ -492,7 +525,7 @@
     // Calculadora de EPS con un inventario de ejemplo de una planta.
     const ejemploEps = { fw_entry: 3, fw_mid: 1, srv_win: 4, srv_lin: 2, sw_core: 2, sw_acceso: 6, consola: 1, ot: 2 };
     $("epsTipos").innerHTML = modelo.supuestos.estimador_almacenamiento.calculadora_eps.tipos.map((x) => `
-      <label class="eps-fila"><span>${esc(x.nombre)} <small>· ${x.eps} EPS c/u</small></span>
+      <label class="eps-fila"><span><span id="epsNombre_${x.id}">${esc(x.nombre)}</span> <small>· ${x.eps} EPS c/u</small></span>
         <input id="epsN_${x.id}" type="number" min="0" step="1" value="${ejemploEps[x.id] || 0}" inputmode="numeric" aria-label="Cantidad de ${esc(x.nombre)}">
         <small id="epsTot_${x.id}">0</small></label>`).join("");
     $("epsDesdeOferta").addEventListener("click", epsDesdeOferta);
@@ -509,7 +542,7 @@
     // Ejemplo inicial: un NUC industrial.
     $("colectores").innerHTML = modelo.opcionesColector().map((o) => `
       <div class="opt" id="colCard${o.id}">
-        <strong>${esc(o.opcion)}</strong>
+        <strong id="colNombre${o.id}">${esc(o.opcion)}</strong>
         <span class="num">${o.precioMensual ? mon0.format(o.precioMensual) + "/mes c/u" : "Sin costo"}</span>
         <small>${o.mesesCobro ? `Durante ${o.mesesCobro} meses` : o.precioMensual ? "Recurrente" : "Aplica si no se cotizan colectores"}</small>
         ${o.precioMensual ? `<div class="stepper"><button type="button" data-step="colN${o.id}" data-d="-1" aria-label="Quitar ${esc(o.opcion)}">−</button><input id="colN${o.id}" type="number" min="0" step="1" value="${o.mesesCobro ? 1 : 0}" inputmode="numeric" aria-label="Cantidad de ${esc(o.opcion)}"><button type="button" data-step="colN${o.id}" data-d="1" aria-label="Agregar ${esc(o.opcion)}">+</button></div>` : ""}
@@ -520,6 +553,7 @@
     $("form").addEventListener("input", render);
     $("form").addEventListener("change", render);
     $("form").addEventListener("submit", (e) => e.preventDefault());
+    document.querySelectorAll('input[name="modo"]').forEach((r) => r.addEventListener("change", render));
     $("interna").addEventListener("input", render);
     $("interna").addEventListener("change", render);
     document.querySelectorAll("[data-step]").forEach((b) => b.addEventListener("click", () => {

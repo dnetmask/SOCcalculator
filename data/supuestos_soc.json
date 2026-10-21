@@ -12,6 +12,42 @@
     "texto_oferta": "Excluido de IVA por ser servicio de computación en la nube.",
     "nota": "Exclusión de IVA para servicios de computación en la nube (Estatuto Tributario, art. 476). Validar con contabilidad el cumplimiento de requisitos, en especial para el colector NUC (equipo físico)."
   },
+  "modos_servicio": {
+    "nota": "El cotizador permite elegir SOC OT o SOC IT. El equipo, los costos y los precios son los mismos; cambian solo los textos de la oferta.",
+    "por_defecto": "ot",
+    "ot": {
+      "nombre": "SOC OT",
+      "titulo": "SOC OT Netmask",
+      "descripcion": "Arma la propuesta mensual con el SOC de gestión de incidentes y la gestión de vulnerabilidades OT, juntos o por separado, más los complementos que necesita cada planta.",
+      "monitoreo": "Monitoreo de eventos IPS/IDS, EDR, servidores y OT",
+      "vulnerabilidades": "Gestión de vulnerabilidades OT",
+      "vulnerabilidades_items": ["Inventario de activos OT por sede (PLC, HMI, estaciones)", "Identificación y priorización por CVE", "Virtual patching mientras llega el parche", "Ciclo de parches ISA/IEC 62443-2-3 y reporte mensual"],
+      "vulnerabilidades_incluye": "inventario de activos, priorización por CVE, virtual patching y ciclo de parches ISA/IEC 62443-2-3",
+      "licencia_cliente": "No incluye la licencia de la sonda OT (licencia OT de Fortinet, Nozomi, Claroty, TXOne…): la aporta el cliente. Sin licencias FortiSIEM.",
+      "licencia_cliente_corta": "no incluye la licencia de la sonda OT, que aporta el cliente",
+      "otra_consola": "Consola EDR, de gestión u OT",
+      "otra_consola_linea": "Otras consolas fuente adicionales (EDR, gestión, OT)",
+      "eps_ot": "Sonda o equipo OT",
+      "colectores": {"NUC industrial on-prem": "NUC industrial on-prem"},
+      "colector_detalle": "Recolectan, normalizan y cifran los eventos de cada planta"
+    },
+    "it": {
+      "nombre": "SOC IT",
+      "titulo": "SOC IT Netmask",
+      "descripcion": "Arma la propuesta mensual con el SOC de gestión de incidentes y la gestión de vulnerabilidades, juntos o por separado, más los complementos que necesita cada sede.",
+      "monitoreo": "Monitoreo de eventos IPS/IDS, EDR, servidores y aplicaciones",
+      "vulnerabilidades": "Gestión de vulnerabilidades",
+      "vulnerabilidades_items": ["Inventario de activos por sede (servidores, estaciones, red)", "Identificación y priorización por CVE", "Virtual patching mientras llega el parche", "Ciclo de gestión de parches y reporte mensual"],
+      "vulnerabilidades_incluye": "inventario de activos, priorización por CVE, virtual patching y ciclo de gestión de parches",
+      "licencia_cliente": "No incluye la licencia de la consola de vulnerabilidades (Tenable, Qualys, Rapid7, FortiClient EMS…): la aporta el cliente. Sin licencias FortiSIEM.",
+      "licencia_cliente_corta": "no incluye la licencia de la consola de vulnerabilidades, que aporta el cliente",
+      "otra_consola": "Consola EDR, de gestión o de vulnerabilidades",
+      "otra_consola_linea": "Otras consolas fuente adicionales (EDR, gestión, vulnerabilidades)",
+      "eps_ot": "Consola de vulnerabilidades",
+      "colectores": {"NUC industrial on-prem": "NUC on-prem"},
+      "colector_detalle": "Recolectan, normalizan y cifran los eventos de cada sede"
+    }
+  },
   "plan_base": {
     "dispositivos_incluidos": 10,
     "agentes_avanzados_incluidos": 0,

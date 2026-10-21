@@ -74,6 +74,12 @@ h1, h2, h3 { color: var(--ink); margin: 0; font-weight: 700; text-wrap: balance;
 .band h1 { color: var(--band-ink); font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 800; }
 .band p { margin: 0; max-width: 64ch; color: #c9d7e4; }
 .band .eyebrow { color: var(--cyan-bright); }
+.modo { display: inline-flex; margin-top: 10px; border: 1px solid rgb(255 255 255 / .35); border-radius: 999px; padding: 3px; gap: 2px; justify-self: start; }
+.modo label { position: relative; cursor: pointer; }
+.modo input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.modo span { display: block; padding: 6px 16px; border-radius: 999px; font: 600 .85rem var(--f-sans); color: #c9d7e4; }
+.modo input:checked + span { background: var(--cyan-bright); color: #04263b; }
+.modo input:focus-visible + span { outline: 2px solid #ffffff; outline-offset: 2px; }
 .chevrons { position: absolute; right: max(16px, 4vw); top: 50%; transform: translateY(-50%); display: flex; gap: 6px; opacity: .9; z-index: 0; }
 .chevrons span { width: 26px; height: 64px; background: var(--cyan-bright); clip-path: polygon(0 0, 35% 0, 100% 50%, 35% 100%, 0 100%, 65% 50%); }
 .chevrons span:nth-child(2) { opacity: .75; } .chevrons span:nth-child(3) { opacity: .5; } .chevrons span:nth-child(4) { opacity: .28; }
@@ -251,14 +257,18 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
 <div class="brandbar gutter">
   <div class="inner">
     <div class="logo"><span class="chip"><img src="assets/netmask-logo.png" alt="Netmask Industrial Networking" width="148" height="34"></span></div>
-    <div class="cobrand"><span class="fortibar" aria-hidden="true"></span><span>SOC OT sobre <b>FortiSIEM® MSSP</b> · Partner MSSP de Fortinet</span><a class="salir" href="/salir">Salir</a></div>
+    <div class="cobrand"><span class="fortibar" aria-hidden="true"></span><span><span id="txtModoCobrand">SOC OT</span> sobre <b>FortiSIEM® MSSP</b> · Partner MSSP de Fortinet</span><a class="salir" href="/salir">Salir</a></div>
   </div>
 </div>
 <header class="band gutter">
   <div class="inner">
     <div class="eyebrow">Cotizador · Servicio gestionado</div>
-    <h1>SOC OT Netmask</h1>
-    <p>Arma la propuesta mensual con el SOC de gestión de incidentes y la gestión de vulnerabilidades OT, juntos o por separado, más los complementos que necesita cada planta.</p>
+    <h1 id="txtTitulo">SOC OT Netmask</h1>
+    <p id="txtDescripcion">Arma la propuesta mensual con el SOC de gestión de incidentes y la gestión de vulnerabilidades OT, juntos o por separado, más los complementos que necesita cada planta.</p>
+    <div class="modo" role="radiogroup" aria-label="Tipo de SOC">
+      <label><input type="radio" name="modo" value="ot" checked><span>SOC OT</span></label>
+      <label><input type="radio" name="modo" value="it"><span>SOC IT</span></label>
+    </div>
   </div>
   <div class="chevrons" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
 </header>
@@ -289,7 +299,7 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
           <div class="plan">
           <div>
             <ul>
-              <li>Monitoreo de eventos IPS/IDS, EDR, servidores y OT</li>
+              <li id="txtMonitoreo">Monitoreo de eventos IPS/IDS, EDR, servidores y OT</li>
               <li>Depuración de falsos positivos y respuesta a incidentes</li>
               <li>FortiSIEM MSSP en Azure con IOC de FortiGuard</li>
               <li>CMDB de activos y monitoreo de disponibilidad</li>
@@ -306,12 +316,12 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
 
         <div class="service" id="cardVuln">
           <div class="service-head">
-            <div><strong>Gestión de vulnerabilidades OT</strong><span class="tag">Por sede</span></div>
+            <div><strong id="txtVulnNombre">Gestión de vulnerabilidades OT</strong><span class="tag">Por sede</span></div>
             <label class="switch" aria-label="Incluir gestión de vulnerabilidades OT"><input type="checkbox" id="vuln" checked><span></span></label>
           </div>
           <div class="plan">
             <div>
-              <ul>
+              <ul id="txtVulnItems">
                 <li>Inventario de activos OT por sede (PLC, HMI, estaciones)</li>
                 <li>Identificación y priorización por CVE</li>
                 <li>Virtual patching mientras llega el parche</li>
@@ -324,7 +334,7 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
               <div class="stepper"><button type="button" data-step="sedes" data-d="-1" aria-label="Quitar sede">−</button><input id="sedes" type="number" min="1" step="1" value="2" inputmode="numeric" aria-label="Sedes"><button type="button" data-step="sedes" data-d="1" aria-label="Agregar sede">+</button></div>
             </div>
             <p class="note volumen" id="notaVolumen"></p>
-            <p class="note">No incluye la licencia de la sonda OT (licencia OT de Fortinet, Nozomi, Claroty, TXOne…): la aporta el cliente. Sin licencias FortiSIEM.</p>
+            <p class="note" id="txtLicCliente">No incluye la licencia de la sonda OT (licencia OT de Fortinet, Nozomi, Claroty, TXOne…): la aporta el cliente. Sin licencias FortiSIEM.</p>
           </div>
         </div>
         <p class="error" id="sinServicio" hidden>Activa al menos un servicio para armar la propuesta.</p>
@@ -337,7 +347,7 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
         </div>
         <div id="fuentesTipo"></div>
         <div class="row tipo">
-          <div class="what"><strong>Otra consola fuente</strong><span>Consola EDR, de gestión u OT · <span class="num" id="precioDisp">—</span>/mes c/u</span></div>
+          <div class="what"><strong>Otra consola fuente</strong><span><span id="txtOtraConsola">Consola EDR, de gestión u OT</span> · <span class="num" id="precioDisp">—</span>/mes c/u</span></div>
           <div class="stepper"><button type="button" data-step="otras" data-d="-1" aria-label="Quitar consola fuente">−</button><input id="otras" type="number" min="0" step="1" value="0" inputmode="numeric" aria-label="Otras consolas fuente adicionales"><button type="button" data-step="otras" data-d="1" aria-label="Agregar consola fuente">+</button></div>
         </div>
         <div class="row">
@@ -349,7 +359,7 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
           <div class="stepper"><button type="button" data-step="ueba" data-d="-1" aria-label="Quitar UEBA">−</button><input id="ueba" type="number" min="0" step="1" value="10" inputmode="numeric" aria-label="Agentes con UEBA"><button type="button" data-step="ueba" data-d="1" aria-label="Agregar UEBA">+</button></div>
         </div>
         <div class="row" style="grid-template-columns: minmax(0,1fr);">
-          <div class="what"><strong>Colectores FortiSIEM</strong><span>Recolectan, normalizan y cifran los eventos de cada planta · se cobran aparte del plan · se pueden combinar</span></div>
+          <div class="what"><strong>Colectores FortiSIEM</strong><span><span id="txtColDetalle">Recolectan, normalizan y cifran los eventos de cada planta</span> · se cobran aparte del plan · se pueden combinar</span></div>
           <div class="opts" id="colectores" aria-label="Colectores"></div>
         </div>
       </section>
