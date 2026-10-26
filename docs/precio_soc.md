@@ -9,6 +9,7 @@ Retención base de eventos: 30 días en línea + 11 meses archivados.
 | Componente | Equilibrio | Precio lista |
 |---|---:|---:|
 | SOC de incidentes, plan base (plataforma + 10 dispositivos/consolas fuente) | $2,352.88 | $2,950.00 |
+| SOC Esencial (hasta 3 dispositivos/consolas fuente, 1/3 del cupo de un cliente) | $784.29 | $1,000.00 |
 | Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | $200.64 | $560.00 |
 | Vulnerabilidades desde la sede 11 del contrato (50 % de descuento) | — | $280.00 |
 | Otra consola fuente adicional (EDR, gestión, OT) | — | $52.00 |

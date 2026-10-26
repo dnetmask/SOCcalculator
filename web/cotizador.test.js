@@ -185,3 +185,19 @@ test("modo SOC IT: mismos precios y costos, textos de IT", () => {
   assert.ok(it.lineas.some((l) => l.concepto === "Colector: NUC on-prem"));
   assert.ok(!it.lineas.find((l) => l.id === "disp").concepto.includes("OT"));
 });
+
+test("SOC Esencial: 1/3 del cupo, hasta 3 fuentes y sin fuentes adicionales", () => {
+  const e = modelo.precio().esencial;
+  assert.equal(e.equilibrio, 784.29); // 2352.88 / 3
+  assert.equal(e.lista, 1000); // 784.29 / 0.8 = 980.36 -> 1000 (COP 3.500.000)
+  assert.equal(modelo.precio(4, undefined, 0).esencial.lista, 800);
+  assert.equal(e.dispositivosIncluidos, 3);
+  assert.equal(e.maxClientes, 3);
+  const q = modelo.cotizar({ plan: "esencial", dispositivos: 13, fuentesTipo: { fw_mid: 2 }, agentes: 5, vulnerabilidades: true, sedes: 1 });
+  assert.equal(q.plan, "esencial");
+  assert.equal(q.dispositivosIncluidos, 3);
+  assert.deepEqual(q.lineas.map((l) => l.id), ["base", "vuln", "agt"]);
+  assert.equal(q.lineas[0].unitario, 1000);
+  assert.ok(q.lineas[0].concepto.startsWith("SOC Esencial"));
+  assert.equal(modelo.cotizar({ soc: false, plan: "esencial", vulnerabilidades: true, sedes: 1 }).plan, "estandar");
+});

@@ -77,6 +77,8 @@ class PrecioSOC:
     sedes_equilibrio: int
     equilibrio_por_sede: Decimal
     precio_por_sede: Decimal
+    esencial_equilibrio: Decimal | None = None  # SOC Esencial: cliente pequeño que ocupa 1/3 del cupo
+    esencial_lista: Decimal | None = None
 
     @property
     def sedes_minimas_con_precio_lista(self) -> int:
@@ -134,6 +136,11 @@ class ModeloPrecioSOC:
                 raise ErrorModelo("La tasa de cambio debe ser positiva")
             _entero_no_negativo(s["plan_base"]["dispositivos_incluidos"], "dispositivos_incluidos")
             _entero_no_negativo(s["plan_base"]["agentes_avanzados_incluidos"], "agentes_avanzados_incluidos")
+            if "plan_esencial" in s:
+                e = s["plan_esencial"]
+                if _entero_no_negativo(e["clientes_por_cupo"], "clientes_por_cupo") < 1 or \
+                        _entero_no_negativo(e["dispositivos_incluidos"], "plan_esencial.dispositivos_incluidos") < 1:
+                    raise ErrorModelo("plan_esencial: clientes_por_cupo y dispositivos_incluidos deben ser al menos 1")
             for clave in ("costos_fijos_mensuales", "costos_variables_por_cliente_mensuales"):
                 for item in s[clave]:
                     if _decimal(item["importe"], f"{clave}.{item['concepto']}") < 0:
@@ -266,7 +273,16 @@ class ModeloPrecioSOC:
             self._precio_adicional("agentes_avanzados", "margen_agente_adicional"),
             self._precio_adicional("ueba", "margen_ueba_adicional"),
             costo_vuln, sedes, _dinero(costo_vuln / sedes), _dinero(_decimal(v["precio_por_sede_usd"], "precio_por_sede")),
+            *self._esencial(base, m, paso),
         )
+
+    def _esencial(self, equilibrio_base: Decimal, m: Decimal, paso: Decimal) -> tuple[Decimal | None, Decimal | None]:
+        """SOC Esencial: equilibrio por cliente / clientes_por_cupo, con el mismo margen y redondeo del plan base."""
+        e = self.s.get("plan_esencial")
+        if not e:
+            return None, None
+        equilibrio = _dinero(equilibrio_base / _entero_no_negativo(e["clientes_por_cupo"], "clientes_por_cupo"))
+        return equilibrio, _redondear_arriba(equilibrio / (1 - m), paso)
 
     def tramos_vulnerabilidades(self, sedes: int) -> list[tuple[int, Decimal]]:
         """Precio de un contrato de `sedes`: [(cantidad, precio unitario)] a lista y con descuento por volumen."""
@@ -386,6 +402,9 @@ def reporte_markdown(modelo: ModeloPrecioSOC, clientes: int | None = None, escen
         "| Componente | Equilibrio | Precio lista |",
         "|---|---:|---:|",
         f"| SOC de incidentes, plan base (plataforma + {p.dispositivos_incluidos} dispositivos/consolas fuente) | {_m(p.equilibrio_base)} | {_m(p.lista_base)} |",
+        *([f"| {s['plan_esencial']['nombre']} (hasta {s['plan_esencial']['dispositivos_incluidos']} dispositivos/consolas fuente, "
+            f"1/{s['plan_esencial']['clientes_por_cupo']} del cupo de un cliente) | {_m(p.esencial_equilibrio)} | {_m(p.esencial_lista)} |"]
+          if p.esencial_lista is not None else []),
         f"| Gestión de vulnerabilidades OT, por sede (sin licencia de sonda) | {_m(p.equilibrio_por_sede)} | {_m(p.precio_por_sede)} |",
         f"| Vulnerabilidades desde la sede {s['gestion_vulnerabilidades']['descuento_volumen']['desde_sede']} del contrato "
         f"({Decimal(s['gestion_vulnerabilidades']['descuento_volumen']['descuento_fraccion']) * 100:.0f} % de descuento) | — | "

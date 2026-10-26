@@ -54,6 +54,13 @@
     "ueba_incluidos": 0,
     "nota": "Dispositivo/Consola fuente = fuente de log facturable en FortiSIEM (firewall, switch, servidor, consola EDR o de gestión...). La POC SOC OT contempla máximo 12 fuentes."
   },
+  "plan_esencial": {
+    "nombre": "SOC Esencial",
+    "dispositivos_incluidos": 3,
+    "clientes_por_cupo": 3,
+    "max_clientes_sin_ampliar_equipo": 3,
+    "nota": "Plan para clientes pequeños (1 a 3 fuentes). Cada cliente Esencial ocupa 1/3 del cupo de un cliente estándar: precio = equilibrio por cliente / clientes_por_cupo / (1 - margen), redondeado hacia arriba. No admite fuentes adicionales: con más de 3 fuentes el cliente pasa al plan estándar. Máximo de clientes Esencial mientras no se amplíe el equipo (3 = 1 cupo de la capacidad de 6 clientes)."
+  },
   "retencion_base": {
     "en_linea_dias": 30,
     "archivado_meses": 11,

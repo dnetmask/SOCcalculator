@@ -235,6 +235,7 @@
           precio: dinero(precioSede * (1 - num(v.descuento_volumen.descuento_fraccion))),
         },
         dispositivosIncluidos: s.plan_base.dispositivos_incluidos,
+        esencial: planEsencial(base, m, paso),
         agentesIncluidos: s.plan_base.agentes_avanzados_incluidos,
         precioDispositivo: precioAdicional("dispositivos", "margen_dispositivo_adicional"),
         uebaIncluidos: s.plan_base.ueba_incluidos || 0,
@@ -245,6 +246,15 @@
         costoUeba: costoUnitarioPrimerNivel("ueba"),
         retencion: { enLineaDias: s.retencion_base.en_linea_dias, archivadoMeses: s.retencion_base.archivado_meses },
       };
+    }
+
+    // SOC Esencial: cliente pequeño que ocupa 1/clientes_por_cupo del cupo de un cliente estándar.
+    function planEsencial(equilibrioBase, m, paso) {
+      const e = s.plan_esencial;
+      if (!e) return null;
+      const equilibrio = dinero(equilibrioBase / e.clientes_por_cupo);
+      return { nombre: e.nombre, dispositivosIncluidos: e.dispositivos_incluidos, clientesPorCupo: e.clientes_por_cupo,
+               maxClientes: e.max_clientes_sin_ampliar_equipo, equilibrio, lista: redondearArriba(equilibrio / (1 - m), paso) };
     }
 
     /* Piso de costo de un contrato de `sedes`: su parte del equipo (equilibrio por sede, nunca más
@@ -265,15 +275,19 @@
      *              ueba (≤ agentes), colectores: { [id de opción]: cantidad } (cada tipo
      *              independiente: p. ej. NUC y Azure en la misma oferta), vulnerabilidades: bool, sedes,
      *              descuento: fracción sobre servicios, plazoMeses, clientesEquilibrio, escenario,
-     *              margenComercial: fracción sobre el precio de venta del plan SOC }
+     *              margenComercial: fracción sobre el precio de venta del plan SOC,
+ *              plan: "estandar" | "esencial" (hasta 3 fuentes, sin fuentes adicionales) }
      * Sin SOC de incidentes no hay licencias FortiSIEM ni colector.
      */
     function cotizar(seleccion) {
       const p = precio(seleccion.clientesEquilibrio, seleccion.escenario, seleccion.margenComercial);
       const txt = textosModo(seleccion.modo);
       const soc = seleccion.soc !== false;
+      // Plan Esencial: hasta 3 fuentes, sin fuentes adicionales (con más, plan estándar).
+      const esencial = soc && seleccion.plan === "esencial" && p.esencial ? p.esencial : null;
+      const incluidos = esencial ? esencial.dispositivosIncluidos : p.dispositivosIncluidos;
       const sedes = seleccion.vulnerabilidades ? Math.max(0, Math.floor(seleccion.sedes || 0)) : 0;
-      const extraDisp = Math.max(0, (seleccion.dispositivos || 0) - p.dispositivosIncluidos);
+      const extraDisp = esencial ? 0 : Math.max(0, (seleccion.dispositivos || 0) - incluidos);
       const extraAg = Math.max(0, (seleccion.agentes || 0) - p.agentesIncluidos);
       // UEBA se licencia por agente avanzado: nunca más que los agentes del cliente.
       const ueba = Math.min(Math.max(0, seleccion.ueba || 0), Math.max(seleccion.agentes || 0, 0));
@@ -282,8 +296,11 @@
       const plazo = seleccion.plazoMeses || 12;
 
       const lineas = [];
-      if (soc) {
-        lineas.push({ id: "base", concepto: `SOC de incidentes: plataforma FortiSIEM y ${p.dispositivosIncluidos} dispositivos/consolas fuente`,
+      if (esencial) {
+        lineas.push({ id: "base", concepto: `${esencial.nombre}: plataforma FortiSIEM y hasta ${incluidos} dispositivos/consolas fuente`,
+                      cantidad: 1, unitario: esencial.lista, costo: esencial.equilibrio, descontable: true, meses: null });
+      } else if (soc) {
+        lineas.push({ id: "base", concepto: `SOC de incidentes: plataforma FortiSIEM y ${incluidos} dispositivos/consolas fuente`,
                       cantidad: 1, unitario: p.listaBase, costo: p.equilibrioBase, descontable: true, meses: null });
       }
       if (sedes) {
@@ -301,7 +318,7 @@
         }
       }
       const porTipo = seleccion.fuentesTipo || {};
-      for (const f of soc ? fuentesPorTipo() : []) {
+      for (const f of soc && !esencial ? fuentesPorTipo() : []) {
         const cantidad = Math.max(0, Math.floor(porTipo[f.id] || 0));
         if (!cantidad) continue;
         lineas.push({ id: `fuente-${f.id}`, concepto: `${f.nombre} adicional${f.detalle ? ` (${f.detalle})` : ""}`, cantidad,
@@ -344,6 +361,8 @@
       return {
         precio: p,
         soc,
+        plan: esencial ? "esencial" : "estandar",
+        dispositivosIncluidos: soc ? incluidos : 0,
         sedes,
         modo: seleccion.modo || (s.modos_servicio || {}).por_defecto,
         vacia: lineas.length === 0,

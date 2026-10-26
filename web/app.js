@@ -58,6 +58,11 @@
       .map((o) => [o.id, entero(`colN${o.id}`)]));
   }
 
+  function planActual() {
+    const r = document.querySelector('input[name="plan"]:checked');
+    return r ? r.value : "estandar";
+  }
+
   function modoActual() {
     const r = document.querySelector('input[name="modo"]:checked');
     return r ? r.value : "ot";
@@ -87,6 +92,7 @@
   function seleccion() {
     return {
       modo: modoActual(),
+      plan: planActual(),
       // Las «otras consolas» van por la vía genérica: incluidas + adicionales.
       dispositivos: modelo.supuestos.plan_base.dispositivos_incluidos + entero("otras"),
       fuentesTipo: cantidadesFuentes(),
@@ -162,7 +168,16 @@
     ultima = q;
     const p = q.precio;
 
-    $("precioBase").textContent = mon0.format(p.listaBase) + "/mes";
+    const esencial = q.plan === "esencial" ? p.esencial : null;
+    $("precioBase").textContent = mon0.format(esencial ? esencial.lista : p.listaBase) + "/mes";
+    if (p.esencial) {
+      $("selEstandar").textContent = p.dispositivosIncluidos;
+      $("selEsencial").textContent = p.esencial.dispositivosIncluidos;
+    }
+    $("txtIncluidos").textContent = esencial ? `Hasta ${esencial.dispositivosIncluidos}` : p.dispositivosIncluidos;
+    for (const id of ["filaFuentesHead", "fuentesTipo", "filaOtras"]) $(id).hidden = !!esencial;
+    $("notaEsencial").hidden = !esencial;
+    if (esencial) $("notaEsencial").innerHTML = `<div class="what"><strong>${esc(esencial.nombre)}: hasta ${esencial.dispositivosIncluidos} dispositivos/consolas fuente de cualquier tipo</strong><span>No admite fuentes adicionales: con más de ${esencial.dispositivosIncluidos} fuentes, cotiza el plan Estándar. Agentes, UEBA y colectores se suman igual.</span></div>`;
     $("precioSede").textContent = mon0.format(p.precioPorSede);
     const dv = p.descuentoVolumen;
     $("notaVolumen").textContent = `Desde la sede ${dv.desdeSede}: ${mon0.format(dv.precio)}/sede (${Math.round(dv.fraccion * 100)} % de descuento).`;
@@ -172,7 +187,7 @@
     const ret = retencionTexto(p);
     $("retLinea").textContent = ret.linea;
     $("retArch").textContent = ret.archivo;
-    $("incluidos").textContent = $("incluidos2").textContent = p.dispositivosIncluidos;
+    $("incluidos2").textContent = p.dispositivosIncluidos;
     $("descuentoOut").textContent = `${$("descuento").value} %`;
 
     const cliente = $("cliente").value.trim() || "Cliente sin nombre";
@@ -225,7 +240,7 @@
     const p = q.precio;
     const ret = retencionTexto(p);
     const partes = [];
-    if (q.soc) partes.push(`<b>SOC de incidentes:</b> ${p.dispositivosIncluidos} dispositivos/consolas fuente, retención de eventos de ${ret.linea} en línea + ${ret.archivo} archivados, plataforma FortiSIEM MSSP en Azure con IOC de FortiGuard.`);
+    if (q.soc) partes.push(`<b>${q.plan === "esencial" ? `${esc(p.esencial.nombre)}:</b> hasta` : "SOC de incidentes:</b>"} ${q.dispositivosIncluidos} dispositivos/consolas fuente, retención de eventos de ${ret.linea} en línea + ${ret.archivo} archivados, plataforma FortiSIEM MSSP en Azure con IOC de FortiGuard.`);
     const t = modelo.textosModo(q.modo);
     if (q.sedes) partes.push(`<b>${t.vulnerabilidades}:</b> ${q.sedes} ${q.sedes === 1 ? "sede" : "sedes"} con ${t.vulnerabilidades_incluye}.`);
     return partes;
@@ -386,7 +401,10 @@
       <tr><td>− Equipo de vulnerabilidades con contingencia (lo paga el servicio por sede)</td><td class="r num">−${mon0.format(p.costoVulnerabilidades)}</td></tr>
       <tr><td>÷ ${n} clientes = equilibrio del SOC de incidentes por cliente</td><td class="r num">${mon0.format(p.equilibrioBase)}</td></tr>
       <tr><td>Con margen comercial de ${Math.round(p.margenComercial * 100)} % sobre el precio de venta: equilibrio ÷ (1 − ${Math.round(p.margenComercial * 100)} %)</td><td class="r num">${mon0.format(p.equilibrioBase / (1 - p.margenComercial))}</td></tr>
-      <tr><td>Precio lista (redondeado hacia arriba a múltiplos de ${mon0.format(Number(s.redondeo_precio_lista))}) · margen real ${pct.format(1 - p.equilibrioBase / p.listaBase)}</td><td class="r num">${mon0.format(p.listaBase)}</td></tr>`;
+      <tr><td>Precio lista (redondeado hacia arriba a múltiplos de ${mon0.format(Number(s.redondeo_precio_lista))}) · margen real ${pct.format(1 - p.equilibrioBase / p.listaBase)}</td><td class="r num">${mon0.format(p.listaBase)}</td></tr>` +
+      (p.esencial ? `
+      <tr><td>${esc(p.esencial.nombre)} (hasta ${p.esencial.dispositivosIncluidos} fuentes): ocupa 1/${p.esencial.clientesPorCupo} del cupo de un cliente · equilibrio ÷ ${p.esencial.clientesPorCupo}</td><td class="r num">${mon0.format(p.esencial.equilibrio)}</td></tr>
+      <tr><td>${esc(p.esencial.nombre)}, precio lista con el mismo margen y redondeo · máximo ${p.esencial.maxClientes} clientes Esencial sin ampliar el equipo (= ${Math.round(p.esencial.maxClientes / p.esencial.clientesPorCupo * 10) / 10} cupo de ${s.capacidad_max_clientes_sin_contratar})</td><td class="r num">${mon0.format(p.esencial.lista)}</td></tr>` : "");
     $("tablaFuentes").innerHTML = modelo.fuentesPorTipo().map((f) => `<tr>
         <td>${esc(f.nombre)}</td><td class="r num">${cop.format(f.competenciaCop)}</td><td class="r num">${cop.format(f.precioCop)}</td>
         <td class="r num">${pct.format(1 - f.precioCop / f.competenciaCop)}</td><td class="r num">${cop.format(f.costoCop)}</td>
@@ -503,6 +521,7 @@
       const datos = Object.fromEntries(CAMPOS.map((id) => [id, $(id).type === "checkbox" ? $(id).checked : $(id).value]));
       datos.colectores = cantidadesColector();
       datos.modo = modoActual();
+      datos.plan = planActual();
       datos.eps = cantidadesEps();
       datos.fuentesTipo = cantidadesFuentes();
       localStorage.setItem(CLAVE, JSON.stringify(datos));
@@ -520,6 +539,8 @@
       }
       const radioModo = document.querySelector(`input[name="modo"][value="${datos.modo}"]`);
       if (radioModo) radioModo.checked = true;
+      const radioPlan = document.querySelector(`input[name="plan"][value="${datos.plan}"]`);
+      if (radioPlan) radioPlan.checked = true;
       for (const [id, n] of Object.entries(datos.eps || {})) {
         if ($(`epsN_${id}`)) $(`epsN_${id}`).value = n;
       }
@@ -540,6 +561,7 @@
     $("plazo").value = "12";
     document.querySelector(`input[name="modo"][value="${modelo.supuestos.modos_servicio.por_defecto}"]`).checked = true;
     $("soc").checked = true;
+    document.querySelector('input[name="plan"][value="estandar"]').checked = true;
     $("vuln").checked = false;
     $("sedes").value = 1;
     $("otras").value = 0;

@@ -80,6 +80,13 @@ h1, h2, h3 { color: var(--ink); margin: 0; font-weight: 700; text-wrap: balance;
 .modo span { display: block; padding: 6px 16px; border-radius: 999px; font: 600 .85rem var(--f-sans); color: #c9d7e4; }
 .modo input:checked + span { background: var(--cyan-bright); color: #04263b; }
 .modo input:focus-visible + span { outline: 2px solid #ffffff; outline-offset: 2px; }
+.planSel { display: inline-flex; width: fit-content; justify-self: start; flex-wrap: wrap; margin: 2px 0 12px; border: 1px solid var(--line-strong); border-radius: 999px; padding: 3px; gap: 2px; }
+.planSel label { position: relative; cursor: pointer; }
+.planSel input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.planSel span { display: block; padding: 5px 14px; border-radius: 999px; font: 600 .82rem var(--f-sans); color: var(--body); }
+.planSel input:checked + span { background: var(--band); color: var(--band-ink); }
+.planSel input:focus-visible + span { outline: 2px solid var(--cyan-bright); outline-offset: 2px; }
+.service.off .planSel { opacity: .5; pointer-events: none; }
 .chevrons { position: absolute; right: max(16px, 4vw); top: 50%; transform: translateY(-50%); display: flex; gap: 6px; opacity: .9; z-index: 0; }
 .chevrons span { width: 26px; height: 64px; background: var(--cyan-bright); clip-path: polygon(0 0, 35% 0, 100% 50%, 35% 100%, 0 100%, 65% 50%); }
 .chevrons span:nth-child(2) { opacity: .75; } .chevrons span:nth-child(3) { opacity: .5; } .chevrons span:nth-child(4) { opacity: .28; }
@@ -296,6 +303,10 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
             <div><strong>SOC de gestión de incidentes</strong><span class="tag forti">FortiSIEM</span></div>
             <label class="switch" aria-label="Incluir SOC de gestión de incidentes"><input type="checkbox" id="soc" checked><span></span></label>
           </div>
+          <div class="planSel" role="radiogroup" aria-label="Plan del SOC de incidentes">
+            <label><input type="radio" name="plan" value="estandar" checked><span>Estándar · <b id="selEstandar">10</b> fuentes</span></label>
+            <label><input type="radio" name="plan" value="esencial"><span>Esencial · hasta <b id="selEsencial">3</b> fuentes</span></label>
+          </div>
           <div class="plan">
           <div>
             <ul>
@@ -303,7 +314,7 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
               <li>Depuración de falsos positivos y respuesta a incidentes</li>
               <li>FortiSIEM MSSP en Azure con IOC de FortiGuard</li>
               <li>CMDB de activos y monitoreo de disponibilidad</li>
-              <li><span id="incluidos">10</span> dispositivos/consolas fuente incluidos</li>
+              <li><span id="txtIncluidos">10</span> dispositivos/consolas fuente incluidos</li>
             </ul>
           </div>
           <div class="price num" id="precioBase">—</div>
@@ -342,11 +353,12 @@ table.compacta tfoot tr:last-child td { color: var(--cyan); }
 
       <section class="block" id="seccionSoc">
         <div class="block-head"><h2>Complementos del SOC de incidentes</h2></div>
-        <div class="row" style="grid-template-columns: minmax(0,1fr);">
+        <div class="row" id="notaEsencial" style="grid-template-columns: minmax(0,1fr);" hidden></div>
+        <div class="row" id="filaFuentesHead" style="grid-template-columns: minmax(0,1fr);">
           <div class="what"><strong>Fuentes adicionales por tipo</strong><span>El plan incluye <span id="incluidos2">10</span> dispositivos/consolas fuente de cualquier tipo; las adicionales se cotizan por tipo</span></div>
         </div>
         <div id="fuentesTipo"></div>
-        <div class="row tipo">
+        <div class="row tipo" id="filaOtras">
           <div class="what"><strong>Otra consola fuente</strong><span><span id="txtOtraConsola">Consola EDR, de gestión u OT</span> · <span class="num" id="precioDisp">—</span>/mes c/u</span></div>
           <div class="stepper"><button type="button" data-step="otras" data-d="-1" aria-label="Quitar consola fuente">−</button><input id="otras" type="number" min="0" step="1" value="0" inputmode="numeric" aria-label="Otras consolas fuente adicionales"><button type="button" data-step="otras" data-d="1" aria-label="Agregar consola fuente">+</button></div>
         </div>

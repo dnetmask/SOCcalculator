@@ -45,6 +45,13 @@ class TestPrecioSOC(unittest.TestCase):
         self.assertGreaterEqual(p.lista_base, p.equilibrio_base)
         self.assertEqual(p.lista_base % 50, 0)
 
+    def test_plan_esencial(self):
+        p = self.modelo.precio()
+        self.assertEqual(p.esencial_equilibrio, Decimal("784.29"))  # 2352.88 / 3
+        self.assertEqual(p.esencial_lista, Decimal("1000.00"))  # / 0.8 -> múltiplo de 50
+        self.assertEqual(self.modelo.precio(margen=Decimal("0")).esencial_lista, Decimal("800.00"))
+        self.assertIn("SOC Esencial", reporte_markdown(self.modelo))
+
     def test_vulnerabilidades_por_sede(self):
         p = self.modelo.precio()
         self.assertEqual(p.costo_vulnerabilidades, Decimal("1605.12"))  # 1459.20 x 1.10
@@ -128,6 +135,7 @@ class TestPrecioSOC(unittest.TestCase):
             lambda s: s["escenarios_personal"]["ajustado"]["roles"][0].update(modulo="otro"),
             lambda s: s.pop("factor_prestacional"),
             lambda s: s.update(margen_comercial="1"),
+            lambda s: s["plan_esencial"].update(clientes_por_cupo=0),
             lambda s: s["gestion_vulnerabilidades"].update(precio_por_sede_usd="0"),
             lambda s: s["gestion_vulnerabilidades"].update(sedes_promedio_por_cliente=0),
             lambda s: s["gestion_vulnerabilidades"]["descuento_volumen"].update(descuento_fraccion="1"),
