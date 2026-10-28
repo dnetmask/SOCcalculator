@@ -108,11 +108,11 @@
   "escenario_personal": "ajustado",
   "escenarios_personal": {
     "ajustado": {
-      "descripcion": "SOC OT ajustado: 1 analista N1, 1 N2 y 1 analista de vulnerabilidades, líder técnico SIEM al 30 % y líder de operaciones SOC al 50 % (ambos COP 6,5 M); analistas con salarios base ajustados (-40 % sobre la referencia; N2 y vulnerabilidades además -30 %); horario extendido 8x5 + disponibilidad.",
+      "descripcion": "SOC OT ajustado: 1 analista N1, 1 N2 y 1 analista de vulnerabilidades, líder técnico SIEM al 30 % y líder de operaciones SOC al 50 % (ambos COP 6,5 M); analistas N1 y de vulnerabilidades a COP 3,5 M y N2 a COP 4 M; horario extendido 8x5 + disponibilidad.",
       "roles": [
-        {"rol": "Analista SOC N1 (monitoreo y triage)", "modulo": "incidentes", "cantidad": 1, "salario_mensual_cop": "3300000", "dedicacion": "1", "nota": "5.500.000 - 40 %"},
-        {"rol": "Analista SOC N2 / respuesta a incidentes", "modulo": "incidentes", "cantidad": 1, "salario_mensual_cop": "3780000", "dedicacion": "1", "nota": "9.000.000 - 30 % - 40 %"},
-        {"rol": "Analista de vulnerabilidades OT", "modulo": "vulnerabilidades", "cantidad": 1, "salario_mensual_cop": "3360000", "dedicacion": "1", "nota": "8.000.000 - 30 % - 40 %"},
+        {"rol": "Analista SOC N1 (monitoreo y triage)", "modulo": "incidentes", "cantidad": 1, "salario_mensual_cop": "3500000", "dedicacion": "1", "nota": "dato Netmask (ajustado)"},
+        {"rol": "Analista SOC N2 / respuesta a incidentes", "modulo": "incidentes", "cantidad": 1, "salario_mensual_cop": "4000000", "dedicacion": "1", "nota": "dato Netmask (ajustado)"},
+        {"rol": "Analista de vulnerabilidades OT", "modulo": "vulnerabilidades", "cantidad": 1, "salario_mensual_cop": "3500000", "dedicacion": "1", "nota": "dato Netmask (ajustado)"},
         {"rol": "Líder técnico SIEM", "modulo": "compartido", "cantidad": 1, "salario_mensual_cop": "6500000", "dedicacion": "0.3", "nota": "dato Netmask"},
         {"rol": "Líder de operaciones SOC", "modulo": "compartido", "cantidad": 1, "salario_mensual_cop": "6500000", "dedicacion": "0.5", "nota": "dato Netmask"}
       ]

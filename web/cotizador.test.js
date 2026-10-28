@@ -17,14 +17,14 @@ test("licencias iguales a core.py", () => {
 
 test("punto de equilibrio igual a precio_soc.py", () => {
   const p = modelo.precio();
-  assert.equal(p.costos.total, 11016.62);
-  assert.equal(p.equilibrioBase, 2352.88);
-  assert.equal(p.listaBase, 2950); // margen comercial por defecto 20 %: 2352.88 / 0.8 -> 2950
-  assert.equal(modelo.precio(4, undefined, 0).listaBase, 2400);
+  assert.equal(p.costos.total, 11284.14);
+  assert.equal(p.equilibrioBase, 2403.04);
+  assert.equal(p.listaBase, 3050); // margen comercial por defecto 20 %: 2403.04 / 0.8 -> 3050
+  assert.equal(modelo.precio(4, undefined, 0).listaBase, 2450);
   assert.equal(p.costos.almacenamientoCliente, 43.16); // 600 EPS, ya no USD 200 fijos
-  assert.equal(p.costoVulnerabilidades, 1605.12);
+  assert.equal(p.costoVulnerabilidades, 1672);
   assert.equal(p.sedesEquilibrio, 8);
-  assert.equal(p.equilibrioPorSede, 200.64);
+  assert.equal(p.equilibrioPorSede, 209);
   assert.equal(p.precioPorSede, 560);
   assert.equal(p.sedesMinimas, 3);
   assert.equal(p.precioDispositivo, 52);
@@ -41,15 +41,15 @@ test("colector NUC: 250/mes durante 12 meses", () => {
 test("cotización con base, módulo, adicionales y colector", () => {
   const nuc = modelo.opcionesColector().find((o) => o.opcion.startsWith("NUC")).id;
   const q = modelo.cotizar({ dispositivos: 30, agentes: 20, vulnerabilidades: true, sedes: 2, colectores: { [nuc]: 1 }, descuento: 0.1, plazoMeses: 24 });
-  // 2950 + 2x560 + 20x52 + 20x10 = 5310; 10% = 531; + 250 NUC
-  assert.equal(q.subtotalMensual, 5560);
-  assert.equal(q.descuentoMensual, 531);
-  assert.equal(q.mensualInicial, 5029);
-  assert.equal(q.mensualRecurrente, 4779);
+  // 3050 + 2x560 + 20x52 + 20x10 = 5410; 10% = 541; + 250 NUC
+  assert.equal(q.subtotalMensual, 5660);
+  assert.equal(q.descuentoMensual, 541);
+  assert.equal(q.mensualInicial, 5119);
+  assert.equal(q.mensualRecurrente, 4869);
   assert.equal(q.mesesConCargoTemporal, 12);
-  assert.equal(q.valorContrato, 4779 * 24 + 250 * 12);
-  // Con el margen del 20 %, un 10 % de descuento deja el plan base (2655) sobre su equilibrio (2352.88);
-  // sin margen (2160) quedaría por debajo.
+  assert.equal(q.valorContrato, 4869 * 24 + 250 * 12);
+  // Con el margen del 20 %, un 10 % de descuento deja el plan base (2745) sobre su equilibrio (2403.04);
+  // sin margen (2205) quedaría por debajo.
   assert.ok(q.lineas.find((l) => l.id === "base").neto > q.precio.equilibrioBase);
   const sinMargen = modelo.cotizar({ dispositivos: 30, descuento: 0.1, margenComercial: 0 });
   assert.ok(sinMargen.lineas.find((l) => l.id === "base").neto < sinMargen.precio.equilibrioBase);
@@ -62,7 +62,7 @@ test("sin adicionales ni colector la oferta es solo el plan base", () => {
   const vm = modelo.opcionesColector().find((o) => o.precioMensual === 0).id;
   const q = modelo.cotizar({ dispositivos: 10, agentes: 0, vulnerabilidades: false, colectores: {} });
   assert.deepEqual(q.lineas.map((l) => l.id), ["base"]);
-  assert.equal(q.mensualInicial, 2950);
+  assert.equal(q.mensualInicial, 3050);
 });
 
 test("UEBA se cobra por agente y nunca supera los agentes", () => {
@@ -87,7 +87,7 @@ test("vulnerabilidades sola: por sede, sin licencias ni colector", () => {
   const q = modelo.cotizar({ soc: false, dispositivos: 80, agentes: 10, ueba: 10, colectores: { [nuc]: 2 }, vulnerabilidades: true, sedes: 3 });
   assert.deepEqual(q.lineas.map((l) => l.id), ["vuln"]);
   assert.equal(q.mensualInicial, 1680);
-  assert.equal(q.pisoEquilibrio, 601.92);
+  assert.equal(q.pisoEquilibrio, 627);
 });
 
 test("sin servicios la oferta queda vacía", () => {
@@ -106,8 +106,8 @@ test("vulnerabilidades: 50 % de descuento desde la sede 11", () => {
   const q = modelo.cotizar({ soc: false, vulnerabilidades: true, sedes: 13 });
   assert.deepEqual(q.lineas.map((l) => [l.id, l.cantidad, l.unitario]), [["vuln", 10, 560], ["vuln2", 3, 280]]);
   assert.equal(q.mensualInicial, 5600 + 840);
-  // Piso: equipo completo (1605.12) + 3 sedes sobre la capacidad de 10 a 160.512 c/u
-  assert.equal(q.pisoEquilibrio, 2086.656);
+  // Piso: equipo completo (1672) + 3 sedes sobre la capacidad de 10 a 167.2 c/u
+  assert.equal(q.pisoEquilibrio, 2173.6);
   assert.equal(modelo.cotizar({ soc: false, vulnerabilidades: true, sedes: 10 }).lineas.length, 1);
 });
 
@@ -118,33 +118,34 @@ test("colectores NUC y Azure independientes", () => {
   const q = modelo.cotizar({ dispositivos: 10, colectores: { [nuc]: 3, [azure]: 2 }, plazoMeses: 24 });
   const cols = q.lineas.filter((x) => x.id.startsWith("col"));
   assert.deepEqual(cols.map((l) => [l.cantidad, l.unitario, l.meses]), [[3, 250, 12], [2, 200, null]]);
-  assert.equal(q.mensualInicial, 2950 + 750 + 400);
-  assert.equal(q.mensualRecurrente, 2950 + 400);
-  assert.equal(q.valorContrato, (2950 + 400) * 24 + 750 * 12);
+  assert.equal(q.mensualInicial, 3050 + 750 + 400);
+  assert.equal(q.mensualRecurrente, 3050 + 400);
+  assert.equal(q.valorContrato, (3050 + 400) * 24 + 750 * 12);
   assert.equal(modelo.cotizar({ dispositivos: 10, colectores: { [nuc]: 0, [azure]: 0 } }).lineas.length, 1);
 });
 
 test("desglose de personal: escenario ajustado con salario base y prestaciones", () => {
   const d = modelo.detallePersonal("ajustado");
   const n2 = d.roles.find((r) => r.rol.includes("N2"));
-  assert.equal(n2.salarioCop, 3780000); // 9.000.000 - 30 % - 40 %
-  assert.equal(n2.baseCop, 3780000);
-  assert.equal(Math.round(n2.prestacionesCop), 1965600); // 52 %
-  assert.equal(Math.round(n2.costoCop), 5745600);
-  assert.equal(d.roles.find((r) => r.rol.includes("vulnerabilidades")).salarioCop, 3360000); // 8.000.000 - 30 % - 40 %
+  assert.equal(n2.salarioCop, 4000000);
+  assert.equal(n2.baseCop, 4000000);
+  assert.equal(Math.round(n2.prestacionesCop), 2080000); // 52 %
+  assert.equal(Math.round(n2.costoCop), 6080000);
+  assert.equal(d.roles.find((r) => r.rol.includes("N1")).salarioCop, 3500000);
+  assert.equal(d.roles.find((r) => r.rol.includes("vulnerabilidades")).salarioCop, 3500000);
   assert.equal(d.roles.find((r) => r.rol.includes("N1")).cantidad, 1);
-  assert.equal(d.porModulo.incidentes, 3074.74);
+  assert.equal(d.porModulo.incidentes, 3257.14);
   assert.equal(d.porModulo.compartido, 2258.29);
-  assert.equal(d.porModulo.vulnerabilidades, 1459.2);
-  assert.equal(Math.round(d.totalCop), 25272800); // líderes de operaciones (50 %) y técnico SIEM (30 %) a COP 6,5 M
+  assert.equal(d.porModulo.vulnerabilidades, 1520);
+  assert.equal(Math.round(d.totalCop), 26124000); // líderes de operaciones (50 %) y técnico SIEM (30 %) a COP 6,5 M
   assert.equal(d.fte, 3.8); // 1 + 1 + 1 + 0.5 + 0.3
-  assert.deepEqual(modelo.compararEscenarios(4).map((x) => [x.nombre, x.listaBase, x.equilibrioPorSede]), [["ajustado", 2950, 200.64]]);
+  assert.deepEqual(modelo.compararEscenarios(4).map((x) => [x.nombre, x.listaBase, x.equilibrioPorSede]), [["ajustado", 3050, 209]]);
 });
 
 test("margen comercial sobre el precio de venta del plan SOC", () => {
-  assert.equal(modelo.precio(4, undefined, 0.2).listaBase, 2950); // 2352.88 / 0.8 = 2941.10 -> 2950
-  assert.equal(modelo.precio(4, undefined, 0.3).listaBase, 3400);
-  assert.equal(modelo.cotizar({ dispositivos: 10, margenComercial: 0.2 }).mensualInicial, 2950);
+  assert.equal(modelo.precio(4, undefined, 0.2).listaBase, 3050); // 2403.04 / 0.8 = 3003.80 -> 3050
+  assert.equal(modelo.precio(4, undefined, 0.3).listaBase, 3450);
+  assert.equal(modelo.cotizar({ dispositivos: 10, margenComercial: 0.2 }).mensualInicial, 3050);
   assert.throws(() => modelo.precio(4, undefined, 1));
 });
 
@@ -157,7 +158,7 @@ test("fuentes adicionales por tipo: 15 % bajo la competencia, precio fijo en COP
   const l = q.lineas.find((x) => x.id === "fuente-fw_mid");
   assert.equal(l.cantidad, 2);
   assert.equal(Math.round(l.subtotal * 3500), 880000);
-  assert.equal(Math.round((q.mensualInicial - 2950) * 3500), 880000 + 300000);
+  assert.equal(Math.round((q.mensualInicial - 3050) * 3500), 880000 + 300000);
   assert.equal(modelo.cotizar({ soc: false, vulnerabilidades: true, sedes: 1, fuentesTipo: { fw_mid: 2 } }).lineas.length, 1);
 });
 
@@ -188,16 +189,16 @@ test("modo SOC IT: mismos precios y costos, textos de IT", () => {
 
 test("SOC Esencial: 1/3 del cupo, hasta 3 fuentes y sin fuentes adicionales", () => {
   const e = modelo.precio().esencial;
-  assert.equal(e.equilibrio, 784.29); // 2352.88 / 3
-  assert.equal(e.lista, 1000); // 784.29 / 0.8 = 980.36 -> 1000 (COP 3.500.000)
-  assert.equal(modelo.precio(4, undefined, 0).esencial.lista, 800);
+  assert.equal(e.equilibrio, 801.01); // 2403.04 / 3
+  assert.equal(e.lista, 1050); // 801.01 / 0.8 = 1001.27 -> 1050 (COP 3.675.000)
+  assert.equal(modelo.precio(4, undefined, 0).esencial.lista, 850);
   assert.equal(e.dispositivosIncluidos, 3);
   assert.equal(e.maxClientes, 3);
   const q = modelo.cotizar({ plan: "esencial", dispositivos: 13, fuentesTipo: { fw_mid: 2 }, agentes: 5, vulnerabilidades: true, sedes: 1 });
   assert.equal(q.plan, "esencial");
   assert.equal(q.dispositivosIncluidos, 3);
   assert.deepEqual(q.lineas.map((l) => l.id), ["base", "vuln", "agt"]);
-  assert.equal(q.lineas[0].unitario, 1000);
+  assert.equal(q.lineas[0].unitario, 1050);
   assert.ok(q.lineas[0].concepto.startsWith("SOC Esencial"));
   assert.equal(modelo.cotizar({ soc: false, plan: "esencial", vulnerabilidades: true, sedes: 1 }).plan, "estandar");
 });

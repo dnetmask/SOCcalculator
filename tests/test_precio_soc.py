@@ -24,10 +24,10 @@ class TestPrecioSOC(unittest.TestCase):
 
     def test_personal_por_modulo_en_usd(self):
         p = self.modelo.personal_por_modulo("ajustado")
-        # (3.3M + 3.78M) COP x 1.52 / 3500 (salarios base -40 %, TRM 3.500)
-        self.assertEqual(round(p["incidentes"], 2), Decimal("3074.74"))
-        # 3.36M x 1.52 / 3500
-        self.assertEqual(round(p["vulnerabilidades"], 2), Decimal("1459.20"))
+        # (3.5M + 4M) COP x 1.52 / 3500 (TRM 3.500)
+        self.assertEqual(round(p["incidentes"], 2), Decimal("3257.14"))
+        # 3.5M x 1.52 / 3500
+        self.assertEqual(round(p["vulnerabilidades"], 2), Decimal("1520.00"))
 
     def test_licencias_usan_motor_con_dispositivos_agregados(self):
         c = self.modelo.costos(4)
@@ -38,8 +38,8 @@ class TestPrecioSOC(unittest.TestCase):
     def test_precio_equilibrio_cubre_costo_con_n_clientes(self):
         p = self.modelo.precio()
         self.assertEqual(p.clientes_equilibrio, 4)
-        self.assertEqual(p.lista_base, Decimal("2950.00"))  # margen comercial por defecto 20 %
-        self.assertEqual(self.modelo.precio(margen=Decimal("0")).lista_base, Decimal("2400.00"))
+        self.assertEqual(p.lista_base, Decimal("3050.00"))  # margen comercial por defecto 20 %
+        self.assertEqual(self.modelo.precio(margen=Decimal("0")).lista_base, Decimal("2450.00"))
         # SOC de incidentes x 4 clientes + equipo de vulnerabilidades = costo total
         self.assertLessEqual(abs(p.equilibrio_base * 4 + p.costo_vulnerabilidades - p.costos.total), Decimal("0.03"))
         self.assertGreaterEqual(p.lista_base, p.equilibrio_base)
@@ -47,16 +47,16 @@ class TestPrecioSOC(unittest.TestCase):
 
     def test_plan_esencial(self):
         p = self.modelo.precio()
-        self.assertEqual(p.esencial_equilibrio, Decimal("784.29"))  # 2352.88 / 3
-        self.assertEqual(p.esencial_lista, Decimal("1000.00"))  # / 0.8 -> múltiplo de 50
-        self.assertEqual(self.modelo.precio(margen=Decimal("0")).esencial_lista, Decimal("800.00"))
+        self.assertEqual(p.esencial_equilibrio, Decimal("801.01"))  # 2403.04 / 3
+        self.assertEqual(p.esencial_lista, Decimal("1050.00"))  # / 0.8 -> múltiplo de 50
+        self.assertEqual(self.modelo.precio(margen=Decimal("0")).esencial_lista, Decimal("850.00"))
         self.assertIn("SOC Esencial", reporte_markdown(self.modelo))
 
     def test_vulnerabilidades_por_sede(self):
         p = self.modelo.precio()
-        self.assertEqual(p.costo_vulnerabilidades, Decimal("1605.12"))  # 1459.20 x 1.10
+        self.assertEqual(p.costo_vulnerabilidades, Decimal("1672.00"))  # 1520 x 1.10
         self.assertEqual(p.sedes_equilibrio, 8)  # 4 clientes x 2 sedes
-        self.assertEqual(p.equilibrio_por_sede, Decimal("200.64"))
+        self.assertEqual(p.equilibrio_por_sede, Decimal("209.00"))
         self.assertEqual(p.precio_por_sede, Decimal("560.00"))
         self.assertEqual(p.sedes_minimas_con_precio_lista, 3)
         filas = self.modelo.sensibilidad_vulnerabilidades(12)
@@ -76,8 +76,8 @@ class TestPrecioSOC(unittest.TestCase):
         self.assertGreaterEqual(filas[3].utilidad, 0)
 
     def test_margen_comercial_sobre_precio_de_venta(self):
-        self.assertEqual(self.modelo.precio(margen=Decimal("0.20")).lista_base, Decimal("2950.00"))  # 2352.88 / 0.8 -> 2941.10
-        self.assertEqual(self.modelo.precio(margen=Decimal("0.30")).lista_base, Decimal("3400.00"))
+        self.assertEqual(self.modelo.precio(margen=Decimal("0.20")).lista_base, Decimal("3050.00"))  # 2403.04 / 0.8 -> 3003.80
+        self.assertEqual(self.modelo.precio(margen=Decimal("0.30")).lista_base, Decimal("3450.00"))
         with self.assertRaises(ErrorModelo):
             self.modelo.precio(margen=Decimal("1"))
 
